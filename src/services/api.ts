@@ -56,7 +56,6 @@ export class ApiService {
     return json;
   }
 
-  // QUOTATION ENDPOINTS
   static async createQuote(quoteData: QuoteRequest, token: string): Promise<{ message: string; quote: Quote }> {
     const res = await fetch(`${GATEWAY_URL}/api/quotation/quotes`, {
       method: 'POST',
