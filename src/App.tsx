@@ -5,6 +5,7 @@ import { QuotationWizard } from './components/QuotationWizard';
 import { QuoteResultCard } from './components/QuoteResultCard';
 import { QuoteHistory } from './components/QuoteHistory';
 import { PricingRulesManager } from './components/PricingRulesManager';
+import { AdminManager } from './components/AdminManager';
 import type { User, Quote, AuthResponse } from './types';
 import { ApiService } from './services/api';
 
@@ -16,7 +17,7 @@ export function App() {
   const [user, setUser] = useState<User | null>(null);
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'cotizar' | 'historial' | 'reglas'>('cotizar');
+  const [activeTab, setActiveTab] = useState<'cotizar' | 'historial' | 'reglas' | 'admins'>('cotizar');
   const [latestQuote, setLatestQuote] = useState<Quote | null>(null);
 
   // Restore user session on mount
@@ -90,7 +91,32 @@ export function App() {
         )}
 
         {activeTab === 'reglas' && (
-          <PricingRulesManager tenantId={tenantId} token={token} />
+          user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') ? (
+            <PricingRulesManager tenantId={tenantId} token={token} />
+          ) : (
+            <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '540px', margin: '0 auto', background: '#ffffff' }}>
+              <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px', fontWeight: 700 }}>Acceso Restringido</h3>
+              <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>
+                La gestión de reglas de precios está reservada exclusivamente para administradores con rol <strong>ADMIN</strong> o <strong>SUPER_ADMIN</strong>.
+              </p>
+              {!user && (
+                <button onClick={() => setIsAuthOpen(true)} className="btn-primary">
+                  Iniciar Sesión
+                </button>
+              )}
+            </div>
+          )
+        )}
+
+        {activeTab === 'admins' && (
+          user?.role === 'SUPER_ADMIN' ? (
+            <AdminManager token={token} />
+          ) : (
+            <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '540px', margin: '0 auto' }}>
+              <h3 style={{ fontSize: '20px', color: '#ffffff', marginBottom: '8px' }}>Acceso Restringido</h3>
+              <p style={{ fontSize: '14px', color: '#9ca3af' }}>Solo el Super Administrador puede gestionar administradores de tenant.</p>
+            </div>
+          )
         )}
       </main>
 
