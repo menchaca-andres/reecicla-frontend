@@ -1,0 +1,52 @@
+export interface User {
+  id: string;
+  tenant_id: string;
+  email: string;
+  name?: string;
+  phone?: string;
+  role: string;
+  created_at: string;
+}
+
+export interface AuthResponse {
+  message: string;
+  token: string;
+  user: User;
+}
+
+export interface QuoteRequest {
+  tenant_id: string;
+  device_type: string;
+  brand?: string;
+  model?: string;
+  year?: number;
+  condition: string;
+}
+
+export interface Quote {
+  id: string;
+  tenant_id: string;
+  user_id: string;
+  device_type: string;
+  brand?: string;
+  model?: string;
+  year?: number;
+  condition: string;
+  base_price: string | number;
+  adjustment: string | number;
+  final_price: string | number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PricingRule {
+  id: string;
+  tenant_id: string;
+  device_type: string;
+  rule_key: string;
+  rule_value: any;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
