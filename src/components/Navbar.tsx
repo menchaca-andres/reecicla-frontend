@@ -1,5 +1,5 @@
 import React from 'react';
-import { RefreshCw, User as UserIcon, LogOut, ShieldCheck, Cpu } from 'lucide-react';
+import { RefreshCw, User as UserIcon, LogOut, ShieldCheck, Cpu, Users } from 'lucide-react';
 import type { User } from '../types';
 
 interface NavbarProps {
@@ -7,8 +7,8 @@ interface NavbarProps {
   tenantId: string;
   onOpenAuth: () => void;
   onLogout: () => void;
-  activeTab: 'cotizar' | 'historial' | 'reglas';
-  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas') => void;
+  activeTab: 'cotizar' | 'historial' | 'reglas' | 'admins';
+  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'admins') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -76,22 +76,45 @@ export const Navbar: React.FC<NavbarProps> = ({
               Mis Cotizaciones
             </button>
           )}
-          <button
-            onClick={() => setActiveTab('reglas')}
-            style={{
-              padding: '7px 14px',
-              fontSize: '13px',
-              fontWeight: 600,
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              background: activeTab === 'reglas' ? '#2563eb' : 'transparent',
-              color: activeTab === 'reglas' ? '#ffffff' : '#64748b',
-              transition: 'all 0.15s ease',
-            }}
-          >
-            Reglas de Precios
-          </button>
+          {user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
+            <button
+              onClick={() => setActiveTab('reglas')}
+              style={{
+                padding: '7px 14px',
+                fontSize: '13px',
+                fontWeight: 600,
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                background: activeTab === 'reglas' ? '#2563eb' : 'transparent',
+                color: activeTab === 'reglas' ? '#ffffff' : '#64748b',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Reglas de Precios
+            </button>
+          )}
+          {user?.role === 'SUPER_ADMIN' && (
+            <button
+              onClick={() => setActiveTab('admins')}
+              style={{
+                padding: '7px 14px',
+                fontSize: '13px',
+                fontWeight: 600,
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: activeTab === 'admins' ? '#7c3aed' : 'transparent',
+                color: activeTab === 'admins' ? '#ffffff' : '#64748b',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <Users size={15} /> Administradores
+            </button>
+          )}
         </nav>
 
         {/* User Auth Section */}
@@ -109,7 +132,23 @@ export const Navbar: React.FC<NavbarProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#eff6ff', padding: '6px 12px', borderRadius: '10px', border: '1px solid #bfdbfe' }}>
                 <UserIcon size={15} color="#2563eb" />
                 <div style={{ textAlign: 'left' }}>
-                  <p style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>{user.name || 'Usuario'}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <p style={{ fontSize: '12px', fontWeight: 700, color: '#0f172a', lineHeight: 1.1 }}>{user.name || 'Usuario'}</p>
+                    {user.role && (
+                      <span style={{
+                        fontSize: '9px',
+                        fontWeight: 700,
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        background: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? '#dcfce7' : '#e2e8f0',
+                        color: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? '#15803d' : '#475569',
+                        border: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? '1px solid #86efac' : '1px solid #cbd5e1',
+                        textTransform: 'uppercase'
+                      }}>
+                        {user.role}
+                      </span>
+                    )}
+                  </div>
                   <p style={{ fontSize: '10px', color: '#64748b' }}>{user.email}</p>
                 </div>
               </div>
