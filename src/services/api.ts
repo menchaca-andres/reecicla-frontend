@@ -78,6 +78,30 @@ export class ApiService {
     return json;
   }
 
+  static async getRules(tenantId: string, token: string): Promise<{ rules: PricingRule[] }> {
+    const res = await fetch(`${GATEWAY_URL}/api/quotation/rules?tenant_id=${tenantId}`, {
+      method: 'GET',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al obtener reglas');
+    return json;
+  }
+
+  static async createAdmin(
+    data: { tenant_id: string; email: string; password: string; name?: string; phone?: string },
+    token: string
+  ): Promise<{ message: string; user: import('../types').User }> {
+    const res = await fetch(`${GATEWAY_URL}/api/auth/admin`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al crear administrador');
+    return json;
+  }
+
   static async defineRule(
     ruleData: { tenant_id: string; device_type: string; rule_key: string; rule_value: any },
     token?: string
