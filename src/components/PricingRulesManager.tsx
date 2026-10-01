@@ -39,9 +39,9 @@ function formatRuleValue(ruleKey: string, value: any): string {
 export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenantId, token }) => {
   const [deviceType, setDeviceType] = useState('refrigerator');
   const [basePriceAmount, setBasePriceAmount] = useState<number>(1400);
-  const [workingAdj, setWorkingAdj] = useState<number>(0);
-  const [damagedAdj, setDamagedAdj] = useState<number>(-350);
-  const [brokenAdj, setBrokenAdj] = useState<number>(-700);
+  const [workingAdj, setWorkingAdj] = useState<string>('0');
+  const [damagedAdj, setDamagedAdj] = useState<string>('-350');
+  const [brokenAdj, setBrokenAdj] = useState<string>('-700');
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -85,7 +85,11 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
         tenant_id: tenantId,
         device_type: deviceType,
         rule_key: 'condition_adjustment',
-        rule_value: { working: workingAdj, damaged: damagedAdj, broken: brokenAdj },
+        rule_value: {
+          working: Number(workingAdj),
+          damaged: Number(damagedAdj),
+          broken: Number(brokenAdj),
+        },
       }, token || undefined);
 
       setMessage(`Reglas para "${DEVICE_LABELS[deviceType] ?? deviceType}" actualizadas.`);
@@ -164,15 +168,15 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
               <div>
                 <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Excelente (working)</label>
-                <input type="number" className="input-field" value={workingAdj} onChange={(e) => setWorkingAdj(Number(e.target.value))} />
+                <input type="text" inputMode="numeric" className="input-field" value={workingAdj} onChange={(e) => setWorkingAdj(e.target.value)} />
               </div>
               <div>
                 <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Detalles (damaged)</label>
-                <input type="number" className="input-field" value={damagedAdj} onChange={(e) => setDamagedAdj(Number(e.target.value))} />
+                <input type="text" inputMode="numeric" className="input-field" value={damagedAdj} onChange={(e) => setDamagedAdj(e.target.value)} />
               </div>
               <div>
                 <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Averiado (broken)</label>
-                <input type="number" className="input-field" value={brokenAdj} onChange={(e) => setBrokenAdj(Number(e.target.value))} />
+                <input type="text" inputMode="numeric" className="input-field" value={brokenAdj} onChange={(e) => setBrokenAdj(e.target.value)} />
               </div>
             </div>
           </div>
