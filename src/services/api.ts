@@ -88,9 +88,9 @@ export class ApiService {
   }
 
   static async createAdmin(
-    data: { tenant_id: string; email: string; password: string; name?: string; phone?: string },
+    data: { tenant_id: string; email: string; password: string; name?: string; phone?: string; role?: string },
     token: string
-  ): Promise<{ message: string; user: import('../types').User }> {
+  ): Promise<{ message: string; user: User }> {
     const res = await fetch(`${GATEWAY_URL}/api/auth/admin`, {
       method: 'POST',
       headers: this.getHeaders(token),

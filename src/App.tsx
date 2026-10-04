@@ -91,13 +91,13 @@ export function App() {
         )}
 
         {activeTab === 'reglas' && (
-          user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') ? (
+          user && (user.role === 'TENANT_ADMIN' || user.role === 'CATALOG_ADMIN' || user.role === 'SUPER_ADMIN') ? (
             <PricingRulesManager tenantId={tenantId} token={token} />
           ) : (
             <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '540px', margin: '0 auto', background: '#ffffff' }}>
               <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px', fontWeight: 700 }}>Acceso Restringido</h3>
               <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>
-                La gestión de reglas de precios está reservada exclusivamente para administradores con rol <strong>ADMIN</strong> o <strong>SUPER_ADMIN</strong>.
+                La gestión de reglas de precios está reservada exclusivamente para administradores (<strong>TENANT_ADMIN</strong>, <strong>CATALOG_ADMIN</strong> o <strong>SUPER_ADMIN</strong>).
               </p>
               {!user && (
                 <button onClick={() => setIsAuthOpen(true)} className="btn-primary">
