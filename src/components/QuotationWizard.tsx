@@ -131,7 +131,6 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
           )}
         </div>
 
-        {/* 2. Marca, Modelo y Año */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 110px', gap: '14px' }}>
           <div>
             <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
@@ -174,7 +173,6 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
           </div>
         </div>
 
-        {/* 3. Condición / Estado */}
         <div>
           <label style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: '10px' }}>
             3. Condición Declarada del Equipo
