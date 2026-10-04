@@ -1,10 +1,12 @@
+export type UserRole = 'SUPER_ADMIN' | 'TENANT_ADMIN' | 'CATALOG_ADMIN' | 'INSPECTOR' | 'CLIENT';
+
 export interface User {
   id: string;
   tenant_id: string;
   email: string;
   name?: string;
   phone?: string;
-  role: string;
+  role: UserRole;
   created_at: string;
 }
 

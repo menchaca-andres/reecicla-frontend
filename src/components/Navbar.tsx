@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               Mis Cotizaciones
             </button>
           )}
-          {user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
+          {user && (user.role === 'TENANT_ADMIN' || user.role === 'CATALOG_ADMIN' || user.role === 'SUPER_ADMIN') && (
             <button
               onClick={() => setActiveTab('reglas')}
               style={{
@@ -140,9 +140,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                         fontWeight: 700,
                         padding: '2px 6px',
                         borderRadius: '4px',
-                        background: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? '#dcfce7' : '#e2e8f0',
-                        color: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? '#15803d' : '#475569',
-                        border: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? '1px solid #86efac' : '1px solid #cbd5e1',
+                        background: user.role === 'SUPER_ADMIN' ? '#f3e8ff' : user.role === 'TENANT_ADMIN' || user.role === 'CATALOG_ADMIN' ? '#dcfce7' : user.role === 'INSPECTOR' ? '#fef3c7' : '#e2e8f0',
+                        color: user.role === 'SUPER_ADMIN' ? '#6b21a8' : user.role === 'TENANT_ADMIN' || user.role === 'CATALOG_ADMIN' ? '#15803d' : user.role === 'INSPECTOR' ? '#b45309' : '#475569',
+                        border: user.role === 'SUPER_ADMIN' ? '1px solid #d8b4fe' : user.role === 'TENANT_ADMIN' || user.role === 'CATALOG_ADMIN' ? '1px solid #86efac' : user.role === 'INSPECTOR' ? '1px solid #fde68a' : '1px solid #cbd5e1',
                         textTransform: 'uppercase'
                       }}>
                         {user.role}
