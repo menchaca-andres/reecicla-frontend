@@ -52,3 +52,17 @@ export interface PricingRule {
   created_at: string;
   updated_at: string;
 }
+
+export interface DeviceType {
+  id: string;
+  tenant_id: string;
+  code: string;
+  name: string;
+  description?: string;
+  status: 'ACTIVE' | 'INACTIVE';
+  accepts_quotes: boolean;
+  last_received_at?: string;
+  created_at: string;
+  updated_at: string;
+  inactivated_at?: string;
+}
