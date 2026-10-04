@@ -7,8 +7,8 @@ interface NavbarProps {
   tenantId: string;
   onOpenAuth: () => void;
   onLogout: () => void;
-  activeTab: 'cotizar' | 'historial' | 'reglas' | 'admins';
-  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'admins') => void;
+  activeTab: 'cotizar' | 'historial' | 'reglas' | 'catalogo' | 'admins';
+  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'catalogo' | 'admins') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -77,22 +77,40 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
           {user && (user.role === 'TENANT_ADMIN' || user.role === 'CATALOG_ADMIN' || user.role === 'SUPER_ADMIN') && (
-            <button
-              onClick={() => setActiveTab('reglas')}
-              style={{
-                padding: '7px 14px',
-                fontSize: '13px',
-                fontWeight: 600,
-                borderRadius: '8px',
-                border: 'none',
-                cursor: 'pointer',
-                background: activeTab === 'reglas' ? '#2563eb' : 'transparent',
-                color: activeTab === 'reglas' ? '#ffffff' : '#64748b',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              Reglas de Precios
-            </button>
+            <>
+              <button
+                onClick={() => setActiveTab('catalogo')}
+                style={{
+                  padding: '7px 14px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: activeTab === 'catalogo' ? '#2563eb' : 'transparent',
+                  color: activeTab === 'catalogo' ? '#ffffff' : '#64748b',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                Catálogo
+              </button>
+              <button
+                onClick={() => setActiveTab('reglas')}
+                style={{
+                  padding: '7px 14px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: activeTab === 'reglas' ? '#2563eb' : 'transparent',
+                  color: activeTab === 'reglas' ? '#ffffff' : '#64748b',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                Reglas de Precios
+              </button>
+            </>
           )}
           {user?.role === 'SUPER_ADMIN' && (
             <button
@@ -117,7 +135,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           )}
         </nav>
 
-        {/* User Auth Section */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#fff7ed', padding: '5px 10px', borderRadius: '20px', border: '1px solid #fed7aa' }}>
             <ShieldCheck size={13} color="#ea580c" />
