@@ -19,6 +19,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [role, setRole] = useState<'TENANT_ADMIN' | 'CATALOG_ADMIN' | 'INSPECTOR'>('TENANT_ADMIN');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<CreatedAdmin | null>(null);
@@ -29,6 +30,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
     setPassword('');
     setName('');
     setPhone('');
+    setRole('TENANT_ADMIN');
     setError(null);
     setCreated(null);
   };
@@ -41,7 +43,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
 
     try {
       const res = await ApiService.createAdmin(
-        { tenant_id: tenantId, email, password, name: name || undefined, phone: phone || undefined },
+        { tenant_id: tenantId, email, password, name: name || undefined, phone: phone || undefined, role },
         token
       );
       setCreated({
@@ -55,6 +57,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
       setPassword('');
       setName('');
       setPhone('');
+      setRole('TENANT_ADMIN');
     } catch (err: any) {
       setError(err.message || 'Error al crear el administrador');
     } finally {
@@ -114,7 +117,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
       {/* Form card */}
       <div className="glass-panel" style={{ padding: '28px' }}>
         <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#e2e8f0', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <UserPlus size={16} color="#7c3aed" /> Nuevo Administrador de Tenant
+          <UserPlus size={16} color="#7c3aed" /> Nuevo Administrador
         </h3>
 
         {error && (
@@ -147,6 +150,23 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
               onChange={(e) => setTenantId(e.target.value)}
               required
             />
+          </div>
+
+          {/* Role selector */}
+          <div>
+            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
+              <UserIcon size={12} color="#7c3aed" /> Rol Asignado *
+            </label>
+            <select
+              className="input-field"
+              value={role}
+              onChange={(e) => setRole(e.target.value as any)}
+              required
+            >
+              <option value="TENANT_ADMIN">TENANT_ADMIN (Admin Principal de Tenant)</option>
+              <option value="CATALOG_ADMIN">CATALOG_ADMIN (Admin de Catálogo)</option>
+              <option value="INSPECTOR">INSPECTOR (Inspector Técnico)</option>
+            </select>
           </div>
 
           {/* Name */}
@@ -250,8 +270,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
         color: '#a78bfa',
         lineHeight: '1.5',
       }}>
-        <strong>Nota:</strong> El administrador creado tendrá rol <code>ADMIN</code> y podrá gestionar reglas de precios
-        y cotizaciones del tenant asignado. Solo el <code>SUPER_ADMIN</code> puede crear administradores.
+        <strong>Nota:</strong> Solo el <code>SUPER_ADMIN</code> puede crear usuarios con roles administrativos (<code>TENANT_ADMIN</code>, <code>CATALOG_ADMIN</code>, <code>INSPECTOR</code>).
       </div>
     </div>
   );
