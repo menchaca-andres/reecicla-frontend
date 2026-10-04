@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Refrigerator, WashingMachine, Tv, Smartphone, Laptop, Sparkles, AlertCircle } from 'lucide-react';
-import type { QuoteRequest, Quote } from '../types';
+import React, { useEffect, useState } from 'react';
+import { Package, Sparkles, AlertCircle } from 'lucide-react';
+import type { QuoteRequest, Quote, DeviceType } from '../types';
 import { ApiService } from '../services/api';
 
 interface QuotationWizardProps {
@@ -9,14 +9,6 @@ interface QuotationWizardProps {
   onQuoteCreated: (quote: Quote) => void;
   onNeedAuth: () => void;
 }
-
-const DEVICE_TYPES = [
-  { id: 'refrigerator', label: 'Refrigerador / Heladera', icon: Refrigerator },
-  { id: 'washing_machine', label: 'Lavadora / Lavarropas', icon: WashingMachine },
-  { id: 'tv', label: 'Televisor / Smart TV', icon: Tv },
-  { id: 'laptop', label: 'Notebook / Laptop', icon: Laptop },
-  { id: 'smartphone', label: 'Celular / Smartphone', icon: Smartphone },
-];
 
 const CONDITIONS = [
   { id: 'working', label: 'Excelente / Funcionando', desc: 'Sin fallas operativas ni daños graves', accent: '#16a34a' },
@@ -30,14 +22,33 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
   onQuoteCreated,
   onNeedAuth,
 }) => {
-  const [deviceType, setDeviceType] = useState('refrigerator');
+  const [deviceTypes, setDeviceTypes] = useState<DeviceType[]>([]);
+  const [deviceType, setDeviceType] = useState('');
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
   const [year, setYear] = useState<number>(2021);
   const [condition, setCondition] = useState('working');
 
   const [loading, setLoading] = useState(false);
+  const [loadingTypes, setLoadingTypes] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    ApiService.getDeviceTypes(tenantId)
+      .then(({ device_types }) => {
+        if (cancelled) return;
+        setDeviceTypes(device_types);
+        setDeviceType(device_types[0]?.code ?? '');
+      })
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message || 'No se pudo cargar el catálogo de equipos.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingTypes(false);
+      });
+    return () => { cancelled = true; };
+  }, [tenantId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +63,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
     try {
       const quoteData: QuoteRequest = {
         tenant_id: tenantId,
-        device_type: deviceType,
+        device_type: deviceType.toLowerCase(),
         brand: brand || undefined,
         model: model || undefined,
         year: year || undefined,
@@ -92,24 +103,32 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
           <label style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: '10px' }}>
             1. Tipo de Dispositivo
           </label>
-          <div className="device-grid">
-            {DEVICE_TYPES.map((dev) => {
-              const IconComp = dev.icon;
-              const isSelected = deviceType === dev.id;
+          {loadingTypes ? (
+            <p role="status" style={{ color: '#64748b', fontSize: '13px' }}>Cargando tipos de equipo...</p>
+          ) : deviceTypes.length === 0 ? (
+            <p role="status" style={{ color: '#64748b', fontSize: '13px' }}>No hay tipos activos disponibles para cotizar.</p>
+          ) : (
+            <div className="device-grid">
+              {deviceTypes.map((dev) => {
+              const isSelected = deviceType === dev.code;
               return (
-                <div
+                <button
+                  type="button"
                   key={dev.id}
                   className={`device-card ${isSelected ? 'selected' : ''}`}
-                  onClick={() => setDeviceType(dev.id)}
+                  onClick={() => setDeviceType(dev.code)}
+                  aria-pressed={isSelected}
+                  style={{ color: 'inherit', font: 'inherit' }}
                 >
-                  <IconComp size={26} color={isSelected ? '#2563eb' : '#64748b'} style={{ marginBottom: '6px' }} />
+                  <Package size={26} color={isSelected ? '#2563eb' : '#64748b'} style={{ marginBottom: '6px' }} />
                   <span style={{ fontSize: '12px', fontWeight: 600, textAlign: 'center', color: isSelected ? '#1e293b' : '#64748b' }}>
-                    {dev.label}
+                    {dev.name}
                   </span>
-                </div>
+                </button>
               );
-            })}
-          </div>
+              })}
+            </div>
+          )}
         </div>
 
         {/* 2. Marca, Modelo y Año */}
@@ -199,7 +218,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
         <button
           type="submit"
           className="btn-primary"
-          disabled={loading}
+          disabled={loading || loadingTypes || !deviceType}
           style={{ padding: '14px', fontSize: '15px', width: '100%', marginTop: '6px' }}
         >
           {loading ? 'Calculando Cotización...' : 'Calcular Precio de Cotización (Bs.)'}

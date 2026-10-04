@@ -6,6 +6,7 @@ import { QuoteResultCard } from './components/QuoteResultCard';
 import { QuoteHistory } from './components/QuoteHistory';
 import { PricingRulesManager } from './components/PricingRulesManager';
 import { AdminManager } from './components/AdminManager';
+import { DeviceTypesManager } from './components/DeviceTypesManager';
 import type { User, Quote, AuthResponse } from './types';
 import { ApiService } from './services/api';
 
@@ -17,7 +18,7 @@ export function App() {
   const [user, setUser] = useState<User | null>(null);
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'cotizar' | 'historial' | 'reglas' | 'admins'>('cotizar');
+  const [activeTab, setActiveTab] = useState<'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo'>('cotizar');
   const [latestQuote, setLatestQuote] = useState<Quote | null>(null);
 
   // Restore user session on mount
@@ -115,6 +116,17 @@ export function App() {
             <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '540px', margin: '0 auto' }}>
               <h3 style={{ fontSize: '20px', color: '#ffffff', marginBottom: '8px' }}>Acceso Restringido</h3>
               <p style={{ fontSize: '14px', color: '#9ca3af' }}>Solo el Super Administrador puede gestionar administradores de tenant.</p>
+            </div>
+          )
+        )}
+
+        {activeTab === 'catalogo' && (
+          user && ['CATALOG_ADMIN', 'TENANT_ADMIN', 'ADMIN', 'SUPER_ADMIN'].includes(user.role) ? (
+            <DeviceTypesManager tenantId={tenantId} token={token!} />
+          ) : (
+            <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '540px', margin: '0 auto' }}>
+              <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px' }}>Acceso restringido</h3>
+              <p style={{ fontSize: '14px', color: '#64748b' }}>La gestión del catálogo requiere un rol administrador.</p>
             </div>
           )
         )}
