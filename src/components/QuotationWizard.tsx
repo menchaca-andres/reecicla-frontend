@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Refrigerator, WashingMachine, Tv, Smartphone, Laptop, Sparkles, AlertCircle } from 'lucide-react';
+import { Refrigerator, WashingMachine, Tv, Smartphone, Laptop, Sparkles, AlertCircle, Cpu } from 'lucide-react';
 import type { QuoteRequest, Quote } from '../types';
 import { ApiService } from '../services/api';
 
@@ -10,12 +10,12 @@ interface QuotationWizardProps {
   onNeedAuth: () => void;
 }
 
-const DEVICE_TYPES = [
-  { id: 'refrigerator', label: 'Refrigerador / Heladera', icon: Refrigerator },
-  { id: 'washing_machine', label: 'Lavadora / Lavarropas', icon: WashingMachine },
-  { id: 'tv', label: 'Televisor / Smart TV', icon: Tv },
-  { id: 'laptop', label: 'Notebook / Laptop', icon: Laptop },
-  { id: 'smartphone', label: 'Celular / Smartphone', icon: Smartphone },
+const DEFAULT_DEVICE_TYPES = [
+  { id: 'refrigerator', code: 'REFRIGERATOR', label: 'Refrigerador / Heladera', icon: Refrigerator },
+  { id: 'washing_machine', code: 'WASHING_MACHINE', label: 'Lavadora / Lavarropas', icon: WashingMachine },
+  { id: 'tv', code: 'TV', label: 'Televisor / Smart TV', icon: Tv },
+  { id: 'laptop', code: 'LAPTOP', label: 'Notebook / Laptop', icon: Laptop },
+  { id: 'smartphone', code: 'SMARTPHONE', label: 'Celular / Smartphone', icon: Smartphone },
 ];
 
 const CONDITIONS = [
@@ -31,6 +31,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
   onNeedAuth,
 }) => {
   const [deviceType, setDeviceType] = useState('refrigerator');
+  const [availableTypes, setAvailableTypes] = useState(DEFAULT_DEVICE_TYPES);
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
   const [year, setYear] = useState<number>(2021);
@@ -38,6 +39,35 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    ApiService.getDeviceTypes(tenantId, false)
+      .then((res) => {
+        if (res.deviceTypes && res.deviceTypes.length > 0) {
+          const mapped = res.deviceTypes.map((dt) => {
+            const codeLower = dt.code.toLowerCase();
+            let IconComp = Cpu;
+            if (codeLower.includes('refrigerat') || codeLower.includes('heladera')) IconComp = Refrigerator;
+            else if (codeLower.includes('wash') || codeLower.includes('lavadora')) IconComp = WashingMachine;
+            else if (codeLower.includes('tv') || codeLower.includes('televis')) IconComp = Tv;
+            else if (codeLower.includes('laptop') || codeLower.includes('notebook')) IconComp = Laptop;
+            else if (codeLower.includes('phone') || codeLower.includes('celular') || codeLower.includes('smartphone')) IconComp = Smartphone;
+
+            return {
+              id: dt.code.toLowerCase(),
+              code: dt.code,
+              label: dt.name,
+              icon: IconComp,
+            };
+          });
+          setAvailableTypes(mapped);
+          setDeviceType(mapped[0].id);
+        }
+      })
+      .catch(() => {
+        // use default fallback quietly if catalog service is unpowered
+      });
+  }, [tenantId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +123,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
             1. Tipo de Dispositivo
           </label>
           <div className="device-grid">
-            {DEVICE_TYPES.map((dev) => {
+            {availableTypes.map((dev) => {
               const IconComp = dev.icon;
               const isSelected = deviceType === dev.id;
               return (
@@ -112,7 +142,6 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
           </div>
         </div>
 
-        {/* 2. Marca, Modelo y Año */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 110px', gap: '14px' }}>
           <div>
             <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
@@ -155,7 +184,6 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
           </div>
         </div>
 
-        {/* 3. Condición / Estado */}
         <div>
           <label style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: '10px' }}>
             3. Condición Declarada del Equipo
