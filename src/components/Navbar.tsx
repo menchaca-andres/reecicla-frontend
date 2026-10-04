@@ -7,8 +7,8 @@ interface NavbarProps {
   tenantId: string;
   onOpenAuth: () => void;
   onLogout: () => void;
-  activeTab: 'cotizar' | 'historial' | 'reglas' | 'catalogo' | 'admins';
-  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'catalogo' | 'admins') => void;
+  activeTab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo';
+  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -131,6 +131,24 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
             >
               <Users size={15} /> Administradores
+            </button>
+          )}
+          {user && ['CATALOG_ADMIN', 'TENANT_ADMIN', 'ADMIN', 'SUPER_ADMIN'].includes(user.role) && (
+            <button
+              onClick={() => setActiveTab('catalogo')}
+              style={{
+                padding: '7px 14px',
+                fontSize: '13px',
+                fontWeight: 600,
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                background: activeTab === 'catalogo' ? '#2563eb' : 'transparent',
+                color: activeTab === 'catalogo' ? '#ffffff' : '#64748b',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Tipos de equipos
             </button>
           )}
         </nav>
