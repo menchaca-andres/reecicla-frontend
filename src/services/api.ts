@@ -17,7 +17,7 @@ export class ApiService {
     tenantId: string,
     token?: string | null,
     includeInactive = false
-  ): Promise<{ device_types: DeviceType[] }> {
+  ): Promise<{ device_types: DeviceType[]; deviceTypes: DeviceType[] }> {
     const params = new URLSearchParams({ tenant_id: tenantId });
     if (includeInactive) params.set('include_inactive', 'true');
     const res = await fetch(`${GATEWAY_URL}/api/catalog/device-types?${params}`, {
@@ -25,13 +25,14 @@ export class ApiService {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al consultar el catálogo');
-    return json;
+    const list = json.device_types || json.deviceTypes || [];
+    return { device_types: list, deviceTypes: list };
   }
 
   static async createDeviceType(
     data: { code: string; name: string; description?: string },
     token: string
-  ): Promise<{ device_type: DeviceType }> {
+  ): Promise<{ device_type: DeviceType; deviceType: DeviceType }> {
     const res = await fetch(`${GATEWAY_URL}/api/catalog/device-types`, {
       method: 'POST',
       headers: this.getHeaders(token),
@@ -39,14 +40,15 @@ export class ApiService {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al crear el tipo de equipo');
-    return json;
+    const item = json.device_type || json.deviceType;
+    return { device_type: item, deviceType: item };
   }
 
   static async updateDeviceType(
     id: string,
     data: { name: string; description?: string },
     token: string
-  ): Promise<{ device_type: DeviceType }> {
+  ): Promise<{ device_type: DeviceType; deviceType: DeviceType }> {
     const res = await fetch(`${GATEWAY_URL}/api/catalog/device-types/${id}`, {
       method: 'PATCH',
       headers: this.getHeaders(token),
@@ -54,14 +56,15 @@ export class ApiService {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al actualizar el tipo de equipo');
-    return json;
+    const item = json.device_type || json.deviceType;
+    return { device_type: item, deviceType: item };
   }
 
   static async setDeviceTypeStatus(
     id: string,
     status: 'ACTIVE' | 'INACTIVE',
     token: string
-  ): Promise<{ device_type: DeviceType }> {
+  ): Promise<{ device_type: DeviceType; deviceType: DeviceType }> {
     const res = await fetch(`${GATEWAY_URL}/api/catalog/device-types/${id}/status`, {
       method: 'PATCH',
       headers: this.getHeaders(token),
@@ -69,8 +72,10 @@ export class ApiService {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al cambiar el estado del tipo');
-    return json;
+    const item = json.device_type || json.deviceType;
+    return { device_type: item, deviceType: item };
   }
+
 
   static async register(data: {
     tenant_id: string;
