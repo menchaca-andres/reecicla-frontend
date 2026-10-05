@@ -7,8 +7,8 @@ import { QuoteHistory } from './components/QuoteHistory';
 import { PricingRulesManager } from './components/PricingRulesManager';
 import { CatalogManager } from './components/CatalogManager';
 import { AdminManager } from './components/AdminManager';
-import { DeviceTypesManager } from './components/DeviceTypesManager';
 import type { User, Quote, AuthResponse } from './types';
+
 import { ApiService } from './services/api';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001';
@@ -138,18 +138,8 @@ export function App() {
             </div>
           )
         )}
-
-        {activeTab === 'catalogo' && (
-          user && ['CATALOG_ADMIN', 'TENANT_ADMIN', 'ADMIN', 'SUPER_ADMIN'].includes(user.role) ? (
-            <DeviceTypesManager tenantId={tenantId} token={token!} />
-          ) : (
-            <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '540px', margin: '0 auto' }}>
-              <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px' }}>Acceso restringido</h3>
-              <p style={{ fontSize: '14px', color: '#64748b' }}>La gestión del catálogo requiere un rol administrador.</p>
-            </div>
-          )
-        )}
       </main>
+
 
       <AuthModal
         isOpen={isAuthOpen}

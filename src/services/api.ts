@@ -1,4 +1,4 @@
-import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType } from '../types';
+import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem } from '../types';
 
 const GATEWAY_URL = 'http://localhost:3000';
 
@@ -12,6 +12,7 @@ export class ApiService {
     }
     return headers;
   }
+
 
   static async getDeviceTypes(
     tenantId: string,
@@ -75,6 +76,16 @@ export class ApiService {
     const item = json.device_type || json.deviceType;
     return { device_type: item, deviceType: item };
   }
+
+  static async inactivateDeviceType(id: string, token: string): Promise<void> {
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/device-types/${id}/inactivate`, {
+      method: 'PATCH',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al inactivar el tipo de equipo');
+  }
+
 
 
   static async register(data: {
@@ -178,5 +189,168 @@ export class ApiService {
     if (!res.ok) throw new Error(json.error || 'Error al guardar regla');
     return json;
   }
+
+  static async getBrands(
+    tenantId: string,
+    deviceTypeId?: string,
+    token?: string | null,
+    includeInactive = false
+  ): Promise<{ brands: DeviceBrand[] }> {
+    const params = new URLSearchParams({ tenant_id: tenantId });
+    if (deviceTypeId) params.set('device_type_id', deviceTypeId);
+    if (includeInactive) params.set('include_inactive', 'true');
+
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/brands?${params}`, {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar las marcas');
+    return { brands: json.brands || [] };
+  }
+
+  static async createBrand(
+    data: { device_type_id: string; name: string },
+    token: string
+  ): Promise<{ brand: DeviceBrand }> {
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/brands`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al crear la marca');
+    return { brand: json.brand };
+  }
+
+  static async updateBrand(
+    id: string,
+    name: string,
+    token: string
+  ): Promise<{ brand: DeviceBrand }> {
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/brands/${id}`, {
+      method: 'PATCH',
+      headers: this.getHeaders(token),
+      body: JSON.stringify({ name }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al actualizar la marca');
+    return { brand: json.brand };
+  }
+
+  static async setBrandStatus(
+    id: string,
+    status: 'ACTIVE' | 'INACTIVE',
+    token: string
+  ): Promise<{ brand: DeviceBrand }> {
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/brands/${id}/status`, {
+      method: 'PATCH',
+      headers: this.getHeaders(token),
+      body: JSON.stringify({ status }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al cambiar estado de la marca');
+    return { brand: json.brand };
+  }
+
+  static async getDevices(
+    tenantId: string,
+    deviceTypeId?: string,
+    token?: string | null,
+    includeInactive = false
+  ): Promise<{ devices: Device[] }> {
+    const params = new URLSearchParams({ tenant_id: tenantId });
+    if (deviceTypeId) params.set('device_type_id', deviceTypeId);
+    if (includeInactive) params.set('include_inactive', 'true');
+
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/devices?${params}`, {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar dispositivos');
+    return { devices: json.devices || [] };
+  }
+
+  static async createDevice(
+    data: { device_type_id: string; brand_id: string; model: string; year?: number | null; description?: string },
+    token: string
+  ): Promise<{ device: Device }> {
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/devices`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al registrar el dispositivo');
+    return { device: json.device };
+  }
+
+  static async updateDevice(
+    id: string,
+    data: { model?: string; year?: number | null; description?: string; brand_id?: string },
+    token: string
+  ): Promise<{ device: Device }> {
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/devices/${id}`, {
+      method: 'PATCH',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al actualizar el dispositivo');
+    return { device: json.device };
+  }
+
+  static async setDeviceStatus(
+    id: string,
+    status: 'ACTIVE' | 'INACTIVE',
+    token: string
+  ): Promise<{ device: Device }> {
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/devices/${id}/status`, {
+      method: 'PATCH',
+      headers: this.getHeaders(token),
+      body: JSON.stringify({ status }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al cambiar estado del dispositivo');
+    return { device: json.device };
+  }
+
+  static async getActiveEvaluationRule(
+    deviceTypeId: string,
+    token?: string | null
+  ): Promise<{ rule: EvaluationRule | null }> {
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/evaluation-rules/active?device_type_id=${deviceTypeId}`, {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al obtener la regla de evaluación activa');
+    return { rule: json.rule };
+  }
+
+  static async getEvaluationRuleHistory(
+    deviceTypeId: string,
+    token?: string | null
+  ): Promise<{ rules: EvaluationRule[] }> {
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/evaluation-rules/history?device_type_id=${deviceTypeId}`, {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al obtener historial de reglas de evaluación');
+    return { rules: json.rules || [] };
+  }
+
+  static async createEvaluationRuleVersion(
+    data: { device_type_id: string; checklist: ChecklistItem[]; resale_criteria?: Record<string, any>; recycle_criteria?: Record<string, any> },
+    token: string
+  ): Promise<{ rule: EvaluationRule; message: string }> {
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/evaluation-rules`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al crear versión de regla de evaluación');
+    return { rule: json.rule, message: json.message };
+  }
 }
+
 
