@@ -252,7 +252,6 @@ export class ApiService {
     return { brand: json.brand };
   }
 
-  // Device catalog (Modelo B)
   static async getDevices(
     tenantId: string,
     deviceTypeId?: string,
@@ -315,7 +314,6 @@ export class ApiService {
     return { device: json.device };
   }
 
-  // ── Evaluation Rules (HU-008) ──
   static async getActiveEvaluationRule(
     deviceTypeId: string,
     token?: string | null
