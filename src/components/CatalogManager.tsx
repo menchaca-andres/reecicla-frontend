@@ -23,14 +23,14 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token 
     setLoading(true);
     setError(null);
     try {
-      const res = await ApiService.getDeviceTypes(tenantId, true);
-      setDeviceTypes(res.deviceTypes);
+      const res = await ApiService.getDeviceTypes(tenantId, token, true);
+      setDeviceTypes(res.device_types || []);
     } catch (err: any) {
       setError(err.message || 'Error al cargar tipos de dispositivos.');
     } finally {
       setLoading(false);
     }
-  }, [tenantId]);
+  }, [tenantId, token]);
 
   useEffect(() => {
     loadCatalog();
@@ -47,15 +47,13 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token 
     try {
       const res = await ApiService.createDeviceType(
         {
-          tenant_id: tenantId,
           code: code.trim().toUpperCase(),
           name: name.trim(),
           description: description.trim() || undefined,
-          accepts_quotes: true,
         },
         token
       );
-      setSuccess(`Tipo de dispositivo "${res.deviceType.name}" creado con éxito.`);
+      setSuccess(`Tipo de dispositivo "${res.device_type.name}" creado con éxito.`);
       setCode('');
       setName('');
       setDescription('');
@@ -76,14 +74,10 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token 
 
     try {
       if (newStatus === 'INACTIVE') {
-        await ApiService.inactivateDeviceType(type.id, tenantId, token);
+        await ApiService.setDeviceTypeStatus(type.id, 'INACTIVE', token);
         setSuccess(`Tipo "${type.name}" inactivado (no se ofrecerá para cotizar pero se conserva en historial).`);
       } else {
-        await ApiService.updateDeviceType(
-          type.id,
-          { tenant_id: tenantId, status: 'ACTIVE' },
-          token
-        );
+        await ApiService.setDeviceTypeStatus(type.id, 'ACTIVE', token);
         setSuccess(`Tipo "${type.name}" reactivado exitosamente.`);
       }
       loadCatalog();
