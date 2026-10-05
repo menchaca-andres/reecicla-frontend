@@ -25,7 +25,8 @@ export function DeviceTypesManager({ tenantId, token }: DeviceTypesManagerProps)
     setLoading(true);
     try {
       const response = await ApiService.getDeviceTypes(tenantId, token, true);
-      setDeviceTypes(response.device_types);
+      const list = response?.device_types || response?.deviceTypes || [];
+      setDeviceTypes(list);
       setError(null);
     } catch (err) {
       setError((err as Error).message || 'No se pudo cargar el catálogo.');
@@ -33,6 +34,7 @@ export function DeviceTypesManager({ tenantId, token }: DeviceTypesManagerProps)
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     void loadDeviceTypes();

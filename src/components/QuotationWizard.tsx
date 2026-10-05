@@ -36,10 +36,11 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
   useEffect(() => {
     let cancelled = false;
     ApiService.getDeviceTypes(tenantId)
-      .then(({ device_types }) => {
+      .then((res) => {
         if (cancelled) return;
-        setDeviceTypes(device_types);
-        setDeviceType(device_types[0]?.code ?? '');
+        const types = res?.device_types || res?.deviceTypes || [];
+        setDeviceTypes(types);
+        setDeviceType(types[0]?.code ?? '');
       })
       .catch((err: Error) => {
         if (!cancelled) setError(err.message || 'No se pudo cargar el catálogo de equipos.');
@@ -49,6 +50,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
       });
     return () => { cancelled = true; };
   }, [tenantId]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
