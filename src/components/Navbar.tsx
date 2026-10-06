@@ -7,8 +7,8 @@ interface NavbarProps {
   tenantId: string;
   onOpenAuth: () => void;
   onLogout: () => void;
-  activeTab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo';
-  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo') => void;
+  activeTab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica';
+  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -109,6 +109,22 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }}
               >
                 Reglas de Precios
+              </button>
+              <button
+                onClick={() => setActiveTab('logistica')}
+                style={{
+                  padding: '7px 14px',
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  borderRadius: '8px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: activeTab === 'logistica' ? '#2563eb' : 'transparent',
+                  color: activeTab === 'logistica' ? '#ffffff' : '#64748b',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                Logística
               </button>
             </>
           )}
