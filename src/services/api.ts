@@ -172,6 +172,32 @@ export class ApiService {
     return json;
   }
 
+  static async getAllOrders(token: string): Promise<{ orders: Order[] }> {
+    const res = await fetch(`${GATEWAY_URL}/api/orders/admin/all`, {
+      method: 'GET',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar todas las órdenes');
+    return json;
+  }
+
+  static async dispatchOrder(
+    orderId: string,
+    trackingCode: string,
+    token: string,
+    status: 'BOX_SHIPPED' | 'IN_TRANSIT' = 'BOX_SHIPPED'
+  ): Promise<{ message: string; result: any }> {
+    const res = await fetch(`${GATEWAY_URL}/api/orders/${orderId}/dispatch`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify({ tracking_code: trackingCode, status }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al registrar el envío');
+    return json;
+  }
+
   static async getRules(tenantId: string, token: string): Promise<{ rules: PricingRule[] }> {
     const res = await fetch(`${GATEWAY_URL}/api/quotation/rules?tenant_id=${tenantId}`, {
       method: 'GET',
