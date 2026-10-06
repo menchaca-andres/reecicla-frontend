@@ -116,49 +116,49 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
               <p style={{ fontSize: '14px', color: '#64748b' }}>Aún no registras cotizaciones en la plataforma.</p>
             </div>
           ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {quotes.map((q) => (
-              <div key={q.id} className="glass-card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', background: '#ffffff', border: '1px solid #e2e8f0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <div style={{ background: '#f0fdf4', padding: '10px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
-                    <Cpu size={22} color="#16a34a" />
-                  </div>
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', textTransform: 'capitalize' }}>
-                        {q.device_type} {q.brand ? `• ${q.brand}` : ''}
-                      </h4>
-                      <span className="badge badge-pending">{q.status}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {quotes.map((q) => (
+                <div key={q.id} className="glass-card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', background: '#ffffff', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ background: '#f0fdf4', padding: '10px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
+                      <Cpu size={22} color="#16a34a" />
                     </div>
-                    <p style={{ fontSize: '12px', color: '#64748b', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span>Condición: <strong style={{ color: '#334155' }}>{q.condition}</strong></span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Calendar size={12} /> {new Date(q.created_at).toLocaleDateString()}
-                      </span>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', textTransform: 'capitalize' }}>
+                          {q.device_type} {q.brand ? `• ${q.brand}` : ''}
+                        </h4>
+                        <span className="badge badge-pending">{q.status}</span>
+                      </div>
+                      <p style={{ fontSize: '12px', color: '#64748b', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span>Condición: <strong style={{ color: '#334155' }}>{q.condition}</strong></span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Calendar size={12} /> {new Date(q.created_at).toLocaleDateString()}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Precio Ofrecido</p>
+                    <p style={{ fontSize: '20px', fontWeight: 800, color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
+                      <span style={{ fontSize: '14px' }}>Bs.</span>{Number(q.final_price).toFixed(2)}
                     </p>
+                    {q.status === 'PENDING' && (
+                      <button
+                        type="button"
+                        onClick={() => handleAcceptQuote(q.id)}
+                        disabled={acceptingQuoteId !== null}
+                        className="btn-primary"
+                        style={{ marginTop: '8px', padding: '7px 10px', fontSize: '12px' }}
+                      >
+                        <Check size={14} /> {acceptingQuoteId === q.id ? 'Aceptando...' : 'Aceptar'}
+                      </button>
+                    )}
                   </div>
                 </div>
-
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Precio Ofrecido</p>
-                  <p style={{ fontSize: '20px', fontWeight: 800, color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
-                    <span style={{ fontSize: '14px' }}>Bs.</span>{Number(q.final_price).toFixed(2)}
-                  </p>
-                  {q.status === 'PENDING' && (
-                    <button
-                      type="button"
-                      onClick={() => handleAcceptQuote(q.id)}
-                      disabled={acceptingQuoteId !== null}
-                      className="btn-primary"
-                      style={{ marginTop: '8px', padding: '7px 10px', fontSize: '12px' }}
-                    >
-                      <Check size={14} /> {acceptingQuoteId === q.id ? 'Aceptando...' : 'Aceptar'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
           )}
 
           {orders.length > 0 && (
@@ -224,7 +224,12 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
                           </p>
                           {order.pickup_address && (
                             <p style={{ fontSize: '11px', color: '#2563eb', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              📍 {order.pickup_address.street}, {order.pickup_address.city}
+                              {order.pickup_address.street}, {order.pickup_address.city}
+                            </p>
+                          )}
+                          {order.tracking_code && (
+                            <p style={{ fontSize: '12px', fontWeight: 700, color: '#6b21a8', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', background: '#faf5ff', padding: '3px 8px', borderRadius: '6px', border: '1px solid #e9d5ff', width: 'fit-content' }}>
+                              Guía: <span style={{ fontFamily: 'monospace' }}>{order.tracking_code}</span>
                             </p>
                           )}
                         </div>
