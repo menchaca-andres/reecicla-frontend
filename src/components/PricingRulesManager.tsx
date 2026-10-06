@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Settings, Save, AlertCircle, CheckCircle2, RefreshCw, Tag, Cpu } from 'lucide-react';
 import { ApiService } from '../services/api';
-import type { PricingRule } from '../types';
+import type { PricingRule, DeviceBrand, Device } from '../types';
 
 interface PricingRulesManagerProps {
   tenantId: string;
   token: string | null;
 }
 
-const DEVICE_LABELS: Record<string, string> = {
-  refrigerator: 'Refrigerador',
-  washing_machine: 'Lavadora',
-  tv: 'Televisor',
-  laptop: 'Laptop',
-  smartphone: 'Smartphone',
-};
+const DEFAULT_DEVICE_TYPES = [
+  { code: 'refrigerator', name: 'Refrigerador / Heladera' },
+  { code: 'washing_machine', name: 'Lavadora / Lavarropas' },
+  { code: 'tv', name: 'Televisor / Smart TV' },
+  { code: 'laptop', name: 'Notebook / Laptop' },
+  { code: 'smartphone', name: 'Celular / Smartphone' },
+];
 
 const RULE_KEY_LABELS: Record<string, string> = {
   base_price: 'Precio Base',
@@ -37,7 +37,16 @@ function formatRuleValue(ruleKey: string, value: any): string {
 }
 
 export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenantId, token }) => {
+  const [deviceTypes, setDeviceTypes] = useState<Array<{ id?: string; code: string; name: string }>>(DEFAULT_DEVICE_TYPES);
+  const [brands, setBrands] = useState<DeviceBrand[]>([]);
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [selectedBrandId, setSelectedBrandId] = useState<string>('');
+
+  // Form State
   const [deviceType, setDeviceType] = useState('refrigerator');
+  const [selectedBrandName, setSelectedBrandName] = useState('');
+  const [model, setModel] = useState('');
+  const [year, setYear] = useState<string>('');
   const [basePriceAmount, setBasePriceAmount] = useState<number>(1400);
   const [workingAdj, setWorkingAdj] = useState<string>('0');
   const [damagedAdj, setDamagedAdj] = useState<string>('-350');
@@ -50,6 +59,49 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
   const [rules, setRules] = useState<PricingRule[]>([]);
   const [rulesLoading, setRulesLoading] = useState(false);
 
+  // Load catalog device types and brands
+  useEffect(() => {
+    ApiService.getDeviceTypes(tenantId, token, false)
+      .then((res) => {
+        if (res.device_types && res.device_types.length > 0) {
+          setDeviceTypes(res.device_types.map((dt) => ({ id: dt.id, code: dt.code, name: dt.name })));
+        }
+      })
+      .catch(() => undefined);
+  }, [tenantId, token]);
+
+  // Load brands when device type changes
+  useEffect(() => {
+    const currentDt = deviceTypes.find((dt) => dt.code === deviceType);
+    setSelectedBrandId('');
+    setSelectedBrandName('');
+    setDevices([]);
+    setModel('');
+    if (currentDt?.id) {
+      ApiService.getBrands(tenantId, currentDt.id, token)
+        .then((res) => setBrands(res.brands))
+        .catch(() => setBrands([]));
+    } else {
+      setBrands([]);
+    }
+  }, [tenantId, token, deviceType, deviceTypes]);
+
+  // Load devices (models) when brand changes
+  useEffect(() => {
+    setModel('');
+    if (!selectedBrandId) {
+      setDevices([]);
+      return;
+    }
+    const currentDt = deviceTypes.find((dt) => dt.code === deviceType);
+    ApiService.getDevices(tenantId, currentDt?.id, token, false)
+      .then((res) => {
+        const filtered = res.devices.filter((d) => d.brand_id === selectedBrandId);
+        setDevices(filtered);
+      })
+      .catch(() => setDevices([]));
+  }, [tenantId, token, selectedBrandId, deviceType, deviceTypes]);
+
   const loadRules = useCallback(async () => {
     if (!token) return;
     setRulesLoading(true);
@@ -57,7 +109,7 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
       const res = await ApiService.getRules(tenantId, token);
       setRules(res.rules);
     } catch {
-      // silently fail — table just stays empty
+      // silently fail — table stays empty
     } finally {
       setRulesLoading(false);
     }
@@ -73,17 +125,25 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
     setMessage(null);
     setError(null);
 
+    const payloadMeta = {
+      tenant_id: tenantId,
+      device_type: deviceType,
+      brand_id: selectedBrandId || undefined,
+      brand_name: selectedBrandName.trim() || undefined,
+      model: model.trim() || undefined,
+      min_year: year ? Number(year) : undefined,
+      max_year: year ? Number(year) : undefined,
+    };
+
     try {
       await ApiService.defineRule({
-        tenant_id: tenantId,
-        device_type: deviceType,
+        ...payloadMeta,
         rule_key: 'base_price',
         rule_value: { amount: basePriceAmount, currency: 'Bs' },
       }, token || undefined);
 
       await ApiService.defineRule({
-        tenant_id: tenantId,
-        device_type: deviceType,
+        ...payloadMeta,
         rule_key: 'condition_adjustment',
         rule_value: {
           working: Number(workingAdj),
@@ -92,8 +152,15 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
         },
       }, token || undefined);
 
-      setMessage(`Reglas para "${DEVICE_LABELS[deviceType] ?? deviceType}" actualizadas.`);
-      loadRules(); // refresh table
+      const criteriaDesc = [
+        `Tipo: ${deviceTypes.find((dt) => dt.code === deviceType)?.name || deviceType}`,
+        selectedBrandName ? `Marca: ${selectedBrandName}` : null,
+        model ? `Modelo: ${model}` : null,
+        year ? `Año: ${year}` : null,
+      ].filter(Boolean).join(' | ');
+
+      setMessage(`Regla guardada exitosamente (${criteriaDesc}).`);
+      loadRules();
     } catch (err: any) {
       setError(err.message || 'Error al guardar las reglas');
     } finally {
@@ -109,7 +176,7 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
   }, {});
 
   return (
-    <div style={{ maxWidth: '720px', margin: '0 auto', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
 
       {/* ── FORM ── */}
       <div className="glass-panel" style={{ padding: '32px', background: '#ffffff' }}>
@@ -119,7 +186,7 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
           </div>
           <div>
             <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>Reglas de Valoración</h2>
-            <p style={{ fontSize: '13px', color: '#64748b' }}>Configura precios base y descuentos por condición (Bs.)</p>
+            <p style={{ fontSize: '13px', color: '#64748b' }}>Configura precios base y descuentos por tipo, marca, modelo y año (Bs.)</p>
           </div>
         </div>
 
@@ -135,22 +202,89 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
         )}
 
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
-              Dispositivo a Configurar
-            </label>
-            <select className="input-field" value={deviceType} onChange={(e) => setDeviceType(e.target.value)}>
-              <option value="refrigerator">Refrigerador / Heladera</option>
-              <option value="washing_machine">Lavadora / Lavarropas</option>
-              <option value="tv">Televisor / Smart TV</option>
-              <option value="laptop">Notebook / Laptop</option>
-              <option value="smartphone">Celular / Smartphone</option>
-            </select>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                Tipo de Dispositivo *
+              </label>
+              <select className="input-field" value={deviceType} onChange={(e) => {
+                setDeviceType(e.target.value);
+                setSelectedBrandName('');
+              }}>
+                {deviceTypes.map((dt) => (
+                  <option key={dt.code} value={dt.code}>{dt.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                Marca (Opcional)
+              </label>
+              {brands.length > 0 ? (
+                <select className="input-field" value={selectedBrandId} onChange={(e) => {
+                  const brand = brands.find((b) => b.id === e.target.value);
+                  setSelectedBrandId(e.target.value);
+                  setSelectedBrandName(brand?.name ?? '');
+                }}>
+                  <option value="">-- Todas las Marcas --</option>
+                  {brands.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Ej: Samsung, Lenovo"
+                  value={selectedBrandName}
+                  onChange={(e) => setSelectedBrandName(e.target.value)}
+                />
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '14px' }}>
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                Modelo Específico (Opcional)
+              </label>
+              {devices.length > 0 ? (
+                <select className="input-field" value={model} onChange={(e) => setModel(e.target.value)}>
+                  <option value="">-- Todos los Modelos --</option>
+                  {devices.map((d) => (
+                    <option key={d.id} value={d.model}>{d.model}{d.year ? ` (${d.year})` : ''}</option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder={selectedBrandId ? 'Sin modelos registrados para esta marca' : 'Ej: Galaxy S23, ThinkPad T14'}
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  disabled={!!selectedBrandId && devices.length === 0}
+                />
+              )}
+            </div>
+
+            <div>
+              <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+                Año (Opcional)
+              </label>
+              <input
+                type="number"
+                className="input-field"
+                placeholder="Ej: 2023"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+              />
+            </div>
           </div>
 
           <div>
             <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
-              Precio Base (Bs.)
+              Precio Base (Bs.) *
             </label>
             <input
               type="number"
@@ -182,7 +316,7 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
           </div>
 
           <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '12px', marginTop: '4px' }}>
-            <Save size={16} /> {loading ? 'Guardando...' : 'Guardar Regla'}
+            <Save size={16} /> {loading ? 'Guardando...' : 'Guardar Regla de Valoración'}
           </button>
         </form>
       </div>
@@ -230,7 +364,7 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
               <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Cpu size={14} color="#2563eb" />
                 <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
-                  {DEVICE_LABELS[device] ?? device}
+                  {deviceTypes.find((dt) => dt.code === device)?.name || device}
                 </span>
                 <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>({device})</span>
               </div>
@@ -239,22 +373,36 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc' }}>
+                    <th style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Criterios Específicos</th>
                     <th style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Tipo de Regla</th>
                     <th style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Valor</th>
-                    <th style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Actualizada</th>
                   </tr>
                 </thead>
                 <tbody>
                   {deviceRules.map((rule, i) => (
                     <tr key={rule.id} style={{ borderBottom: i < deviceRules.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                      <td style={{ padding: '11px 16px', fontSize: '13px', fontWeight: 600, color: '#0f172a' }}>
+                      <td style={{ padding: '11px 16px', fontSize: '12px', color: '#334155' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                          <span style={{ fontWeight: 600, color: '#0f172a' }}>
+                            {rule.brand_name || 'Todas las marcas'}
+                          </span>
+                          {rule.model && (
+                            <span style={{ background: '#eff6ff', color: '#1d4ed8', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>
+                              Mod: {rule.model}
+                            </span>
+                          )}
+                          {(rule.min_year || rule.max_year) && (
+                            <span style={{ background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>
+                              Años: {rule.min_year || '*'}-{rule.max_year || '*'}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ padding: '11px 16px', fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>
                         {RULE_KEY_LABELS[rule.rule_key] ?? rule.rule_key}
                       </td>
                       <td style={{ padding: '11px 16px', fontSize: '12px', color: '#334155', fontFamily: 'monospace', background: '#fafafa' }}>
                         {formatRuleValue(rule.rule_key, rule.rule_value)}
-                      </td>
-                      <td style={{ padding: '11px 16px', fontSize: '11px', color: '#94a3b8' }}>
-                        {new Date(rule.updated_at).toLocaleString('es-BO', { dateStyle: 'short', timeStyle: 'short' })}
                       </td>
                     </tr>
                   ))}
