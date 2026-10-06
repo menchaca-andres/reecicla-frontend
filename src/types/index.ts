@@ -46,6 +46,12 @@ export interface PricingRule {
   id: string;
   tenant_id: string;
   device_type: string;
+  device_type_id?: string;
+  brand_id?: string | null;
+  brand_name?: string | null;
+  model?: string | null;
+  min_year?: number | null;
+  max_year?: number | null;
   rule_key: string;
   rule_value: any;
   is_active: boolean;
@@ -135,4 +141,26 @@ export interface BoxRequest {
   requested_at: string;
   updated_at: string;
 }
-
+export interface Order {
+  id: string;
+  tenant_id: string;
+  order_number: string;
+  quote_id: string;
+  device_type_id: string;
+  device_type_name: string;
+  brand?: string | null;
+  model?: string | null;
+  device_year?: number | null;
+  declared_condition?: string | null;
+  quoted_price: number | string;
+  currency: string;
+  status: string;
+  pickup_address?: {
+    street?: string;
+    city?: string;
+    state?: string;
+    zip_code?: string;
+    notes?: string;
+  } | null;
+  created_at: string;
+}

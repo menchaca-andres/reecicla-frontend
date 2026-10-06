@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { History, RefreshCw, Cpu, Calendar, Check, PackageCheck, Box, X } from 'lucide-react';
-import type { Quote, CreateBoxRequestInput } from '../types';
+import type { Quote, Order, CreateBoxRequestInput } from '../types';
 import { ApiService } from '../services/api';
 
 interface QuoteHistoryProps {
@@ -10,7 +10,7 @@ interface QuoteHistoryProps {
 
 export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [orders, setOrders] = useState<Array<{ id: string; quote_id: string; order_number: string; status: string; created_at: string }>>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [acceptingQuoteId, setAcceptingQuoteId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -163,43 +163,87 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
 
           {orders.length > 0 && (
             <section style={{ marginTop: '28px' }}>
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', color: '#0f172a', marginBottom: '12px' }}>
-                <PackageCheck size={18} /> Mis Órdenes
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: 800, color: '#0f172a', marginBottom: '16px' }}>
+                <PackageCheck size={18} color="#2563eb" /> Mis Órdenes ({orders.length})
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {orders.map((order) => (
-                  <div key={order.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '14px 18px', border: '1px solid #e2e8f0', background: '#fff', borderRadius: '10px' }}>
-                    <div>
-                      <strong style={{ color: '#0f172a', fontSize: '15px' }}>{order.order_number}</strong>
-                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
-                        Fecha: {new Date(order.created_at).toLocaleDateString()}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {orders.map((order) => {
+                  const statusMap: Record<string, { label: string; bg: string; color: string; border: string }> = {
+                    ACCEPTED: { label: 'Cotización Aceptada', bg: '#f0fdf4', color: '#166534', border: '#bbf7d0' },
+                    BOX_REQUESTED: { label: 'Caja Solicitada', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+                    BOX_SHIPPED: { label: 'Caja Enviada', bg: '#faf5ff', color: '#6b21a8', border: '#e9d5ff' },
+                    IN_TRANSIT: { label: 'En Tránsito', bg: '#fff7ed', color: '#c2410c', border: '#ffedd5' },
+                    RECEIVED: { label: 'Recibido en Almacén', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
+                    INSPECTING: { label: 'En Evaluación', bg: '#fefce8', color: '#a16207', border: '#fef08a' },
+                    PAID: { label: 'Pagado', bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
+                    CLOSED: { label: 'Completado', bg: '#f8fafc', color: '#475569', border: '#e2e8f0' },
+                  };
+                  const statusInfo = statusMap[order.status] || { label: order.status, bg: '#f1f5f9', color: '#334155', border: '#cbd5e1' };
+
+                  return (
+                    <div key={order.id} style={{ border: '1px solid #e2e8f0', background: '#ffffff', borderRadius: '12px', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                      {/* Top Header */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <strong style={{ color: '#0f172a', fontSize: '16px', fontFamily: 'monospace', letterSpacing: '0.5px' }}>{order.order_number}</strong>
+                          <span style={{
+                            padding: '3px 10px',
+                            borderRadius: '20px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            backgroundColor: statusInfo.bg,
+                            color: statusInfo.color,
+                            border: `1px solid ${statusInfo.border}`
+                          }}>
+                            {statusInfo.label}
+                          </span>
+                        </div>
+                        <span style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Calendar size={12} /> {new Date(order.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+
+                      {/* Content details */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '16px', alignItems: 'center' }}>
+                        <div>
+                          <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispositivo</p>
+                          <p style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', marginTop: '2px' }}>
+                            {order.device_type_name || 'Dispositivo'} {order.brand ? `• ${order.brand}` : ''} {order.model ? `(${order.model})` : ''} {order.device_year ? `'${order.device_year}` : ''}
+                          </p>
+                          {order.declared_condition && (
+                            <p style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>
+                              Condición: <strong style={{ color: '#0f172a' }}>{order.declared_condition}</strong>
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Monto Aceptado</p>
+                          <p style={{ fontSize: '18px', fontWeight: 800, color: '#16a34a', marginTop: '2px' }}>
+                            {order.currency === 'BOB' || order.currency === 'Bs' ? 'Bs.' : order.currency} {Number(order.quoted_price || 0).toFixed(2)}
+                          </p>
+                          {order.pickup_address && (
+                            <p style={{ fontSize: '11px', color: '#2563eb', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              📍 {order.pickup_address.street}, {order.pickup_address.city}
+                            </p>
+                          )}
+                        </div>
+
+                        <div style={{ justifySelf: 'end' }}>
+                          {(order.status === 'ACCEPTED' || order.status === 'BOX_REQUESTED') && (
+                            <button
+                              onClick={() => setSelectedOrderIdForBox(order.id)}
+                              className="btn-primary"
+                              style={{ padding: '8px 14px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                            >
+                              <Box size={14} /> {order.status === 'BOX_REQUESTED' ? 'Ver / Editar Dirección' : 'Solicitar Caja'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span className="badge" style={{
-                        padding: '4px 10px',
-                        borderRadius: '20px',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        backgroundColor: order.status === 'BOX_REQUESTED' ? '#eff6ff' : '#f1f5f9',
-                        color: order.status === 'BOX_REQUESTED' ? '#1d4ed8' : '#334155',
-                        border: `1px solid ${order.status === 'BOX_REQUESTED' ? '#bfdbfe' : '#cbd5e1'}`
-                      }}>
-                        {order.status}
-                      </span>
-
-                      {(order.status === 'ACCEPTED' || order.status === 'BOX_REQUESTED') && (
-                        <button
-                          onClick={() => setSelectedOrderIdForBox(order.id)}
-                          className="btn-primary"
-                          style={{ padding: '6px 12px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
-                        >
-                          <Box size={14} /> {order.status === 'BOX_REQUESTED' ? 'Ver / Re-solicitar Caja' : 'Solicitar Caja'}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </section>
           )}
