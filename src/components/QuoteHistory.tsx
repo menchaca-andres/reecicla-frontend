@@ -107,13 +107,15 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
         <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '16px', borderRadius: '10px', marginBottom: '16px' }}>
           {error}
         </div>
-      ) : quotes.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '40px 20px', background: '#f8fafc', borderRadius: '14px', border: '1px dashed #cbd5e1' }}>
-          <p style={{ fontSize: '14px', color: '#64748b' }}>Aún no registras cotizaciones en la plataforma.</p>
-        </div>
       ) : (
         <>
           {notice && <p role="status" style={{ color: '#166534', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '14px' }}>{notice}</p>}
+
+          {quotes.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px', background: '#f8fafc', borderRadius: '14px', border: '1px dashed #cbd5e1', marginBottom: '20px' }}>
+              <p style={{ fontSize: '14px', color: '#64748b' }}>Aún no registras cotizaciones en la plataforma.</p>
+            </div>
+          ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {quotes.map((q) => (
               <div key={q.id} className="glass-card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', background: '#ffffff', border: '1px solid #e2e8f0' }}>
@@ -157,6 +159,7 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
               </div>
             ))}
           </div>
+          )}
 
           {orders.length > 0 && (
             <section style={{ marginTop: '28px' }}>
