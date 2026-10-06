@@ -25,6 +25,9 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token 
   const [typeName, setTypeName] = useState('');
   const [typeDesc, setTypeDesc] = useState('');
   const [submittingType, setSubmittingType] = useState(false);
+  const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
+  const [editTypeName, setEditTypeName] = useState('');
+  const [editTypeDesc, setEditTypeDesc] = useState('');
 
   // ── Brands form ──
   const [selectedTypeForBrand, setSelectedTypeForBrand] = useState('');
@@ -158,13 +161,43 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token 
     finally { setSubmittingType(false); }
   };
 
-  const handleInactivateType = async (id: string, name: string) => {
+  const beginEditType = (deviceType: DeviceType) => {
+    setEditingTypeId(deviceType.id);
+    setEditTypeName(deviceType.name);
+    setEditTypeDesc(deviceType.description || '');
+  };
+
+  const handleUpdateType = async (id: string) => {
+    if (!token || !editTypeName.trim()) return;
+    setSubmittingType(true);
+    try {
+      await ApiService.updateDeviceType(id, {
+        name: editTypeName.trim(),
+        description: editTypeDesc.trim() || undefined,
+      }, token);
+      setEditingTypeId(null);
+      notify('Tipo de equipo actualizado.');
+      await loadTypes();
+    } catch (err: any) {
+      notify(err.message || 'Error al actualizar el tipo.', true);
+    } finally {
+      setSubmittingType(false);
+    }
+  };
+
+  const handleToggleType = async (deviceType: DeviceType) => {
     if (!token) return;
     try {
-      await ApiService.inactivateDeviceType(id, token);
-      notify(`Tipo "${name}" inactivado.`);
-      loadTypes();
-    } catch (err: any) { notify(err.message, true); }
+      if (deviceType.status === 'ACTIVE') {
+        await ApiService.inactivateDeviceType(deviceType.id, token);
+      } else {
+        await ApiService.setDeviceTypeStatus(deviceType.id, 'ACTIVE', token);
+      }
+      notify(`Tipo "${deviceType.name}" ${deviceType.status === 'ACTIVE' ? 'inactivado' : 'reactivado'}.`);
+      await loadTypes();
+    } catch (err: any) {
+      notify(err.message || 'Error al cambiar el estado del tipo.', true);
+    }
   };
 
   // ── Brand handlers ──
@@ -638,7 +671,34 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token 
                 {deviceTypes.map(t => (
                   <tr key={t.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <td style={{ padding: '10px 12px', fontFamily: 'monospace', fontWeight: 700, color: '#2563eb' }}>{t.code}</td>
-                    <td style={{ padding: '10px 12px', fontWeight: 600, color: '#0f172a' }}>{t.name}</td>
+                    <td style={{ padding: '10px 12px', fontWeight: 600, color: '#0f172a' }}>
+                      {editingTypeId === t.id ? (
+                        <div style={{ display: 'grid', gap: '6px', minWidth: '220px' }}>
+                          <input
+                            type="text"
+                            aria-label={`Nombre de ${t.code}`}
+                            value={editTypeName}
+                            maxLength={120}
+                            onChange={(event) => setEditTypeName(event.target.value)}
+                            style={{ padding: '6px 8px', borderRadius: '5px', border: '1px solid #cbd5e1', fontSize: '12px' }}
+                          />
+                          <input
+                            type="text"
+                            aria-label={`Descripción de ${t.code}`}
+                            value={editTypeDesc}
+                            maxLength={2000}
+                            placeholder="Descripción opcional"
+                            onChange={(event) => setEditTypeDesc(event.target.value)}
+                            style={{ padding: '6px 8px', borderRadius: '5px', border: '1px solid #cbd5e1', fontSize: '12px' }}
+                          />
+                        </div>
+                      ) : (
+                        <>
+                          <div>{t.name}</div>
+                          {t.description && <div style={{ color: '#64748b', fontSize: '11px', fontWeight: 400 }}>{t.description}</div>}
+                        </>
+                      )}
+                    </td>
                     <td style={{ padding: '10px 12px' }}>
                       <span style={{
                         padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600,
@@ -648,14 +708,42 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token 
                         {t.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right' }}>
-                      {t.status === 'ACTIVE' && (
-                        <button
-                          onClick={() => handleInactivateType(t.id, t.name)}
-                          style={{ background: 'none', border: '1px solid #fecaca', color: '#dc2626', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
-                        >
-                          Inactivar
-                        </button>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      {editingTypeId === t.id ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => void handleUpdateType(t.id)}
+                            disabled={submittingType || !editTypeName.trim()}
+                            title="Guardar cambios"
+                            aria-label={`Guardar cambios de ${t.code}`}
+                            style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '5px 8px', borderRadius: '4px', cursor: 'pointer', marginRight: '6px' }}
+                          ><Check size={14} /></button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingTypeId(null)}
+                            title="Cancelar edición"
+                            aria-label={`Cancelar edición de ${t.code}`}
+                            style={{ background: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', padding: '5px 8px', borderRadius: '4px', cursor: 'pointer' }}
+                          ><X size={14} /></button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => beginEditType(t)}
+                            title="Editar tipo"
+                            aria-label={`Editar ${t.name}`}
+                            style={{ background: 'none', border: '1px solid #cbd5e1', color: '#475569', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', marginRight: '6px' }}
+                          >Editar</button>
+                          <button
+                            type="button"
+                            onClick={() => void handleToggleType(t)}
+                            title={t.status === 'ACTIVE' ? 'Inactivar tipo' : 'Reactivar tipo'}
+                            aria-label={`${t.status === 'ACTIVE' ? 'Inactivar' : 'Reactivar'} ${t.name}`}
+                            style={{ background: 'none', border: t.status === 'ACTIVE' ? '1px solid #fecaca' : '1px solid #bbf7d0', color: t.status === 'ACTIVE' ? '#dc2626' : '#15803d', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                          >{t.status === 'ACTIVE' ? 'Inactivar' : 'Reactivar'}</button>
+                        </>
                       )}
                     </td>
                   </tr>
