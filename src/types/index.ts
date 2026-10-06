@@ -155,6 +155,11 @@ export interface Order {
   quoted_price: number | string;
   currency: string;
   status: string;
+  customer_name?: string | null;
+  customer_email?: string | null;
+  tracking_code?: string | null;
+  box_status?: string | null;
+  shipped_at?: string | null;
   pickup_address?: {
     street?: string;
     city?: string;
