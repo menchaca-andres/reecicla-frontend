@@ -7,6 +7,7 @@ import { QuoteHistory } from './components/QuoteHistory';
 import { PricingRulesManager } from './components/PricingRulesManager';
 import { CatalogManager } from './components/CatalogManager';
 import { AdminManager } from './components/AdminManager';
+import { LogisticsManager } from './components/LogisticsManager';
 import type { User, Quote, AuthResponse } from './types';
 
 import { ApiService } from './services/api';
@@ -19,7 +20,7 @@ export function App() {
   const [user, setUser] = useState<User | null>(null);
 
   const [isAuthOpen, setIsAuthOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo'>('cotizar');
+  const [activeTab, setActiveTab] = useState<'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica'>('cotizar');
   const [latestQuote, setLatestQuote] = useState<Quote | null>(null);
 
   // Restore user session on mount
@@ -135,6 +136,24 @@ export function App() {
             <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '540px', margin: '0 auto' }}>
               <h3 style={{ fontSize: '20px', color: '#ffffff', marginBottom: '8px' }}>Acceso Restringido</h3>
               <p style={{ fontSize: '14px', color: '#9ca3af' }}>Solo el Super Administrador puede gestionar administradores de tenant.</p>
+            </div>
+          )
+        )}
+
+        {activeTab === 'logistica' && (
+          user && (user.role === 'TENANT_ADMIN' || user.role === 'CATALOG_ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'INSPECTOR') ? (
+            <LogisticsManager token={token} />
+          ) : (
+            <div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '540px', margin: '0 auto', background: '#ffffff' }}>
+              <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px', fontWeight: 700 }}>Acceso Restringido</h3>
+              <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>
+                La gestión de logística está reservada para personal autorizado y administradores.
+              </p>
+              {!user && (
+                <button onClick={() => setIsAuthOpen(true)} className="btn-primary">
+                  Iniciar Sesión
+                </button>
+              )}
             </div>
           )
         )}
