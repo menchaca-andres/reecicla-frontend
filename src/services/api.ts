@@ -1,4 +1,4 @@
-import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput } from '../types';
+import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order } from '../types';
 
 const GATEWAY_URL = 'http://localhost:3000';
 
@@ -162,13 +162,7 @@ export class ApiService {
     return json;
   }
 
-  static async getUserOrders(token: string): Promise<{ orders: Array<{
-    id: string;
-    quote_id: string;
-    order_number: string;
-    status: string;
-    created_at: string;
-  }> }> {
+  static async getUserOrders(token: string): Promise<{ orders: Order[] }> {
     const res = await fetch(`${GATEWAY_URL}/api/orders`, {
       method: 'GET',
       headers: this.getHeaders(token),
@@ -203,7 +197,17 @@ export class ApiService {
   }
 
   static async defineRule(
-    ruleData: { tenant_id: string; device_type: string; rule_key: string; rule_value: any },
+    ruleData: {
+      tenant_id: string;
+      device_type: string;
+      brand_id?: string;
+      brand_name?: string;
+      model?: string;
+      min_year?: number;
+      max_year?: number;
+      rule_key: string;
+      rule_value: any;
+    },
     token?: string
   ): Promise<{ message: string; rule: PricingRule }> {
     const res = await fetch(`${GATEWAY_URL}/api/quotation/rules`, {
