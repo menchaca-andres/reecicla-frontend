@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { History, RefreshCw, Cpu, Calendar } from 'lucide-react';
+import { History, RefreshCw, Cpu, Calendar, Check, PackageCheck } from 'lucide-react';
 import type { Quote } from '../types';
 import { ApiService } from '../services/api';
 
@@ -10,7 +10,10 @@ interface QuoteHistoryProps {
 
 export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
+  const [orders, setOrders] = useState<Array<{ id: string; quote_id: string; order_number: string; status: string; created_at: string }>>([]);
   const [loading, setLoading] = useState(true);
+  const [acceptingQuoteId, setAcceptingQuoteId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchHistory = async () => {
@@ -19,10 +22,29 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
     try {
       const res = await ApiService.getUserQuotes(tenantId, token);
       setQuotes(res.quotes);
+      const orderRes = await ApiService.getUserOrders(token);
+      setOrders(orderRes.orders);
     } catch (err: any) {
       setError(err.message || 'Error al obtener el historial');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAcceptQuote = async (quoteId: string) => {
+    setAcceptingQuoteId(quoteId);
+    setNotice(null);
+    setError(null);
+    try {
+      await ApiService.acceptQuote(quoteId, token);
+      setQuotes((current) => current.map((quote) =>
+        quote.id === quoteId ? { ...quote, status: 'ACCEPTED' } : quote
+      ));
+      setNotice('Cotización aceptada. La orden aparecerá cuando termine el procesamiento.');
+    } catch (err: any) {
+      setError(err.message || 'Error al aceptar la cotización');
+    } finally {
+      setAcceptingQuoteId(null);
     }
   };
 
@@ -59,9 +81,11 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
           <p style={{ fontSize: '14px', color: '#64748b' }}>Aún no registras cotizaciones en la plataforma.</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {quotes.map((q) => (
-            <div key={q.id} className="glass-card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', border: '1px solid #e2e8f0' }}>
+        <>
+          {notice && <p role="status" style={{ color: '#166534', fontSize: '13px', marginBottom: '14px' }}>{notice}</p>}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {quotes.map((q) => (
+              <div key={q.id} className="glass-card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', background: '#ffffff', border: '1px solid #e2e8f0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{ background: '#f0fdf4', padding: '10px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
                   <Cpu size={22} color="#16a34a" />
@@ -82,15 +106,42 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
                 </div>
               </div>
 
-              <div style={{ textAlign: 'right' }}>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Precio Ofrecido</p>
                 <p style={{ fontSize: '20px', fontWeight: 800, color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
                   <span style={{ fontSize: '14px' }}>Bs.</span>{Number(q.final_price).toFixed(2)}
                 </p>
+                {q.status === 'PENDING' && (
+                  <button
+                    type="button"
+                    onClick={() => handleAcceptQuote(q.id)}
+                    disabled={acceptingQuoteId !== null}
+                    className="btn-primary"
+                    style={{ marginTop: '8px', padding: '7px 10px', fontSize: '12px' }}
+                  >
+                    <Check size={14} /> {acceptingQuoteId === q.id ? 'Aceptando...' : 'Aceptar'}
+                  </button>
+                )}
               </div>
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+          {orders.length > 0 && (
+            <section style={{ marginTop: '28px' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', color: '#0f172a', marginBottom: '12px' }}>
+                <PackageCheck size={18} /> Mis órdenes
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {orders.map((order) => (
+                  <div key={order.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '12px 16px', border: '1px solid #e2e8f0', background: '#fff', borderRadius: '8px' }}>
+                    <strong style={{ color: '#0f172a' }}>{order.order_number}</strong>
+                    <span style={{ color: '#475569', fontSize: '13px' }}>{order.status}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </>
       )}
     </div>
   );
