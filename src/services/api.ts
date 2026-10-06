@@ -1,4 +1,4 @@
-import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem } from '../types';
+import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput } from '../types';
 
 const GATEWAY_URL = 'http://localhost:3000';
 
@@ -376,6 +376,34 @@ export class ApiService {
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al crear versión de regla de evaluación');
     return { rule: json.rule, message: json.message };
+  }
+
+  static async requestBox(
+    orderId: string,
+    address: CreateBoxRequestInput,
+    token: string
+  ): Promise<{ message: string; box_request: BoxRequest }> {
+    const res = await fetch(`${GATEWAY_URL}/api/orders/${encodeURIComponent(orderId)}/box-requests`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(address),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al solicitar caja');
+    return json;
+  }
+
+  static async getBoxRequests(
+    orderId: string,
+    token: string
+  ): Promise<{ box_requests: BoxRequest[] }> {
+    const res = await fetch(`${GATEWAY_URL}/api/orders/${encodeURIComponent(orderId)}/box-requests`, {
+      method: 'GET',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar solicitudes de caja');
+    return json;
   }
 }
 

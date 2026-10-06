@@ -118,3 +118,21 @@ export interface EvaluationRule {
   device_type_code?: string;
 }
 
+export interface CreateBoxRequestInput {
+  street: string;
+  city: string;
+  state: string;
+  zip_code: string;
+  notes?: string;
+}
+
+export interface BoxRequest {
+  id: string;
+  tenant_id: string;
+  order_id: string;
+  status: 'REQUESTED' | 'DISPATCHED' | 'DELIVERED' | 'CANCELLED';
+  tracking_number?: string;
+  requested_at: string;
+  updated_at: string;
+}
+
