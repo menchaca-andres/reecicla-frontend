@@ -47,11 +47,16 @@ export class ApiService {
 
   static async updateDeviceType(
     id: string,
-    data: { name: string; description?: string },
+    data: {
+      name?: string;
+      description?: string;
+      accepts_quotes?: boolean;
+      status?: 'ACTIVE' | 'INACTIVE';
+    },
     token: string
   ): Promise<{ device_type: DeviceType; deviceType: DeviceType }> {
     const res = await fetch(`${GATEWAY_URL}/api/catalog/device-types/${id}`, {
-      method: 'PATCH',
+      method: 'PUT',
       headers: this.getHeaders(token),
       body: JSON.stringify(data),
     });
@@ -65,16 +70,19 @@ export class ApiService {
     id: string,
     status: 'ACTIVE' | 'INACTIVE',
     token: string
-  ): Promise<{ device_type: DeviceType; deviceType: DeviceType }> {
-    const res = await fetch(`${GATEWAY_URL}/api/catalog/device-types/${id}/status`, {
-      method: 'PATCH',
+  ): Promise<void> {
+    if (status === 'INACTIVE') {
+      await this.inactivateDeviceType(id, token);
+      return;
+    }
+
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/device-types/${id}`, {
+      method: 'PUT',
       headers: this.getHeaders(token),
       body: JSON.stringify({ status }),
     });
     const json = await res.json();
-    if (!res.ok) throw new Error(json.error || 'Error al cambiar el estado del tipo');
-    const item = json.device_type || json.deviceType;
-    return { device_type: item, deviceType: item };
+    if (!res.ok) throw new Error(json.error || 'Error al reactivar el tipo de equipo');
   }
 
   static async inactivateDeviceType(id: string, token: string): Promise<void> {
