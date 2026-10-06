@@ -32,6 +32,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
   const [search, setSearch] = useState('');
 
   const [condition, setCondition] = useState('working');
+  const [idempotencyKey, setIdempotencyKey] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [loadingTypes, setLoadingTypes] = useState(true);
@@ -111,7 +112,10 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
         year: selectedDevice.year || undefined,
         condition,
       };
-      const res = await ApiService.createQuote(quoteData, token);
+      const requestKey = idempotencyKey || crypto.randomUUID();
+      setIdempotencyKey(requestKey);
+      const res = await ApiService.createQuote(quoteData, token, requestKey);
+      setIdempotencyKey(null);
       onQuoteCreated(res.quote);
     } catch (err: any) {
       setError(err.message || 'Error al calcular la cotización');
@@ -158,7 +162,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
                     type="button"
                     key={dev.id}
                     className={`device-card ${isSelected ? 'selected' : ''}`}
-                    onClick={() => setSelectedTypeCode(dev.code)}
+                    onClick={() => { setSelectedTypeCode(dev.code); setIdempotencyKey(null); }}
                     aria-pressed={isSelected}
                     style={{ color: 'inherit', font: 'inherit' }}
                   >
@@ -211,7 +215,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
                   return (
                     <div
                       key={dev.id}
-                      onClick={() => setSelectedDeviceId(dev.id)}
+                      onClick={() => { setSelectedDeviceId(dev.id); setIdempotencyKey(null); }}
                       style={{
                         padding: '10px 14px',
                         borderRadius: '8px',
@@ -261,7 +265,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
               return (
                 <div
                   key={cond.id}
-                  onClick={() => setCondition(cond.id)}
+                  onClick={() => { setCondition(cond.id); setIdempotencyKey(null); }}
                   style={{
                     padding: '12px 16px', borderRadius: '10px',
                     background: isSelected ? '#f8fafc' : '#ffffff',

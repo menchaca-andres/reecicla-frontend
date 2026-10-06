@@ -1,4 +1,4 @@
-import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem } from '../types';
+import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput } from '../types';
 
 const GATEWAY_URL = 'http://localhost:3000';
 
@@ -131,10 +131,10 @@ export class ApiService {
     return json;
   }
 
-  static async createQuote(quoteData: QuoteRequest, token: string): Promise<{ message: string; quote: Quote }> {
+  static async createQuote(quoteData: QuoteRequest, token: string, idempotencyKey: string): Promise<{ message: string; quote: Quote }> {
     const res = await fetch(`${GATEWAY_URL}/api/quotation/quotes`, {
       method: 'POST',
-      headers: this.getHeaders(token),
+      headers: { ...this.getHeaders(token), 'Idempotency-Key': idempotencyKey },
       body: JSON.stringify(quoteData),
     });
     const json = await res.json();
@@ -149,6 +149,32 @@ export class ApiService {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al consultar historial');
+    return json;
+  }
+
+  static async acceptQuote(quoteId: string, token: string): Promise<{ quote: Quote }> {
+    const res = await fetch(`${GATEWAY_URL}/api/quotation/quotes/${encodeURIComponent(quoteId)}/accept`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al aceptar la cotización');
+    return json;
+  }
+
+  static async getUserOrders(token: string): Promise<{ orders: Array<{
+    id: string;
+    quote_id: string;
+    order_number: string;
+    status: string;
+    created_at: string;
+  }> }> {
+    const res = await fetch(`${GATEWAY_URL}/api/orders`, {
+      method: 'GET',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar órdenes');
     return json;
   }
 
@@ -350,6 +376,34 @@ export class ApiService {
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al crear versión de regla de evaluación');
     return { rule: json.rule, message: json.message };
+  }
+
+  static async requestBox(
+    orderId: string,
+    address: CreateBoxRequestInput,
+    token: string
+  ): Promise<{ message: string; box_request: BoxRequest }> {
+    const res = await fetch(`${GATEWAY_URL}/api/orders/${encodeURIComponent(orderId)}/box-requests`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(address),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al solicitar caja');
+    return json;
+  }
+
+  static async getBoxRequests(
+    orderId: string,
+    token: string
+  ): Promise<{ box_requests: BoxRequest[] }> {
+    const res = await fetch(`${GATEWAY_URL}/api/orders/${encodeURIComponent(orderId)}/box-requests`, {
+      method: 'GET',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar solicitudes de caja');
+    return json;
   }
 }
 
