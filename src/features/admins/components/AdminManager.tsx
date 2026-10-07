@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserPlus, Building2, Mail, Lock, User as UserIcon, Phone, CheckCircle, AlertCircle } from 'lucide-react';
 import { ApiService } from '../../../services/api';
+import styles from '../AdminManager.module.css';
 
 interface AdminManagerProps {
   token: string | null;
@@ -66,22 +67,18 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
   };
 
   return (
-    <div style={{ maxWidth: '580px', margin: '0 auto', paddingTop: '32px' }}>
+    <div className={styles.container}>
       {/* Header */}
-      <div style={{ marginBottom: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-          <div style={{
-            background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-            width: '42px', height: '42px', borderRadius: '12px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+      <div className={styles.header}>
+        <div className={styles.headerRow}>
+          <div className={styles.headerIcon}>
             <UserPlus size={20} color="#ffffff" />
           </div>
           <div>
-            <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#ffffff', margin: 0 }}>
+            <h2 className={styles.title}>
               Gestión de Administradores
             </h2>
-            <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
+            <p className={styles.subtitle}>
               Crea administradores para cualquier tenant de la plataforma
             </p>
           </div>
@@ -90,56 +87,38 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
 
       {/* Success banner */}
       {created && (
-        <div style={{
-          background: 'rgba(22, 163, 74, 0.12)',
-          border: '1px solid rgba(22, 163, 74, 0.35)',
-          borderRadius: '12px',
-          padding: '16px 20px',
-          marginBottom: '20px',
-          display: 'flex',
-          gap: '12px',
-          alignItems: 'flex-start',
-        }}>
-          <CheckCircle size={20} color="#22c55e" style={{ flexShrink: 0, marginTop: '1px' }} />
+        <div className={styles.successBanner}>
+          <CheckCircle size={20} color="#22c55e" className={styles.successIcon} />
           <div>
-            <p style={{ fontSize: '14px', fontWeight: 600, color: '#22c55e', margin: '0 0 2px' }}>
+            <p className={styles.successTitle}>
               Administrador creado exitosamente
             </p>
-            <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>
-              <strong style={{ color: '#e2e8f0' }}>{created.email}</strong> asignado como{' '}
-              <strong style={{ color: '#a78bfa' }}>{created.role}</strong> en el tenant{' '}
-              <strong style={{ color: '#e2e8f0' }}>{created.tenant_id}</strong>
+            <p className={styles.successDesc}>
+              <strong className={styles.highlightText}>{created.email}</strong> asignado como{' '}
+              <strong className={styles.highlightRole}>{created.role}</strong> en el tenant{' '}
+              <strong className={styles.highlightText}>{created.tenant_id}</strong>
             </p>
           </div>
         </div>
       )}
 
       {/* Form card */}
-      <div className="glass-panel" style={{ padding: '28px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#e2e8f0', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+      <div className={`glass-panel ${styles.formCard}`}>
+        <h3 className={styles.cardTitle}>
           <UserPlus size={16} color="#7c3aed" /> Nuevo Administrador
         </h3>
 
         {error && (
-          <div style={{
-            background: 'rgba(220, 38, 38, 0.1)',
-            border: '1px solid rgba(220, 38, 38, 0.3)',
-            borderRadius: '8px',
-            padding: '10px 14px',
-            marginBottom: '16px',
-            display: 'flex',
-            gap: '8px',
-            alignItems: 'center',
-          }}>
+          <div className={styles.errorBanner}>
             <AlertCircle size={15} color="#f87171" />
-            <span style={{ fontSize: '13px', color: '#f87171' }}>{error}</span>
+            <span className={styles.errorText}>{error}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <form onSubmit={handleSubmit} className={styles.form}>
           {/* Tenant ID */}
           <div>
-            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
+            <label className={styles.label}>
               <Building2 size={12} color="#ea580c" /> ID del Tenant *
             </label>
             <input
@@ -154,7 +133,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
 
           {/* Role selector */}
           <div>
-            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
+            <label className={styles.label}>
               <UserIcon size={12} color="#7c3aed" /> Rol Asignado *
             </label>
             <select
@@ -171,7 +150,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
 
           {/* Name */}
           <div>
-            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
+            <label className={styles.label}>
               <UserIcon size={12} color="#2563eb" /> Nombre Completo
             </label>
             <input
@@ -185,7 +164,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
 
           {/* Phone */}
           <div>
-            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
+            <label className={styles.label}>
               <Phone size={12} color="#16a34a" /> Celular / Teléfono
             </label>
             <input
@@ -199,7 +178,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
 
           {/* Email */}
           <div>
-            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
+            <label className={styles.label}>
               <Mail size={12} color="#2563eb" /> Correo Electrónico *
             </label>
             <input
@@ -214,7 +193,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
 
           {/* Password */}
           <div>
-            <label style={{ fontSize: '12px', color: '#94a3b8', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '5px' }}>
+            <label className={styles.label}>
               <Lock size={12} color="#2563eb" /> Contraseña *
             </label>
             <input
@@ -228,12 +207,11 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+          <div className={styles.buttonRow}>
             <button
               type="submit"
-              className="btn-primary"
+              className={`btn-primary ${styles.submitBtn}`}
               disabled={loading}
-              style={{ flex: 1, padding: '12px' }}
             >
               {loading ? 'Creando...' : 'Crear Administrador'}
             </button>
@@ -241,16 +219,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
               <button
                 type="button"
                 onClick={resetForm}
-                style={{
-                  padding: '12px 16px',
-                  background: 'rgba(148, 163, 184, 0.1)',
-                  border: '1px solid rgba(148, 163, 184, 0.2)',
-                  borderRadius: '10px',
-                  color: '#94a3b8',
-                  fontSize: '13px',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                }}
+                className={styles.clearBtn}
               >
                 Limpiar
               </button>
@@ -260,16 +229,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
       </div>
 
       {/* Info note */}
-      <div style={{
-        marginTop: '16px',
-        background: 'rgba(124, 58, 237, 0.08)',
-        border: '1px solid rgba(124, 58, 237, 0.2)',
-        borderRadius: '10px',
-        padding: '12px 16px',
-        fontSize: '12px',
-        color: '#a78bfa',
-        lineHeight: '1.5',
-      }}>
+      <div className={styles.infoNote}>
         <strong>Nota:</strong> Solo el <code>SUPER_ADMIN</code> puede crear usuarios con roles administrativos (<code>TENANT_ADMIN</code>, <code>CATALOG_ADMIN</code>, <code>INSPECTOR</code>).
       </div>
     </div>

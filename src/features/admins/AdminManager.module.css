@@ -1,0 +1,155 @@
+.container {
+  max-width: 580px;
+  margin: 0 auto;
+  padding-top: 32px;
+}
+
+.header {
+  margin-bottom: 28px;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.headerIcon {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.successBanner {
+  background: rgba(22, 163, 74, 0.12);
+  border: 1px solid rgba(22, 163, 74, 0.35);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.successIcon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.successTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #22c55e;
+  margin: 0 0 2px;
+}
+
+.successDesc {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.highlightText {
+  color: #e2e8f0;
+}
+
+.highlightRole {
+  color: #a78bfa;
+}
+
+.formCard {
+  padding: 28px;
+}
+
+.cardTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.errorBanner {
+  background: rgba(220, 38, 38, 0.1);
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.errorText {
+  font-size: 13px;
+  color: #f87171;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.label {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+
+.buttonRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.submitBtn {
+  flex: 1;
+  padding: 12px;
+}
+
+.clearBtn {
+  padding: 12px 16px;
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.infoNote {
+  margin-top: 16px;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 12px;
+  color: #a78bfa;
+  line-height: 1.5;
+}

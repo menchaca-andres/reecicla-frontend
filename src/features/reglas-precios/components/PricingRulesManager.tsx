@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Settings, Save, AlertCircle, CheckCircle2, RefreshCw, Tag, Cpu } from 'lucide-react';
 import { ApiService } from '../../../services/api';
 import type { PricingRule, DeviceBrand, Device } from '../../../types';
+import styles from '../PricingRulesManager.module.css';
 
 interface PricingRulesManagerProps {
   tenantId: string;
@@ -176,35 +177,35 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
   }, {});
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+    <div className={styles.container}>
 
       {/* ── FORM ── */}
-      <div className="glass-panel" style={{ padding: '32px', background: '#ffffff' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-          <div style={{ background: '#eff6ff', padding: '10px', borderRadius: '12px', color: '#2563eb', border: '1px solid #bfdbfe' }}>
+      <div className={`glass-panel ${styles.formCard}`}>
+        <div className={styles.headerRow}>
+          <div className={styles.headerIcon}>
             <Settings size={22} />
           </div>
           <div>
-            <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>Reglas de Valoración</h2>
-            <p style={{ fontSize: '13px', color: '#64748b' }}>Configura precios base y descuentos por tipo, marca, modelo y año (Bs.)</p>
+            <h2 className={styles.title}>Reglas de Valoración</h2>
+            <p className={styles.subtitle}>Configura precios base y descuentos por tipo, marca, modelo y año (Bs.)</p>
           </div>
         </div>
 
         {message && (
-          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#16a34a', padding: '12px 16px', borderRadius: '10px', fontSize: '13px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className={styles.alertSuccess}>
             <CheckCircle2 size={16} /> {message}
           </div>
         )}
         {error && (
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '12px 16px', borderRadius: '10px', fontSize: '13px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div className={styles.alertError}>
             <AlertCircle size={16} /> {error}
           </div>
         )}
 
-        <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+        <form onSubmit={handleSave} className={styles.form}>
+          <div className={styles.grid2}>
             <div>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+              <label className={styles.label}>
                 Tipo de Dispositivo *
               </label>
               <select className="input-field" value={deviceType} onChange={(e) => {
@@ -218,7 +219,7 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
             </div>
 
             <div>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+              <label className={styles.label}>
                 Marca (Opcional)
               </label>
               {brands.length > 0 ? (
@@ -244,9 +245,9 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '14px' }}>
+          <div className={styles.grid2_1}>
             <div>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+              <label className={styles.label}>
                 Modelo Específico (Opcional)
               </label>
               {devices.length > 0 ? (
@@ -269,7 +270,7 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
             </div>
 
             <div>
-              <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+              <label className={styles.label}>
                 Año (Opcional)
               </label>
               <input
@@ -283,7 +284,7 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
           </div>
 
           <div>
-            <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', display: 'block', marginBottom: '4px' }}>
+            <label className={styles.label}>
               Precio Base (Bs.) *
             </label>
             <input
@@ -295,27 +296,27 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
             />
           </div>
 
-          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px' }}>
-            <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a', marginBottom: '10px' }}>
+          <div className={styles.conditionSection}>
+            <h4 className={styles.conditionTitle}>
               Ajustes por Condición (Bs.)
             </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+            <div className={styles.grid3}>
               <div>
-                <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Excelente (working)</label>
+                <label className={styles.labelSmall}>Excelente (working)</label>
                 <input type="text" inputMode="numeric" className="input-field" value={workingAdj} onChange={(e) => setWorkingAdj(e.target.value)} />
               </div>
               <div>
-                <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Detalles (damaged)</label>
+                <label className={styles.labelSmall}>Detalles (damaged)</label>
                 <input type="text" inputMode="numeric" className="input-field" value={damagedAdj} onChange={(e) => setDamagedAdj(e.target.value)} />
               </div>
               <div>
-                <label style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Averiado (broken)</label>
+                <label className={styles.labelSmall}>Averiado (broken)</label>
                 <input type="text" inputMode="numeric" className="input-field" value={brokenAdj} onChange={(e) => setBrokenAdj(e.target.value)} />
               </div>
             </div>
           </div>
 
-          <button type="submit" className="btn-primary" disabled={loading} style={{ padding: '12px', marginTop: '4px' }}>
+          <button type="submit" className={`btn-primary ${styles.saveBtn}`} disabled={loading}>
             <Save size={16} /> {loading ? 'Guardando...' : 'Guardar Regla de Valoración'}
           </button>
         </form>
@@ -323,14 +324,14 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
 
       {/* ── RULES TABLE ── */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className={styles.rulesHeader}>
+          <div className={styles.rulesHeaderLeft}>
             <Tag size={16} color="#2563eb" />
-            <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+            <h3 className={styles.sectionTitle}>
               Reglas Configuradas
             </h3>
             {rules.length > 0 && (
-              <span style={{ background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', borderRadius: '20px', fontSize: '11px', fontWeight: 700, padding: '2px 8px' }}>
+              <span className={styles.countBadge}>
                 {rules.length}
               </span>
             )}
@@ -339,7 +340,7 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
             onClick={loadRules}
             disabled={rulesLoading}
             title="Actualizar"
-            style={{ background: 'none', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '12px' }}
+            className={styles.refreshBtn}
           >
             <RefreshCw size={13} style={{ animation: rulesLoading ? 'spin 1s linear infinite' : 'none' }} />
             Actualizar
@@ -347,61 +348,61 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
         </div>
 
         {rulesLoading ? (
-          <div style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', fontSize: '13px' }}>
+          <div className={styles.loadingText}>
             Cargando reglas...
           </div>
         ) : rules.length === 0 ? (
-          <div className="glass-panel" style={{ padding: '32px', textAlign: 'center', background: '#f8fafc' }}>
+          <div className={`glass-panel ${styles.emptyCard}`}>
             <Settings size={28} color="#cbd5e1" style={{ marginBottom: '8px' }} />
-            <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>
+            <p className={styles.emptyText}>
               Aún no hay reglas configuradas para este tenant.
             </p>
           </div>
         ) : (
           Object.entries(groupedRules).map(([device, deviceRules]) => (
-            <div key={device} className="glass-panel" style={{ marginBottom: '12px', padding: '0', overflow: 'hidden', background: '#ffffff' }}>
+            <div key={device} className={`glass-panel ${styles.deviceGroupCard}`}>
               {/* Device header */}
-              <div style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className={styles.deviceHeader}>
                 <Cpu size={14} color="#2563eb" />
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#0f172a' }}>
+                <span className={styles.deviceName}>
                   {deviceTypes.find((dt) => dt.code === device)?.name || device}
                 </span>
-                <span style={{ fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace' }}>({device})</span>
+                <span className={styles.deviceCode}>({device})</span>
               </div>
 
               {/* Rules rows */}
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <table className={styles.table}>
                 <thead>
-                  <tr style={{ background: '#f8fafc' }}>
-                    <th style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Criterios Específicos</th>
-                    <th style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Tipo de Regla</th>
-                    <th style={{ padding: '8px 16px', fontSize: '11px', fontWeight: 700, color: '#64748b', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e2e8f0' }}>Valor</th>
+                  <tr className={styles.theadTr}>
+                    <th className={styles.th}>Criterios Específicos</th>
+                    <th className={styles.th}>Tipo de Regla</th>
+                    <th className={styles.th}>Valor</th>
                   </tr>
                 </thead>
                 <tbody>
                   {deviceRules.map((rule, i) => (
-                    <tr key={rule.id} style={{ borderBottom: i < deviceRules.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                      <td style={{ padding: '11px 16px', fontSize: '12px', color: '#334155' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                          <span style={{ fontWeight: 600, color: '#0f172a' }}>
+                    <tr key={rule.id} className={styles.tbodyTr} style={{ borderBottom: i < deviceRules.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
+                      <td className={styles.td}>
+                        <div className={styles.criteriaWrapper}>
+                          <span className={styles.brandText}>
                             {rule.brand_name || 'Todas las marcas'}
                           </span>
                           {rule.model && (
-                            <span style={{ background: '#eff6ff', color: '#1d4ed8', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 }}>
+                            <span className={styles.modelBadge}>
                               Mod: {rule.model}
                             </span>
                           )}
                           {(rule.min_year || rule.max_year) && (
-                            <span style={{ background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px', fontSize: '11px' }}>
+                            <span className={styles.yearBadge}>
                               Años: {rule.min_year || '*'}-{rule.max_year || '*'}
                             </span>
                           )}
                         </div>
                       </td>
-                      <td style={{ padding: '11px 16px', fontSize: '12px', fontWeight: 600, color: '#0f172a' }}>
+                      <td className={styles.tdBold}>
                         {RULE_KEY_LABELS[rule.rule_key] ?? rule.rule_key}
                       </td>
-                      <td style={{ padding: '11px 16px', fontSize: '12px', color: '#334155', fontFamily: 'monospace', background: '#fafafa' }}>
+                      <td className={styles.tdMono}>
                         {formatRuleValue(rule.rule_key, rule.rule_value)}
                       </td>
                     </tr>

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Truck, Box, RefreshCw, AlertCircle, CheckCircle2, Search, X } from 'lucide-react';
 import { ApiService } from '../../../services/api';
 import type { Order } from '../../../types';
+import styles from '../LogisticsManager.module.css';
 
 interface LogisticsManagerProps {
   token: string | null;
@@ -85,40 +86,40 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
   };
 
   return (
-    <div style={{ maxWidth: '960px', margin: '0 auto', paddingTop: '16px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div className={styles.container}>
 
       {/* ── HEADER ── */}
-      <div className="glass-panel" style={{ padding: '28px 32px', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          <div style={{ background: '#f0fdf4', padding: '12px', borderRadius: '14px', color: '#16a34a', border: '1px solid #bbf7d0' }}>
+      <div className={`glass-panel ${styles.headerCard}`}>
+        <div className={styles.headerLeft}>
+          <div className={styles.headerIcon}>
             <Truck size={24} />
           </div>
           <div>
-            <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>Gestión de Logística y Envíos (HU-013)</h2>
-            <p style={{ fontSize: '13px', color: '#64748b', marginTop: '2px' }}>
+            <h2 className={styles.title}>Gestión de Logística y Envíos (HU-013)</h2>
+            <p className={styles.subtitle}>
               Registra guías de rastreo y actualiza estados de envío para las cajas solicitadas por clientes.
             </p>
           </div>
         </div>
 
-        <button onClick={fetchOrders} className="btn-secondary" style={{ padding: '8px 14px', fontSize: '13px' }}>
+        <button onClick={fetchOrders} className={`btn-secondary ${styles.refreshBtn}`}>
           <RefreshCw size={14} /> Actualizar
         </button>
       </div>
 
       {successMsg && (
-        <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d', padding: '14px 18px', borderRadius: '10px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className={styles.alertSuccess}>
           <CheckCircle2 size={18} /> {successMsg}
         </div>
       )}
       {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '14px 18px', borderRadius: '10px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className={styles.alertError}>
           <AlertCircle size={18} /> {error}
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <div className={styles.filterRow}>
+        <span className={styles.filterLabel}>
           <Search size={14} /> Filtrar Estado:
         </span>
         {[
@@ -130,17 +131,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
           <button
             key={f.code}
             onClick={() => setStatusFilter(f.code)}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '20px',
-              fontSize: '12px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              border: statusFilter === f.code ? '1px solid #2563eb' : '1px solid #cbd5e1',
-              background: statusFilter === f.code ? '#eff6ff' : '#ffffff',
-              color: statusFilter === f.code ? '#1d4ed8' : '#64748b',
-              transition: 'all 0.15s ease',
-            }}
+            className={statusFilter === f.code ? styles.filterChipActive : styles.filterChip}
           >
             {f.label}
           </button>
@@ -148,59 +139,59 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '48px', color: '#64748b' }}>Cargando órdenes de logística...</div>
+        <div className={styles.loadingText}>Cargando órdenes de logística...</div>
       ) : filteredOrders.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '48px', background: '#f8fafc', borderRadius: '14px', border: '1px dashed #cbd5e1' }}>
-          <p style={{ fontSize: '14px', color: '#64748b' }}>No se encontraron órdenes con el filtro seleccionado.</p>
+        <div className={styles.emptyBox}>
+          <p className={styles.emptyText}>No se encontraron órdenes con el filtro seleccionado.</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div className={styles.orderList}>
           {filteredOrders.map((order) => {
             const st = statusMap[order.status] || { label: order.status, bg: '#f1f5f9', color: '#334155', border: '#cbd5e1' };
 
             return (
-              <div key={order.id} className="glass-card" style={{ padding: '20px 24px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '14px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div key={order.id} className={`glass-card ${styles.orderCard}`}>
 
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <strong style={{ fontSize: '17px', color: '#0f172a', fontFamily: 'monospace' }}>{order.order_number}</strong>
-                    <span style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700, background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
+                <div className={styles.orderCardHeader}>
+                  <div className={styles.orderNumberGroup}>
+                    <strong className={styles.orderNumber}>{order.order_number}</strong>
+                    <span className={styles.statusBadge} style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
                       {st.label}
                     </span>
                   </div>
-                  <span style={{ fontSize: '12px', color: '#64748b' }}>
+                  <span className={styles.customerText}>
                     Cliente: <strong>{order.customer_name || 'Cliente'}</strong> ({order.customer_email || '—'})
                   </span>
                 </div>
 
                 {/* Details Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr', gap: '16px', alignItems: 'center' }}>
+                <div className={styles.detailsGrid}>
                   <div>
-                    <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Equipo</p>
-                    <p style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginTop: '2px' }}>
+                    <p className={styles.fieldCategory}>Equipo</p>
+                    <p className={styles.deviceTitle}>
                       {order.device_type_name} {order.brand ? `• ${order.brand}` : ''} {order.model ? `(${order.model})` : ''}
                     </p>
-                    <p style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>
+                    <p className={styles.priceText}>
                       Monto: <strong style={{ color: '#16a34a' }}>{order.currency === 'BOB' || order.currency === 'Bs' ? 'Bs.' : order.currency} {Number(order.quoted_price).toFixed(2)}</strong>
                     </p>
                   </div>
 
                   <div>
-                    <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase' }}>Dirección de Recojo</p>
+                    <p className={styles.fieldCategory}>Dirección de Recojo</p>
                     {order.pickup_address ? (
-                      <p style={{ fontSize: '12px', color: '#1e293b', marginTop: '2px', lineHeight: '1.4' }}>
+                      <p className={styles.addressText}>
                         📍 {order.pickup_address.street}, {order.pickup_address.city} ({order.pickup_address.state})
-                        {order.pickup_address.notes && <span style={{ display: 'block', color: '#64748b', fontSize: '11px' }}>Notas: {order.pickup_address.notes}</span>}
+                        {order.pickup_address.notes && <span className={styles.addressNotes}>Notas: {order.pickup_address.notes}</span>}
                       </p>
                     ) : (
-                      <p style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>Sin dirección registrada aún</p>
+                      <p className={styles.noAddress}>Sin dirección registrada aún</p>
                     )}
                   </div>
 
-                  <div style={{ justifySelf: 'end', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                  <div className={styles.actionsColumn}>
                     {order.tracking_code && (
-                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#6b21a8', background: '#faf5ff', padding: '4px 10px', borderRadius: '6px', border: '1px solid #e9d5ff', fontFamily: 'monospace' }}>
+                      <span className={styles.trackingBadge}>
                         📦 Guía: {order.tracking_code}
                       </span>
                     )}
@@ -208,8 +199,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                     {(order.status === 'BOX_REQUESTED' || order.status === 'ACCEPTED' || order.status === 'BOX_SHIPPED') && (
                       <button
                         onClick={() => handleOpenDispatchModal(order)}
-                        className="btn-primary"
-                        style={{ padding: '8px 14px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        className={`btn-primary ${styles.dispatchBtn}`}
                       >
                         <Box size={14} /> {order.tracking_code ? 'Editar Guía / Tracking' : 'Registrar Guía de Envío'}
                       </button>
@@ -224,43 +214,24 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
       )}
 
       {selectedOrder && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.6)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: '#ffffff',
-            borderRadius: '16px',
-            padding: '28px',
-            maxWidth: '480px',
-            width: '100%',
-            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>
                 <Truck size={20} color="#2563eb" /> Registrar Despacho / Guía
               </h3>
-              <button onClick={() => setSelectedOrder(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}>
+              <button onClick={() => setSelectedOrder(null)} className={styles.modalCloseBtn}>
                 <X size={20} />
               </button>
             </div>
 
-            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>
+            <p className={styles.modalSubText}>
               Orden: <strong style={{ color: '#0f172a' }}>{selectedOrder.order_number}</strong> ({selectedOrder.device_type_name})
             </p>
 
-            <form onSubmit={handleDispatchSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <form onSubmit={handleDispatchSubmit} className={styles.modalForm}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                <label className={styles.label}>
                   Número de Guía / Código de Tracking *
                 </label>
                 <input
@@ -269,12 +240,12 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                   value={trackingCodeInput}
                   onChange={(e) => setTrackingCodeInput(e.target.value)}
                   placeholder="Ej: DHL-882391 / TRACK-00123"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px', fontFamily: 'monospace' }}
+                  className={styles.inputMonospace}
                 />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                <label className={styles.label}>
                   Nuevo Estado de la Orden *
                 </label>
                 <select
@@ -287,7 +258,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                 </select>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+              <div className={styles.modalActions}>
                 <button
                   type="button"
                   onClick={() => setSelectedOrder(null)}

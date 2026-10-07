@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Package, Sparkles, AlertCircle, Search } from 'lucide-react';
 import type { QuoteRequest, Quote, DeviceType, Device } from '../../../types';
 import { ApiService } from '../../../services/api';
+import styles from '../QuotationWizard.module.css';
 
 interface QuotationWizardProps {
   tenantId: string;
@@ -125,34 +126,34 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
   };
 
   return (
-    <div className="glass-panel animate-fade-in" style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', background: '#ffffff', borderRadius: '24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '28px' }}>
-        <div style={{ background: 'rgba(0, 113, 227, 0.08)', padding: '12px', borderRadius: '16px', color: '#0071e3' }}>
+    <div className={`glass-panel animate-fade-in ${styles.wizardCard}`}>
+      <div className={styles.headerRow}>
+        <div className={styles.headerIcon}>
           <Sparkles size={24} />
         </div>
         <div>
-          <h2 style={{ fontSize: '22px', fontWeight: 600, color: '#1d1d1f', letterSpacing: '-0.02em' }}>Solicitar Cotización de Equipo</h2>
-          <p style={{ fontSize: '13px', color: '#86868b', marginTop: '2px' }}>Seleccioná el equipo del catálogo y su condición actual</p>
+          <h2 className={styles.title}>Solicitar Cotización de Equipo</h2>
+          <p className={styles.subtitle}>Seleccioná el equipo del catálogo y su condición actual</p>
         </div>
       </div>
 
       {error && (
-        <div style={{ background: 'rgba(255, 59, 48, 0.08)', border: '1px solid rgba(255, 59, 48, 0.2)', color: '#ff3b30', padding: '12px 16px', borderRadius: '14px', fontSize: '13px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div className={styles.alertError}>
           <AlertCircle size={16} /> {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <form onSubmit={handleSubmit} className={styles.form}>
 
         {/* Step 1 — Tipo de dispositivo */}
         <div>
-          <label style={{ fontSize: '14px', fontWeight: 600, color: '#1d1d1f', display: 'block', marginBottom: '12px' }}>
+          <label className={styles.stepLabel}>
             1. Tipo de Dispositivo
           </label>
           {loadingTypes ? (
-            <p role="status" style={{ color: '#86868b', fontSize: '13px' }}>Cargando tipos de equipo...</p>
+            <p role="status" className={styles.statusText}>Cargando tipos de equipo...</p>
           ) : deviceTypes.length === 0 ? (
-            <p role="status" style={{ color: '#86868b', fontSize: '13px' }}>No hay tipos activos disponibles.</p>
+            <p role="status" className={styles.statusText}>No hay tipos activos disponibles.</p>
           ) : (
             <div className="device-grid">
               {deviceTypes.map((dev) => {
@@ -167,7 +168,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
                     style={{ color: 'inherit', font: 'inherit' }}
                   >
                     <Package size={26} color={isSelected ? '#0071e3' : '#86868b'} style={{ marginBottom: '8px' }} />
-                    <span style={{ fontSize: '13px', fontWeight: 500, textAlign: 'center', color: isSelected ? '#1d1d1f' : '#6e6e73' }}>
+                    <span className={styles.cardButtonText} style={{ color: isSelected ? '#1d1d1f' : '#6e6e73' }}>
                       {dev.name}
                     </span>
                   </button>
@@ -179,35 +180,34 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
 
         {/* Step 2 — Seleccionar device del catálogo */}
         <div>
-          <label style={{ fontSize: '14px', fontWeight: 600, color: '#1d1d1f', display: 'block', marginBottom: '12px' }}>
+          <label className={styles.stepLabel}>
             2. Seleccionar Modelo del Catálogo
           </label>
 
           {loadingDevices ? (
-            <p style={{ color: '#86868b', fontSize: '13px' }}>Cargando modelos disponibles...</p>
+            <p className={styles.statusText}>Cargando modelos disponibles...</p>
           ) : devices.length === 0 ? (
-            <div style={{ padding: '16px', background: 'rgba(255, 149, 0, 0.08)', borderRadius: '14px', border: '1px solid rgba(255, 149, 0, 0.2)', fontSize: '13px', color: '#ff9500' }}>
+            <div className={styles.emptyWarning}>
               No hay dispositivos registrados para este tipo. Contactá al administrador.
             </div>
           ) : (
             <>
               {/* Buscador */}
-              <div style={{ position: 'relative', marginBottom: '12px' }}>
-                <Search size={14} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#86868b' }} />
+              <div className={styles.searchContainer}>
+                <Search size={14} className={styles.searchIcon} />
                 <input
                   type="text"
-                  className="input-field"
+                  className={`input-field ${styles.searchInput}`}
                   placeholder="Buscar por marca, modelo o año..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  style={{ paddingLeft: '36px', fontSize: '13px' }}
                 />
               </div>
 
               {/* Lista de devices */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px', maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
+              <div className={styles.deviceListGrid}>
                 {filteredDevices.length === 0 ? (
-                  <p style={{ fontSize: '13px', color: '#86868b', textAlign: 'center', padding: '16px', gridColumn: '1 / -1' }}>
+                  <p className={styles.emptySearch}>
                     Sin resultados para "{search}"
                   </p>
                 ) : filteredDevices.map((dev) => {
@@ -216,37 +216,22 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
                     <div
                       key={dev.id}
                       onClick={() => { setSelectedDeviceId(dev.id); setIdempotencyKey(null); }}
-                      style={{
-                        padding: '14px 16px',
-                        borderRadius: '14px',
-                        border: `1px solid ${isSelected ? '#0071e3' : 'rgba(0, 0, 0, 0.08)'}`,
-                        background: isSelected ? 'rgba(0, 113, 227, 0.04)' : '#ffffff',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                      }}
+                      className={isSelected ? styles.deviceRowSelected : styles.deviceRow}
                     >
                       <div>
-                        <span style={{ fontSize: '14px', fontWeight: 600, color: isSelected ? '#0071e3' : '#1d1d1f' }}>
+                        <span className={isSelected ? styles.deviceNameSelected : styles.deviceName}>
                           {dev.brand_name} {dev.model}
                         </span>
                         {dev.year && (
-                          <span style={{ fontSize: '12px', color: '#86868b', marginLeft: '8px' }}>
+                          <span className={styles.deviceYear}>
                             ({dev.year})
                           </span>
                         )}
                         {dev.description && (
-                          <p style={{ fontSize: '12px', color: '#86868b', margin: '2px 0 0' }}>{dev.description}</p>
+                          <p className={styles.deviceDesc}>{dev.description}</p>
                         )}
                       </div>
-                      <div style={{
-                        width: '18px', height: '18px', borderRadius: '50%', flexShrink: 0,
-                        border: `2px solid ${isSelected ? '#0071e3' : '#86868b'}`,
-                        background: isSelected ? '#0071e3' : 'transparent',
-                        transition: 'all 0.2s ease',
-                      }} />
+                      <div className={isSelected ? styles.radioDotSelected : styles.radioDot} />
                     </div>
                   );
                 })}
@@ -257,34 +242,23 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
 
         {/* Step 3 — Condición */}
         <div>
-          <label style={{ fontSize: '14px', fontWeight: 600, color: '#1d1d1f', display: 'block', marginBottom: '12px' }}>
+          <label className={styles.stepLabel}>
             3. Condición Declarada del Equipo
           </label>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
+          <div className={styles.conditionGrid}>
             {CONDITIONS.map((cond) => {
               const isSelected = condition === cond.id;
               return (
                 <div
                   key={cond.id}
                   onClick={() => { setCondition(cond.id); setIdempotencyKey(null); }}
-                  style={{
-                    padding: '14px 18px', borderRadius: '14px',
-                    background: isSelected ? 'rgba(0, 113, 227, 0.04)' : '#ffffff',
-                    border: `1px solid ${isSelected ? '#0071e3' : 'rgba(0, 0, 0, 0.08)'}`,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                  }}
+                  className={isSelected ? styles.conditionRowSelected : styles.conditionRow}
                 >
                   <div>
-                    <p style={{ fontSize: '14px', fontWeight: 600, color: isSelected ? '#0071e3' : '#1d1d1f' }}>{cond.label}</p>
-                    <p style={{ fontSize: '12px', color: '#86868b', marginTop: '2px' }}>{cond.desc}</p>
+                    <p className={isSelected ? styles.conditionLabelSelected : styles.conditionLabel}>{cond.label}</p>
+                    <p className={styles.conditionDesc}>{cond.desc}</p>
                   </div>
-                  <div style={{
-                    width: '18px', height: '18px', borderRadius: '50%',
-                    border: `2px solid ${isSelected ? '#0071e3' : '#86868b'}`,
-                    background: isSelected ? '#0071e3' : 'transparent',
-                    transition: 'all 0.2s ease',
-                  }} />
+                  <div className={isSelected ? styles.radioDotSelected : styles.radioDot} />
                 </div>
               );
             })}
@@ -293,7 +267,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
 
         {/* Summary del device seleccionado */}
         {selectedDevice && (
-          <div style={{ background: 'rgba(52, 199, 89, 0.08)', border: '1px solid rgba(52, 199, 89, 0.2)', borderRadius: '14px', padding: '14px 18px', fontSize: '13px', color: '#248a3d' }}>
+          <div className={styles.summaryBox}>
             <strong>Equipo seleccionado:</strong> {selectedDevice.brand_name} {selectedDevice.model}
             {selectedDevice.year ? ` (${selectedDevice.year})` : ''} — {selectedDevice.device_type_name}
           </div>
@@ -301,9 +275,8 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
 
         <button
           type="submit"
-          className="btn-primary"
+          className={`btn-primary ${styles.submitBtn}`}
           disabled={loading || loadingTypes || !selectedDeviceId}
-          style={{ padding: '14px', fontSize: '15px', width: '100%', marginTop: '8px' }}
         >
           {loading ? 'Calculando Cotización...' : 'Calcular Precio de Cotización (Bs.)'}
         </button>

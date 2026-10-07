@@ -1,0 +1,256 @@
+.wizardCard {
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 24px;
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.headerIcon {
+  background: rgba(0, 113, 227, 0.08);
+  padding: 12px;
+  border-radius: 16px;
+  color: #0071e3;
+  display: flex;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1d1d1f;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #86868b;
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+
+.alertError {
+  background: rgba(255, 59, 48, 0.08);
+  border: 1px solid rgba(255, 59, 48, 0.2);
+  color: #ff3b30;
+  padding: 12px 16px;
+  border-radius: 14px;
+  font-size: 13px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.stepLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.statusText {
+  color: #86868b;
+  font-size: 13px;
+  margin: 0;
+}
+
+.cardButtonText {
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.emptyWarning {
+  padding: 16px;
+  background: rgba(255, 149, 0, 0.08);
+  border-radius: 14px;
+  border: 1px solid rgba(255, 149, 0, 0.2);
+  font-size: 13px;
+  color: #ff9500;
+}
+
+.searchContainer {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #86868b;
+}
+
+.searchInput {
+  padding-left: 36px;
+  font-size: 13px;
+}
+
+.deviceListGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.emptySearch {
+  font-size: 13px;
+  color: #86868b;
+  text-align: center;
+  padding: 16px;
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.deviceRow {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.deviceRowSelected {
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid #0071e3;
+  background: rgba(0, 113, 227, 0.04);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.deviceName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+}
+
+.deviceNameSelected {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0071e3;
+}
+
+.deviceYear {
+  font-size: 12px;
+  color: #86868b;
+  margin-left: 8px;
+}
+
+.deviceDesc {
+  font-size: 12px;
+  color: #86868b;
+  margin: 2px 0 0;
+}
+
+.radioDot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid #86868b;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.radioDotSelected {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid #0071e3;
+  background: #0071e3;
+  transition: all 0.2s ease;
+}
+
+.conditionGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.conditionRow {
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.conditionRowSelected {
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: rgba(0, 113, 227, 0.04);
+  border: 1px solid #0071e3;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.conditionLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1d1f;
+  margin: 0;
+}
+
+.conditionLabelSelected {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0071e3;
+  margin: 0;
+}
+
+.conditionDesc {
+  font-size: 12px;
+  color: #86868b;
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+
+.summaryBox {
+  background: rgba(52, 199, 89, 0.08);
+  border: 1px solid rgba(52, 199, 89, 0.2);
+  border-radius: 14px;
+  padding: 14px 18px;
+  font-size: 13px;
+  color: #248a3d;
+}
+
+.submitBtn {
+  padding: 14px;
+  font-size: 15px;
+  width: 100%;
+  margin-top: 8px;
+}

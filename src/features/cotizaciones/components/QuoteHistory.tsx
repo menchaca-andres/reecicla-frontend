@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { History, RefreshCw, Cpu, Calendar, Check, PackageCheck, Box, X } from 'lucide-react';
 import type { Quote, Order, CreateBoxRequestInput } from '../../../types';
 import { ApiService } from '../../../services/api';
+import styles from '../QuoteHistory.module.css';
 
 interface QuoteHistoryProps {
   tenantId: string;
@@ -84,73 +85,72 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
   }, [tenantId, token]);
 
   return (
-    <div className="glass-panel animate-fade-in" style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', background: '#ffffff', borderRadius: '24px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ background: '#eff6ff', padding: '10px', borderRadius: '12px', color: '#2563eb', border: '1px solid #bfdbfe' }}>
+    <div className={`glass-panel animate-fade-in ${styles.card}`}>
+      <div className={styles.headerRow}>
+        <div className={styles.headerLeft}>
+          <div className={styles.headerIcon}>
             <History size={22} />
           </div>
           <div>
-            <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>Mis Cotizaciones Guardadas</h2>
-            <p style={{ fontSize: '13px', color: '#64748b' }}>Historial de solicitudes asociadas a tu usuario</p>
+            <h2 className={styles.title}>Mis Cotizaciones Guardadas</h2>
+            <p className={styles.subtitle}>Historial de solicitudes asociadas a tu usuario</p>
           </div>
         </div>
 
-        <button onClick={fetchHistory} className="btn-secondary" style={{ padding: '8px 14px', fontSize: '13px' }}>
+        <button onClick={fetchHistory} className={`btn-secondary ${styles.refreshBtn}`}>
           <RefreshCw size={14} /> Actualizar
         </button>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>Cargando historial...</div>
+        <div className={styles.loadingText}>Cargando historial...</div>
       ) : error ? (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '16px', borderRadius: '10px', marginBottom: '16px' }}>
+        <div className={styles.alertError}>
           {error}
         </div>
       ) : (
         <>
-          {notice && <p role="status" style={{ color: '#166534', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', padding: '10px 14px', borderRadius: '8px', fontSize: '13px', marginBottom: '14px' }}>{notice}</p>}
+          {notice && <p role="status" className={styles.noticeText}>{notice}</p>}
 
           {quotes.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', background: '#f8fafc', borderRadius: '14px', border: '1px dashed #cbd5e1', marginBottom: '20px' }}>
-              <p style={{ fontSize: '14px', color: '#64748b' }}>Aún no registras cotizaciones en la plataforma.</p>
+            <div className={styles.emptyBox}>
+              <p className={styles.emptyText}>Aún no registras cotizaciones en la plataforma.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div className={styles.quoteList}>
               {quotes.map((q) => (
-                <div key={q.id} className="glass-card" style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', background: '#ffffff', border: '1px solid #e2e8f0' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <div style={{ background: '#f0fdf4', padding: '10px', borderRadius: '12px', border: '1px solid #bbf7d0' }}>
+                <div key={q.id} className={`glass-card ${styles.quoteCard}`}>
+                  <div className={styles.quoteLeft}>
+                    <div className={styles.quoteIcon}>
                       <Cpu size={22} color="#16a34a" />
                     </div>
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#0f172a', textTransform: 'capitalize' }}>
+                      <div className={styles.quoteTitleRow}>
+                        <h4 className={styles.quoteTitle}>
                           {q.device_type} {q.brand ? `• ${q.brand}` : ''}
                         </h4>
                         <span className="badge badge-pending">{q.status}</span>
                       </div>
-                      <p style={{ fontSize: '12px', color: '#64748b', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <p className={styles.quoteMeta}>
                         <span>Condición: <strong style={{ color: '#334155' }}>{q.condition}</strong></span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span className={styles.dateFlex}>
                           <Calendar size={12} /> {new Date(q.created_at).toLocaleDateString()}
                         </span>
                       </p>
                     </div>
                   </div>
 
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600 }}>Precio Ofrecido</p>
-                    <p style={{ fontSize: '20px', fontWeight: 800, color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '3px' }}>
-                      <span style={{ fontSize: '14px' }}>Bs.</span>{Number(q.final_price).toFixed(2)}
+                  <div className={styles.quoteRight}>
+                    <p className={styles.priceLabel}>Precio Ofrecido</p>
+                    <p className={styles.priceValue}>
+                      <span className={styles.priceCurrency}>Bs.</span>{Number(q.final_price).toFixed(2)}
                     </p>
                     {q.status === 'PENDING' && (
                       <button
                         type="button"
                         onClick={() => handleAcceptQuote(q.id)}
                         disabled={acceptingQuoteId !== null}
-                        className="btn-primary"
-                        style={{ marginTop: '8px', padding: '7px 10px', fontSize: '12px' }}
+                        className={`btn-primary ${styles.acceptBtn}`}
                       >
                         <Check size={14} /> {acceptingQuoteId === q.id ? 'Aceptando...' : 'Aceptar'}
                       </button>
@@ -162,11 +162,11 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
           )}
 
           {orders.length > 0 && (
-            <section style={{ marginTop: '28px' }}>
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: 800, color: '#0f172a', marginBottom: '16px' }}>
+            <section className={styles.ordersSection}>
+              <h3 className={styles.sectionTitle}>
                 <PackageCheck size={18} color="#2563eb" /> Mis Órdenes ({orders.length})
               </h3>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div className={styles.orderList}>
                 {orders.map((order) => {
                   const statusMap: Record<string, { label: string; bg: string; color: string; border: string }> = {
                     ACCEPTED: { label: 'Cotización Aceptada', bg: '#f0fdf4', color: '#166534', border: '#bbf7d0' },
@@ -181,16 +181,12 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
                   const statusInfo = statusMap[order.status] || { label: order.status, bg: '#f1f5f9', color: '#334155', border: '#cbd5e1' };
 
                   return (
-                    <div key={order.id} style={{ border: '1px solid #e2e8f0', background: '#ffffff', borderRadius: '12px', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                    <div key={order.id} className={styles.orderCard}>
                       {/* Top Header */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <strong style={{ color: '#0f172a', fontSize: '16px', fontFamily: 'monospace', letterSpacing: '0.5px' }}>{order.order_number}</strong>
-                          <span style={{
-                            padding: '3px 10px',
-                            borderRadius: '20px',
-                            fontSize: '11px',
-                            fontWeight: 700,
+                      <div className={styles.orderHeader}>
+                        <div className={styles.orderHeaderLeft}>
+                          <strong className={styles.orderNumber}>{order.order_number}</strong>
+                          <span className={styles.statusBadge} style={{
                             backgroundColor: statusInfo.bg,
                             color: statusInfo.color,
                             border: `1px solid ${statusInfo.border}`
@@ -198,37 +194,37 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
                             {statusInfo.label}
                           </span>
                         </div>
-                        <span style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span className={styles.orderDate}>
                           <Calendar size={12} /> {new Date(order.created_at).toLocaleDateString()}
                         </span>
                       </div>
 
                       {/* Content details */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '16px', alignItems: 'center' }}>
+                      <div className={styles.orderDetailsGrid}>
                         <div>
-                          <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dispositivo</p>
-                          <p style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b', marginTop: '2px' }}>
+                          <p className={styles.fieldCategory}>Dispositivo</p>
+                          <p className={styles.deviceTitle}>
                             {order.device_type_name || 'Dispositivo'} {order.brand ? `• ${order.brand}` : ''} {order.model ? `(${order.model})` : ''} {order.device_year ? `'${order.device_year}` : ''}
                           </p>
                           {order.declared_condition && (
-                            <p style={{ fontSize: '12px', color: '#475569', marginTop: '2px' }}>
+                            <p className={styles.conditionText}>
                               Condición: <strong style={{ color: '#0f172a' }}>{order.declared_condition}</strong>
                             </p>
                           )}
                         </div>
 
                         <div>
-                          <p style={{ fontSize: '11px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Monto Aceptado</p>
-                          <p style={{ fontSize: '18px', fontWeight: 800, color: '#16a34a', marginTop: '2px' }}>
+                          <p className={styles.fieldCategory}>Monto Aceptado</p>
+                          <p className={styles.priceText}>
                             {order.currency === 'BOB' || order.currency === 'Bs' ? 'Bs.' : order.currency} {Number(order.quoted_price || 0).toFixed(2)}
                           </p>
                           {order.pickup_address && (
-                            <p style={{ fontSize: '11px', color: '#2563eb', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <p className={styles.addressShort}>
                               {order.pickup_address.street}, {order.pickup_address.city}
                             </p>
                           )}
                           {order.tracking_code && (
-                            <p style={{ fontSize: '12px', fontWeight: 700, color: '#6b21a8', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px', background: '#faf5ff', padding: '3px 8px', borderRadius: '6px', border: '1px solid #e9d5ff', width: 'fit-content' }}>
+                            <p className={styles.trackingBadge}>
                               Guía: <span style={{ fontFamily: 'monospace' }}>{order.tracking_code}</span>
                             </p>
                           )}
@@ -254,42 +250,23 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
           )}
 
           {selectedOrderIdForBox && (
-            <div style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(15, 23, 42, 0.6)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000,
-              padding: '20px'
-            }}>
-              <div style={{
-                background: '#ffffff',
-                borderRadius: '16px',
-                padding: '28px',
-                maxWidth: '480px',
-                width: '100%',
-                boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className={styles.modalOverlay}>
+              <div className={styles.modalContent}>
+                <div className={styles.modalHeader}>
+                  <h3 className={styles.modalTitle}>
                     <Box size={20} color="#2563eb" /> Dirección de Recojo para Caja
                   </h3>
                   <button
                     onClick={() => setSelectedOrderIdForBox(null)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                    className={styles.closeBtn}
                   >
                     <X size={20} />
                   </button>
                 </div>
 
-                <form onSubmit={handleRequestBox} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <form onSubmit={handleRequestBox} className={styles.modalForm}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                    <label className={styles.label}>
                       Calle y Número / Dirección *
                     </label>
                     <input
@@ -298,13 +275,13 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
                       value={boxAddress.street}
                       onChange={(e) => setBoxAddress({ ...boxAddress, street: e.target.value })}
                       placeholder="Ej: Av. 6 de Agosto #1234"
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                      className={styles.input}
                     />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className={styles.grid2}>
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                      <label className={styles.label}>
                         Ciudad *
                       </label>
                       <input
@@ -313,12 +290,12 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
                         value={boxAddress.city}
                         onChange={(e) => setBoxAddress({ ...boxAddress, city: e.target.value })}
                         placeholder="Ej: La Paz"
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                        className={styles.input}
                       />
                     </div>
 
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                      <label className={styles.label}>
                         Departamento / Estado *
                       </label>
                       <input
@@ -327,13 +304,13 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
                         value={boxAddress.state}
                         onChange={(e) => setBoxAddress({ ...boxAddress, state: e.target.value })}
                         placeholder="Ej: La Paz"
-                        style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                        className={styles.input}
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                    <label className={styles.label}>
                       Código Postal *
                     </label>
                     <input
@@ -342,12 +319,12 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
                       value={boxAddress.zip_code}
                       onChange={(e) => setBoxAddress({ ...boxAddress, zip_code: e.target.value })}
                       placeholder="Ej: 0000"
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                      className={styles.input}
                     />
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, color: '#334155', marginBottom: '4px' }}>
+                    <label className={styles.label}>
                       Notas / Referencias de entrega (Opcional)
                     </label>
                     <textarea
@@ -355,11 +332,11 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
                       onChange={(e) => setBoxAddress({ ...boxAddress, notes: e.target.value })}
                       placeholder="Ej: Frente al parque central, timbre blanco"
                       rows={3}
-                      style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '14px' }}
+                      className={styles.textarea}
                     />
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                  <div className={styles.modalActions}>
                     <button
                       type="button"
                       onClick={() => setSelectedOrderIdForBox(null)}
