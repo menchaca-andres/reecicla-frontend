@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { History, RefreshCw, Cpu, Calendar, Check, PackageCheck, Box, X } from 'lucide-react';
-import type { Quote, Order, CreateBoxRequestInput } from '../types';
-import { ApiService } from '../services/api';
+import type { Quote, Order, CreateBoxRequestInput } from '../../../types';
+import { ApiService } from '../../../services/api';
 
 interface QuoteHistoryProps {
   tenantId: string;
@@ -84,7 +84,7 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
   }, [tenantId, token]);
 
   return (
-    <div className="glass-panel" style={{ padding: '32px', maxWidth: '840px', margin: '0 auto', background: '#ffffff' }}>
+    <div className="glass-panel animate-fade-in" style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', background: '#ffffff', borderRadius: '24px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{ background: '#eff6ff', padding: '10px', borderRadius: '12px', color: '#2563eb', border: '1px solid #bfdbfe' }}>

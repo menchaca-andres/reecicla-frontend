@@ -1,6 +1,6 @@
 import React from 'react';
 import { CheckCircle2, Calendar, Cpu, Tag } from 'lucide-react';
-import type { Quote } from '../types';
+import type { Quote } from '../../../types';
 
 interface QuoteResultCardProps {
   quote: Quote;

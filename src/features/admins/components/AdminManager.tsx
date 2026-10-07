@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UserPlus, Building2, Mail, Lock, User as UserIcon, Phone, CheckCircle, AlertCircle } from 'lucide-react';
-import { ApiService } from '../services/api';
+import { ApiService } from '../../../services/api';
 
 interface AdminManagerProps {
   token: string | null;

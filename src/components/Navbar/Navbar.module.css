@@ -1,0 +1,58 @@
+/* ─── Actions section (right side) ─────────────────────────────────── */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ─── Tenant badge ──────────────────────────────────────────────────── */
+.tenantBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.56);
+  font-weight: 400;
+}
+
+/* ─── Logged-in user row ────────────────────────────────────────────── */
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.userName {
+  font-size: 12px;
+  color: #1d1d1f;
+  font-weight: 500;
+}
+
+/* ─── Brand logo button overrides ───────────────────────────────────── */
+.brandButton {
+  padding-left: 0 !important;
+}
+
+.brandLabel {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1d1d1f;
+  margin-left: 4px;
+  letter-spacing: -0.02em;
+}
+
+/* ─── Logout / icon-only button ─────────────────────────────────────── */
+.iconButton {
+  height: auto !important;
+  padding: 0 !important;
+}
+
+/* ─── Sign-in link override ─────────────────────────────────────────── */
+.signinLink {
+  color: #0071e3!important;
+  font-weight: 500;
+}
+
+.signinIcon {
+  margin-right: 2px;
+}

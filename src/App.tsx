@@ -1,13 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
-import { AuthModal } from './components/AuthModal';
-import { QuotationWizard } from './components/QuotationWizard';
-import { QuoteResultCard } from './components/QuoteResultCard';
-import { QuoteHistory } from './components/QuoteHistory';
-import { PricingRulesManager } from './components/PricingRulesManager';
-import { CatalogManager } from './components/CatalogManager';
-import { AdminManager } from './components/AdminManager';
-import { LogisticsManager } from './components/LogisticsManager';
+import { AuthModal } from './features/auth';
+import { QuotationWizard, QuoteResultCard, QuoteHistory } from './features/cotizaciones';
+import { PricingRulesManager } from './features/reglas-precios';
+import { CatalogManager } from './features/catalogo';
+import { AdminManager } from './features/admins';
+import { LogisticsManager } from './features/logistica';
 import type { User, Quote, AuthResponse } from './types';
 
 import { ApiService } from './services/api';
@@ -65,7 +63,7 @@ export function App() {
         setActiveTab={setActiveTab}
       />
 
-      <main style={{ flex: 1, maxWidth: '1200px', width: '100%', margin: '0 auto', padding: '0 24px 64px' }}>
+      <main style={{ flex: 1, maxWidth: '1440px', width: '100%', margin: '0 auto', padding: '0 32px 64px' }}>
         {activeTab === 'cotizar' && (
           latestQuote ? (
             <QuoteResultCard quote={latestQuote} onNewQuote={() => setLatestQuote(null)} />

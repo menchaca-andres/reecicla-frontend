@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Package, Sparkles, AlertCircle, Search } from 'lucide-react';
-import type { QuoteRequest, Quote, DeviceType, Device } from '../types';
-import { ApiService } from '../services/api';
+import type { QuoteRequest, Quote, DeviceType, Device } from '../../../types';
+import { ApiService } from '../../../services/api';
 
 interface QuotationWizardProps {
   tenantId: string;
@@ -125,34 +125,34 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
   };
 
   return (
-    <div className="glass-panel" style={{ padding: '32px', maxWidth: '700px', margin: '0 auto', background: '#ffffff' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-        <div style={{ background: '#eff6ff', padding: '10px', borderRadius: '12px', color: '#2563eb', border: '1px solid #bfdbfe' }}>
-          <Sparkles size={22} />
+    <div className="glass-panel animate-fade-in" style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto', background: '#ffffff', borderRadius: '24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '28px' }}>
+        <div style={{ background: 'rgba(0, 113, 227, 0.08)', padding: '12px', borderRadius: '16px', color: '#0071e3' }}>
+          <Sparkles size={24} />
         </div>
         <div>
-          <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>Solicitar Cotización de Equipo</h2>
-          <p style={{ fontSize: '13px', color: '#64748b' }}>Seleccioná el equipo del catálogo y su condición actual</p>
+          <h2 style={{ fontSize: '22px', fontWeight: 600, color: '#1d1d1f', letterSpacing: '-0.02em' }}>Solicitar Cotización de Equipo</h2>
+          <p style={{ fontSize: '13px', color: '#86868b', marginTop: '2px' }}>Seleccioná el equipo del catálogo y su condición actual</p>
         </div>
       </div>
 
       {error && (
-        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', padding: '12px 16px', borderRadius: '10px', fontSize: '13px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ background: 'rgba(255, 59, 48, 0.08)', border: '1px solid rgba(255, 59, 48, 0.2)', color: '#ff3b30', padding: '12px 16px', borderRadius: '14px', fontSize: '13px', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <AlertCircle size={16} /> {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
         {/* Step 1 — Tipo de dispositivo */}
         <div>
-          <label style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: '10px' }}>
+          <label style={{ fontSize: '14px', fontWeight: 600, color: '#1d1d1f', display: 'block', marginBottom: '12px' }}>
             1. Tipo de Dispositivo
           </label>
           {loadingTypes ? (
-            <p role="status" style={{ color: '#64748b', fontSize: '13px' }}>Cargando tipos de equipo...</p>
+            <p role="status" style={{ color: '#86868b', fontSize: '13px' }}>Cargando tipos de equipo...</p>
           ) : deviceTypes.length === 0 ? (
-            <p role="status" style={{ color: '#64748b', fontSize: '13px' }}>No hay tipos activos disponibles.</p>
+            <p role="status" style={{ color: '#86868b', fontSize: '13px' }}>No hay tipos activos disponibles.</p>
           ) : (
             <div className="device-grid">
               {deviceTypes.map((dev) => {
@@ -166,8 +166,8 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
                     aria-pressed={isSelected}
                     style={{ color: 'inherit', font: 'inherit' }}
                   >
-                    <Package size={26} color={isSelected ? '#2563eb' : '#64748b'} style={{ marginBottom: '6px' }} />
-                    <span style={{ fontSize: '12px', fontWeight: 600, textAlign: 'center', color: isSelected ? '#1e293b' : '#64748b' }}>
+                    <Package size={26} color={isSelected ? '#0071e3' : '#86868b'} style={{ marginBottom: '8px' }} />
+                    <span style={{ fontSize: '13px', fontWeight: 500, textAlign: 'center', color: isSelected ? '#1d1d1f' : '#6e6e73' }}>
                       {dev.name}
                     </span>
                   </button>
@@ -179,35 +179,35 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
 
         {/* Step 2 — Seleccionar device del catálogo */}
         <div>
-          <label style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: '10px' }}>
+          <label style={{ fontSize: '14px', fontWeight: 600, color: '#1d1d1f', display: 'block', marginBottom: '12px' }}>
             2. Seleccionar Modelo del Catálogo
           </label>
 
           {loadingDevices ? (
-            <p style={{ color: '#64748b', fontSize: '13px' }}>Cargando modelos disponibles...</p>
+            <p style={{ color: '#86868b', fontSize: '13px' }}>Cargando modelos disponibles...</p>
           ) : devices.length === 0 ? (
-            <div style={{ padding: '16px', background: '#fef9c3', borderRadius: '8px', border: '1px solid #fde047', fontSize: '13px', color: '#854d0e' }}>
+            <div style={{ padding: '16px', background: 'rgba(255, 149, 0, 0.08)', borderRadius: '14px', border: '1px solid rgba(255, 149, 0, 0.2)', fontSize: '13px', color: '#ff9500' }}>
               No hay dispositivos registrados para este tipo. Contactá al administrador.
             </div>
           ) : (
             <>
               {/* Buscador */}
-              <div style={{ position: 'relative', marginBottom: '10px' }}>
-                <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+              <div style={{ position: 'relative', marginBottom: '12px' }}>
+                <Search size={14} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#86868b' }} />
                 <input
                   type="text"
                   className="input-field"
                   placeholder="Buscar por marca, modelo o año..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  style={{ paddingLeft: '30px', fontSize: '13px' }}
+                  style={{ paddingLeft: '36px', fontSize: '13px' }}
                 />
               </div>
 
               {/* Lista de devices */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px', maxHeight: '280px', overflowY: 'auto', paddingRight: '4px' }}>
                 {filteredDevices.length === 0 ? (
-                  <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', padding: '12px' }}>
+                  <p style={{ fontSize: '13px', color: '#86868b', textAlign: 'center', padding: '16px', gridColumn: '1 / -1' }}>
                     Sin resultados para "{search}"
                   </p>
                 ) : filteredDevices.map((dev) => {
@@ -217,34 +217,35 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
                       key={dev.id}
                       onClick={() => { setSelectedDeviceId(dev.id); setIdempotencyKey(null); }}
                       style={{
-                        padding: '10px 14px',
-                        borderRadius: '8px',
-                        border: `1px solid ${isSelected ? '#2563eb' : '#e2e8f0'}`,
-                        background: isSelected ? '#eff6ff' : '#f8fafc',
+                        padding: '14px 16px',
+                        borderRadius: '14px',
+                        border: `1px solid ${isSelected ? '#0071e3' : 'rgba(0, 0, 0, 0.08)'}`,
+                        background: isSelected ? 'rgba(0, 113, 227, 0.04)' : '#ffffff',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        transition: 'all 0.12s ease',
+                        transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                       }}
                     >
                       <div>
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: isSelected ? '#1d4ed8' : '#1e293b' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 600, color: isSelected ? '#0071e3' : '#1d1d1f' }}>
                           {dev.brand_name} {dev.model}
                         </span>
                         {dev.year && (
-                          <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '8px' }}>
+                          <span style={{ fontSize: '12px', color: '#86868b', marginLeft: '8px' }}>
                             ({dev.year})
                           </span>
                         )}
                         {dev.description && (
-                          <p style={{ fontSize: '11px', color: '#94a3b8', margin: '1px 0 0' }}>{dev.description}</p>
+                          <p style={{ fontSize: '12px', color: '#86868b', margin: '2px 0 0' }}>{dev.description}</p>
                         )}
                       </div>
                       <div style={{
-                        width: '16px', height: '16px', borderRadius: '50%', flexShrink: 0,
-                        border: `2px solid ${isSelected ? '#2563eb' : '#94a3b8'}`,
-                        background: isSelected ? '#2563eb' : 'transparent',
+                        width: '18px', height: '18px', borderRadius: '50%', flexShrink: 0,
+                        border: `2px solid ${isSelected ? '#0071e3' : '#86868b'}`,
+                        background: isSelected ? '#0071e3' : 'transparent',
+                        transition: 'all 0.2s ease',
                       }} />
                     </div>
                   );
@@ -256,10 +257,10 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
 
         {/* Step 3 — Condición */}
         <div>
-          <label style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b', display: 'block', marginBottom: '10px' }}>
+          <label style={{ fontSize: '14px', fontWeight: 600, color: '#1d1d1f', display: 'block', marginBottom: '12px' }}>
             3. Condición Declarada del Equipo
           </label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px' }}>
             {CONDITIONS.map((cond) => {
               const isSelected = condition === cond.id;
               return (
@@ -267,21 +268,22 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
                   key={cond.id}
                   onClick={() => { setCondition(cond.id); setIdempotencyKey(null); }}
                   style={{
-                    padding: '12px 16px', borderRadius: '10px',
-                    background: isSelected ? '#f8fafc' : '#ffffff',
-                    border: `1px solid ${isSelected ? cond.accent : '#e2e8f0'}`,
+                    padding: '14px 18px', borderRadius: '14px',
+                    background: isSelected ? 'rgba(0, 113, 227, 0.04)' : '#ffffff',
+                    border: `1px solid ${isSelected ? '#0071e3' : 'rgba(0, 0, 0, 0.08)'}`,
                     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    transition: 'all 0.15s ease',
+                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
                   <div>
-                    <p style={{ fontSize: '13px', fontWeight: 700, color: isSelected ? cond.accent : '#1e293b' }}>{cond.label}</p>
-                    <p style={{ fontSize: '12px', color: '#64748b', marginTop: '1px' }}>{cond.desc}</p>
+                    <p style={{ fontSize: '14px', fontWeight: 600, color: isSelected ? '#0071e3' : '#1d1d1f' }}>{cond.label}</p>
+                    <p style={{ fontSize: '12px', color: '#86868b', marginTop: '2px' }}>{cond.desc}</p>
                   </div>
                   <div style={{
-                    width: '16px', height: '16px', borderRadius: '50%',
-                    border: `2px solid ${isSelected ? cond.accent : '#94a3b8'}`,
-                    background: isSelected ? cond.accent : 'transparent',
+                    width: '18px', height: '18px', borderRadius: '50%',
+                    border: `2px solid ${isSelected ? '#0071e3' : '#86868b'}`,
+                    background: isSelected ? '#0071e3' : 'transparent',
+                    transition: 'all 0.2s ease',
                   }} />
                 </div>
               );
@@ -291,7 +293,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
 
         {/* Summary del device seleccionado */}
         {selectedDevice && (
-          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '12px 16px', fontSize: '13px', color: '#15803d' }}>
+          <div style={{ background: 'rgba(52, 199, 89, 0.08)', border: '1px solid rgba(52, 199, 89, 0.2)', borderRadius: '14px', padding: '14px 18px', fontSize: '13px', color: '#248a3d' }}>
             <strong>Equipo seleccionado:</strong> {selectedDevice.brand_name} {selectedDevice.model}
             {selectedDevice.year ? ` (${selectedDevice.year})` : ''} — {selectedDevice.device_type_name}
           </div>
@@ -301,7 +303,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
           type="submit"
           className="btn-primary"
           disabled={loading || loadingTypes || !selectedDeviceId}
-          style={{ padding: '14px', fontSize: '15px', width: '100%', marginTop: '6px' }}
+          style={{ padding: '14px', fontSize: '15px', width: '100%', marginTop: '8px' }}
         >
           {loading ? 'Calculando Cotización...' : 'Calcular Precio de Cotización (Bs.)'}
         </button>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Settings, Save, AlertCircle, CheckCircle2, RefreshCw, Tag, Cpu } from 'lucide-react';
-import { ApiService } from '../services/api';
-import type { PricingRule, DeviceBrand, Device } from '../types';
+import { ApiService } from '../../../services/api';
+import type { PricingRule, DeviceBrand, Device } from '../../../types';
 
 interface PricingRulesManagerProps {
   tenantId: string;

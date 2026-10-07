@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Check, Pencil, Plus, RotateCcw, X } from 'lucide-react';
-import { ApiService } from '../services/api';
-import type { DeviceType } from '../types';
+import { ApiService } from '../../../services/api';
+import type { DeviceType } from '../../../types';
 
 interface DeviceTypesManagerProps {
   tenantId: string;

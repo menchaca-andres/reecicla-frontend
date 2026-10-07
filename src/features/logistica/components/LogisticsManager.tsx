@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Truck, Box, RefreshCw, AlertCircle, CheckCircle2, Search, X } from 'lucide-react';
-import { ApiService } from '../services/api';
-import type { Order } from '../types';
+import { ApiService } from '../../../services/api';
+import type { Order } from '../../../types';
 
 interface LogisticsManagerProps {
   token: string | null;
