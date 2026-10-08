@@ -114,16 +114,13 @@ export function DeviceTypesManager({ tenantId, token }: DeviceTypesManagerProps)
       {notice && <p role="status" style={{ color: '#166534', background: '#f0fdf4', padding: '10px 12px', marginBottom: '16px' }}>{notice}</p>}
 
       <form onSubmit={handleCreate} style={{ display: 'grid', gridTemplateColumns: 'minmax(130px, 0.7fr) minmax(160px, 1fr) minmax(180px, 1.4fr) auto', alignItems: 'end', gap: '12px', paddingBottom: '24px', borderBottom: '1px solid #e2e8f0' }}>
-        <label style={{ color: '#475569', fontSize: '12px', fontWeight: 700 }}>
-          Código
+        <label style={{ color: '#475569', fontSize: '12px', fontWeight: 700 }}>Código
           <input className="input-field" required maxLength={60} pattern="[A-Za-z][A-Za-z0-9_]{1,59}" title="2 a 60 caracteres: letras, números y guion bajo" value={code} onChange={(event) => setCode(event.target.value.toUpperCase())} placeholder="REFRIGERATOR" style={{ marginTop: '5px' }} />
         </label>
-        <label style={{ color: '#475569', fontSize: '12px', fontWeight: 700 }}>
-          Nombre
+        <label style={{ color: '#475569', fontSize: '12px', fontWeight: 700 }}>Nombre
           <input className="input-field" required maxLength={120} value={name} onChange={(event) => setName(event.target.value)} placeholder="Refrigerador" style={{ marginTop: '5px' }} />
         </label>
-        <label style={{ color: '#475569', fontSize: '12px', fontWeight: 700 }}>
-          Descripción
+        <label style={{ color: '#475569', fontSize: '12px', fontWeight: 700 }}>Descripción
           <input className="input-field" maxLength={2000} value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Descripción breve" style={{ marginTop: '5px' }} />
         </label>
         <button className="btn-primary" type="submit" disabled={saving} aria-label="Crear tipo de equipo" title="Crear tipo de equipo" style={{ padding: '10px 14px' }}>

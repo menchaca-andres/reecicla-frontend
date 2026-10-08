@@ -1,1 +1,1 @@
-export { AuthModal } from './components/AuthModal';
+export { AuthPage } from './components/AuthPage';

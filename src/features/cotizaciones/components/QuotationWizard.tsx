@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Package, Sparkles, AlertCircle, Search } from 'lucide-react';
 import type { QuoteRequest, Quote, DeviceType, Device } from '../../../types';
 import { ApiService } from '../../../services/api';
 import styles from '../QuotationWizard.module.css';
@@ -12,9 +11,9 @@ interface QuotationWizardProps {
 }
 
 const CONDITIONS = [
-  { id: 'working', label: 'Excelente / Funcionando', desc: 'Sin fallas operativas ni daños graves', accent: '#16a34a' },
-  { id: 'damaged', label: 'Detalles / Daño Estético', desc: 'Funciona pero tiene desgaste o fallas menores', accent: '#ea580c' },
-  { id: 'broken', label: 'Averiado / Para Repuestos', desc: 'No enciende o requiere reparación mayor', accent: '#dc2626' },
+  { id: 'working', label: 'Excelente / Funcionando', desc: 'Sin fallas operativas' },
+  { id: 'damaged', label: 'Detalles / Daño Estético', desc: 'Desgaste o fallas menores' },
+  { id: 'broken', label: 'Averiado / Repuestos', desc: 'No enciende o daño mayor' },
 ];
 
 export const QuotationWizard: React.FC<QuotationWizardProps> = ({
@@ -126,112 +125,62 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
   };
 
   return (
-    <div className={`glass-panel animate-fade-in ${styles.wizardCard}`}>
-      <div className={styles.headerRow}>
-        <div className={styles.headerIcon}>
-          <Sparkles size={24} />
-        </div>
-        <div>
-          <h2 className={styles.title}>Solicitar Cotización de Equipo</h2>
-          <p className={styles.subtitle}>Seleccioná el equipo del catálogo y su condición actual</p>
-        </div>
-      </div>
+    <div className={styles.container}>
 
       {error && (
         <div className={styles.alertError}>
-          <AlertCircle size={16} /> {error}
+          {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className={styles.form}>
 
-        {/* Step 1 — Tipo de dispositivo */}
+        {/* Step 1 — Equipos */}
         <div>
-          <label className={styles.stepLabel}>
-            1. Tipo de Dispositivo
-          </label>
+          <h2 className={styles.sectionHeaderTitle}>Equipos</h2>
           {loadingTypes ? (
             <p role="status" className={styles.statusText}>Cargando tipos de equipo...</p>
           ) : deviceTypes.length === 0 ? (
             <p role="status" className={styles.statusText}>No hay tipos activos disponibles.</p>
           ) : (
-            <div className="device-grid">
+            <div className={styles.squareGrid}>
               {deviceTypes.map((dev) => {
                 const isSelected = selectedTypeCode === dev.code;
                 return (
-                  <button
-                    type="button"
-                    key={dev.id}
-                    className={`device-card ${isSelected ? 'selected' : ''}`}
-                    onClick={() => { setSelectedTypeCode(dev.code); setIdempotencyKey(null); }}
-                    aria-pressed={isSelected}
-                    style={{ color: 'inherit', font: 'inherit' }}
-                  >
-                    <Package size={26} color={isSelected ? '#0071e3' : '#86868b'} style={{ marginBottom: '8px' }} />
-                    <span className={styles.cardButtonText} style={{ color: isSelected ? '#1d1d1f' : '#6e6e73' }}>
-                      {dev.name}
-                    </span>
-                  </button>
+                  <div key={dev.id} className={isSelected ? styles.squareCardSelected : styles.squareCard} onClick={() => { setSelectedTypeCode(dev.code); setIdempotencyKey(null); }}>
+                    <span className={isSelected ? styles.cardTitleSelected : styles.cardTitle}>{dev.name}</span>
+                  </div>
                 );
               })}
             </div>
           )}
         </div>
 
-        {/* Step 2 — Seleccionar device del catálogo */}
+        {/* Step 2 — Modelos */}
         <div>
-          <label className={styles.stepLabel}>
-            2. Seleccionar Modelo del Catálogo
-          </label>
+          <h2 className={styles.sectionHeaderTitle}>Modelos</h2>
 
           {loadingDevices ? (
             <p className={styles.statusText}>Cargando modelos disponibles...</p>
           ) : devices.length === 0 ? (
-            <div className={styles.emptyWarning}>
-              No hay dispositivos registrados para este tipo. Contactá al administrador.
-            </div>
+            <div className={styles.emptyWarning}>No hay dispositivos registrados para este tipo. Contactá al administrador.</div>
           ) : (
             <>
               {/* Buscador */}
               <div className={styles.searchContainer}>
-                <Search size={14} className={styles.searchIcon} />
-                <input
-                  type="text"
-                  className={`input-field ${styles.searchInput}`}
-                  placeholder="Buscar por marca, modelo o año..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
+                <input type="text" className={`input-field ${styles.searchInput}`} placeholder="Buscar por marca, modelo o año..." value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
 
-              {/* Lista de devices */}
-              <div className={styles.deviceListGrid}>
+              {/* Grilla cuadrada de modelos */}
+              <div className={styles.squareGrid}>
                 {filteredDevices.length === 0 ? (
-                  <p className={styles.emptySearch}>
-                    Sin resultados para "{search}"
-                  </p>
+                  <p className={styles.emptySearch}>Sin resultados para "{search}"</p>
                 ) : filteredDevices.map((dev) => {
                   const isSelected = selectedDeviceId === dev.id;
                   return (
-                    <div
-                      key={dev.id}
-                      onClick={() => { setSelectedDeviceId(dev.id); setIdempotencyKey(null); }}
-                      className={isSelected ? styles.deviceRowSelected : styles.deviceRow}
-                    >
-                      <div>
-                        <span className={isSelected ? styles.deviceNameSelected : styles.deviceName}>
-                          {dev.brand_name} {dev.model}
-                        </span>
-                        {dev.year && (
-                          <span className={styles.deviceYear}>
-                            ({dev.year})
-                          </span>
-                        )}
-                        {dev.description && (
-                          <p className={styles.deviceDesc}>{dev.description}</p>
-                        )}
-                      </div>
-                      <div className={isSelected ? styles.radioDotSelected : styles.radioDot} />
+                    <div key={dev.id} onClick={() => { setSelectedDeviceId(dev.id); setIdempotencyKey(null); }} className={isSelected ? styles.squareCardSelected : styles.squareCard}>
+                      <span className={isSelected ? styles.cardTitleSelected : styles.cardTitle}>{dev.brand_name} {dev.model}</span>
+                      {dev.year && (<span className={styles.cardSubtext}>{dev.year}</span>)}
                     </div>
                   );
                 })}
@@ -242,44 +191,21 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
 
         {/* Step 3 — Condición */}
         <div>
-          <label className={styles.stepLabel}>
-            3. Condición Declarada del Equipo
-          </label>
-          <div className={styles.conditionGrid}>
+          <h2 className={styles.sectionHeaderTitle}>Condición</h2>
+          <div className={styles.squareGrid}>
             {CONDITIONS.map((cond) => {
               const isSelected = condition === cond.id;
               return (
-                <div
-                  key={cond.id}
-                  onClick={() => { setCondition(cond.id); setIdempotencyKey(null); }}
-                  className={isSelected ? styles.conditionRowSelected : styles.conditionRow}
-                >
-                  <div>
-                    <p className={isSelected ? styles.conditionLabelSelected : styles.conditionLabel}>{cond.label}</p>
-                    <p className={styles.conditionDesc}>{cond.desc}</p>
-                  </div>
-                  <div className={isSelected ? styles.radioDotSelected : styles.radioDot} />
+                <div key={cond.id} onClick={() => { setCondition(cond.id); setIdempotencyKey(null); }} className={isSelected ? styles.squareCardSelected : styles.squareCard}>
+                  <span className={isSelected ? styles.cardTitleSelected : styles.cardTitle}>{cond.label}</span>
+                  <span className={styles.cardSubtext}>{cond.desc}</span>
                 </div>
               );
             })}
           </div>
         </div>
 
-        {/* Summary del device seleccionado */}
-        {selectedDevice && (
-          <div className={styles.summaryBox}>
-            <strong>Equipo seleccionado:</strong> {selectedDevice.brand_name} {selectedDevice.model}
-            {selectedDevice.year ? ` (${selectedDevice.year})` : ''} — {selectedDevice.device_type_name}
-          </div>
-        )}
-
-        <button
-          type="submit"
-          className={`btn-primary ${styles.submitBtn}`}
-          disabled={loading || loadingTypes || !selectedDeviceId}
-        >
-          {loading ? 'Calculando Cotización...' : 'Calcular Precio de Cotización (Bs.)'}
-        </button>
+        <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading || loadingTypes || !selectedDeviceId}> {loading ? 'Calculando cotización...' : 'Calcular precio de cotización'}</button>
       </form>
     </div>
   );

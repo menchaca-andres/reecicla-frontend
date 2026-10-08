@@ -87,46 +87,21 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({
 
           <div>
             <label className={styles.label}>Modelo *</label>
-            <input
-              type="text"
-              placeholder="Ej. Galaxy S23, XPS 15 9530"
-              value={devModel}
-              onChange={(e) => setDevModel(e.target.value)}
-              required
-              className={styles.input}
-            />
+            <input type="text" placeholder="Ej. Galaxy S23, XPS 15 9530" value={devModel} onChange={(e) => setDevModel(e.target.value)} required className={styles.input} />
           </div>
 
           <div>
             <label className={styles.label}>Año de Lanzamiento</label>
-            <input
-              type="number"
-              placeholder="Ej. 2023"
-              min="2000"
-              max="2030"
-              value={devYear}
-              onChange={(e) => setDevYear(e.target.value)}
-              className={styles.input}
-            />
+            <input type="number" placeholder="Ej. 2023" min="2000" max="2030" value={devYear} onChange={(e) => setDevYear(e.target.value)} className={styles.input} />
           </div>
 
           <div className={styles.span2}>
             <label className={styles.label}>Descripción / Especificaciones</label>
-            <input
-              type="text"
-              placeholder="Ej. Smartphone flagship 128GB"
-              value={devDesc}
-              onChange={(e) => setDevDesc(e.target.value)}
-              className={styles.input}
-            />
+            <input type="text" placeholder="Ej. Smartphone flagship 128GB" value={devDesc} onChange={(e) => setDevDesc(e.target.value)} className={styles.input} />
           </div>
 
           <div className={`${styles.span3} ${styles.formActions}`}>
-            <button
-              type="submit"
-              disabled={submittingDevice || !devBrandId}
-              className={styles.btnPrimary}
-            >
+            <button type="submit" disabled={submittingDevice || !devBrandId} className={styles.btnPrimary}>
               {submittingDevice ? 'Guardando...' : 'Registrar Dispositivo'}
             </button>
           </div>
@@ -137,11 +112,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({
       <div className={styles.panel}>
         <div className={styles.listSubheader}>
           <h3 className={styles.sectionTitleNoMarginBottom}>Catálogo de Dispositivos Registrados</h3>
-          <select
-            value={devicesFilterType}
-            onChange={(e) => setDevicesFilterType(e.target.value)}
-            className={styles.selectFilter}
-          >
+          <select value={devicesFilterType} onChange={(e) => setDevicesFilterType(e.target.value)} className={styles.selectFilter}>
             <option value="">Todos los tipos</option>
             {deviceTypes.map(t => (
               <option key={t.id} value={t.id}>{t.name}</option>
@@ -176,12 +147,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({
                     </span>
                   </td>
                   <td className={styles.tdRight}>
-                    <button
-                      onClick={() => handleToggleDevice(dev)}
-                      title={dev.status === 'ACTIVE' ? 'Inactivar' : 'Activar'}
-                      className={styles.btnIcon}
-                      style={{ color: dev.status === 'ACTIVE' ? '#ef4444' : '#22c55e' }}
-                    >
+                    <button onClick={() => handleToggleDevice(dev)} title={dev.status === 'ACTIVE' ? 'Inactivar' : 'Activar'} className={styles.btnIcon} style={{ color: dev.status === 'ACTIVE' ? '#ef4444' : '#22c55e' }}>
                       <Power size={15} />
                     </button>
                   </td>

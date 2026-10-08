@@ -88,7 +88,6 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
   return (
     <div className={styles.container}>
 
-      {/* ── HEADER ── */}
       <div className={`glass-panel ${styles.headerCard}`}>
         <div className={styles.headerLeft}>
           <div className={styles.headerIcon}>
@@ -96,14 +95,11 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
           </div>
           <div>
             <h2 className={styles.title}>Gestión de Logística y Envíos (HU-013)</h2>
-            <p className={styles.subtitle}>
-              Registra guías de rastreo y actualiza estados de envío para las cajas solicitadas por clientes.
-            </p>
+            <p className={styles.subtitle}>Registra guías de rastreo y actualiza estados de envío para las cajas solicitadas por clientes.</p>
           </div>
         </div>
 
-        <button onClick={fetchOrders} className={`btn-secondary ${styles.refreshBtn}`}>
-          <RefreshCw size={14} /> Actualizar
+        <button onClick={fetchOrders} className={`btn-secondary ${styles.refreshBtn}`}><RefreshCw size={14} /> Actualizar
         </button>
       </div>
 
@@ -119,20 +115,14 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
       )}
 
       <div className={styles.filterRow}>
-        <span className={styles.filterLabel}>
-          <Search size={14} /> Filtrar Estado:
-        </span>
+        <span className={styles.filterLabel}><Search size={14} /> Filtrar Estado:</span>
         {[
           { code: 'ALL', label: 'Todas las Órdenes' },
           { code: 'BOX_REQUESTED', label: 'Cajas Solicitadas (Pendientes Guía)' },
           { code: 'BOX_SHIPPED', label: 'Cajas Enviadas' },
           { code: 'IN_TRANSIT', label: 'En Tránsito' },
         ].map((f) => (
-          <button
-            key={f.code}
-            onClick={() => setStatusFilter(f.code)}
-            className={statusFilter === f.code ? styles.filterChipActive : styles.filterChip}
-          >
+          <button key={f.code} onClick={() => setStatusFilter(f.code)} className={statusFilter === f.code ? styles.filterChipActive : styles.filterChip}>
             {f.label}
           </button>
         ))}
@@ -151,8 +141,6 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
 
             return (
               <div key={order.id} className={`glass-card ${styles.orderCard}`}>
-
-                {/* Header */}
                 <div className={styles.orderCardHeader}>
                   <div className={styles.orderNumberGroup}>
                     <strong className={styles.orderNumber}>{order.order_number}</strong>
@@ -165,23 +153,20 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                   </span>
                 </div>
 
-                {/* Details Grid */}
                 <div className={styles.detailsGrid}>
                   <div>
                     <p className={styles.fieldCategory}>Equipo</p>
                     <p className={styles.deviceTitle}>
                       {order.device_type_name} {order.brand ? `• ${order.brand}` : ''} {order.model ? `(${order.model})` : ''}
                     </p>
-                    <p className={styles.priceText}>
-                      Monto: <strong style={{ color: '#16a34a' }}>{order.currency === 'BOB' || order.currency === 'Bs' ? 'Bs.' : order.currency} {Number(order.quoted_price).toFixed(2)}</strong>
-                    </p>
+                    <p className={styles.priceText}>Monto: <strong style={{ color: '#16a34a' }}>{order.currency === 'BOB' || order.currency === 'Bs' ? 'Bs.' : order.currency} {Number(order.quoted_price).toFixed(2)}</strong></p>
                   </div>
 
                   <div>
                     <p className={styles.fieldCategory}>Dirección de Recojo</p>
                     {order.pickup_address ? (
                       <p className={styles.addressText}>
-                        📍 {order.pickup_address.street}, {order.pickup_address.city} ({order.pickup_address.state})
+                        {order.pickup_address.street}, {order.pickup_address.city} ({order.pickup_address.state})
                         {order.pickup_address.notes && <span className={styles.addressNotes}>Notas: {order.pickup_address.notes}</span>}
                       </p>
                     ) : (
@@ -190,19 +175,10 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                   </div>
 
                   <div className={styles.actionsColumn}>
-                    {order.tracking_code && (
-                      <span className={styles.trackingBadge}>
-                        📦 Guía: {order.tracking_code}
-                      </span>
-                    )}
+                    {order.tracking_code && <span className={styles.trackingBadge}>Guía: {order.tracking_code}</span>}
 
                     {(order.status === 'BOX_REQUESTED' || order.status === 'ACCEPTED' || order.status === 'BOX_SHIPPED') && (
-                      <button
-                        onClick={() => handleOpenDispatchModal(order)}
-                        className={`btn-primary ${styles.dispatchBtn}`}
-                      >
-                        <Box size={14} /> {order.tracking_code ? 'Editar Guía / Tracking' : 'Registrar Guía de Envío'}
-                      </button>
+                      <button onClick={() => handleOpenDispatchModal(order)} className={`btn-primary ${styles.dispatchBtn}`}><Box size={14} /> {order.tracking_code ? 'Editar Guía / Tracking' : 'Registrar Guía de Envío'}</button>
                     )}
                   </div>
                 </div>
@@ -231,48 +207,22 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
 
             <form onSubmit={handleDispatchSubmit} className={styles.modalForm}>
               <div>
-                <label className={styles.label}>
-                  Número de Guía / Código de Tracking *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={trackingCodeInput}
-                  onChange={(e) => setTrackingCodeInput(e.target.value)}
-                  placeholder="Ej: DHL-882391 / TRACK-00123"
-                  className={styles.inputMonospace}
-                />
+                <label className={styles.label}>Número de Guía / Código de Tracking *</label>
+                <input type="text" required value={trackingCodeInput} onChange={(e) => setTrackingCodeInput(e.target.value)} placeholder="Ej: DHL-882391 / TRACK-00123" className={styles.inputMonospace} />
               </div>
 
               <div>
-                <label className={styles.label}>
-                  Nuevo Estado de la Orden *
-                </label>
-                <select
-                  className="input-field"
-                  value={shipmentStatus}
-                  onChange={(e) => setShipmentStatus(e.target.value as any)}
-                >
+                <label className={styles.label}>Nuevo Estado de la Orden *</label>
+                <select className="input-field" value={shipmentStatus} onChange={(e) => setShipmentStatus(e.target.value as any)}>
                   <option value="BOX_SHIPPED">Caja Enviada (BOX_SHIPPED)</option>
                   <option value="IN_TRANSIT">En Tránsito (IN_TRANSIT)</option>
                 </select>
               </div>
 
               <div className={styles.modalActions}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedOrder(null)}
-                  className="btn-secondary"
-                  style={{ padding: '8px 16px', fontSize: '13px' }}
-                >
-                  Cancelar
+                <button type="button" onClick={() => setSelectedOrder(null)} className="btn-secondary" style={{ padding: '8px 16px', fontSize: '13px' }}>Cancelar
                 </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn-primary"
-                  style={{ padding: '8px 16px', fontSize: '13px' }}
-                >
+                <button type="submit" disabled={submitting} className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>
                   {submitting ? 'Guardando...' : 'Confirmar Envío y Guía'}
                 </button>
               </div>
