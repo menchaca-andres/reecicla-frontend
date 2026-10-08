@@ -1,322 +1,303 @@
-.card {
-  padding: 40px;
-  max-width: 1200px;
+/* ─────────────────────────────────────────────
+   QuoteHistory — minimalist style
+   Mirrors QuotationWizard visual language:
+   pure white, Inter, no icons, clean rows
+   ───────────────────────────────────────────── */
+
+.page {
+  max-width: 860px;
   margin: 0 auto;
+  padding: 48px 24px 80px;
   background: #ffffff;
-  border-radius: 24px;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
-.headerRow {
+/* ── Top bar ── */
+.topBar {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 40px;
 }
 
-.headerLeft {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.headerIcon {
-  background: #eff6ff;
-  padding: 10px;
-  border-radius: 12px;
-  color: #2563eb;
-  border: 1px solid #bfdbfe;
-  display: flex;
-}
-
-.title {
-  font-size: 20px;
-  font-weight: 800;
-  color: #0f172a;
-  margin: 0;
-}
-
-.subtitle {
-  font-size: 13px;
-  color: #64748b;
+.pageTitle {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #111111;
   margin: 0;
 }
 
 .refreshBtn {
-  padding: 8px 14px;
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 7px 16px;
   font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
 }
 
+.refreshBtn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+/* ── Section headings ── */
+.sectionHeading {
+  font-size: 22px;
+  font-weight: 600;
+  color: #111111;
+  margin: 0 0 16px;
+  letter-spacing: -0.3px;
+}
+
+.ordersSection {
+  margin-top: 48px;
+}
+
+/* ── Status messages ── */
 .loadingText {
+  font-size: 15px;
+  color: #6b7280;
+  padding: 40px 0;
   text-align: center;
-  padding: 40px;
-  color: #64748b;
 }
 
 .alertError {
+  font-size: 14px;
+  color: #dc2626;
   background: #fef2f2;
   border: 1px solid #fecaca;
-  color: #dc2626;
-  padding: 16px;
   border-radius: 10px;
-  margin-bottom: 16px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
 }
 
 .noticeText {
+  font-size: 14px;
   color: #166534;
-  background-color: #f0fdf4;
+  background: #f0fdf4;
   border: 1px solid #bbf7d0;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  margin-bottom: 14px;
-}
-
-.emptyBox {
-  text-align: center;
-  padding: 40px 20px;
-  background: #f8fafc;
-  border-radius: 14px;
-  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  padding: 12px 18px;
   margin-bottom: 20px;
 }
 
 .emptyText {
-  font-size: 14px;
-  color: #64748b;
-  margin: 0;
+  font-size: 15px;
+  color: #9ca3af;
+  text-align: center;
+  padding: 40px 0;
 }
 
-.quoteList {
+/* ── Generic list ── */
+.list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 1px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.quoteCard {
-  padding: 18px 20px;
+/* ── Quote row ── */
+.row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  padding: 18px 20px;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-}
-
-.quoteLeft {
-  display: flex;
-  align-items: center;
   gap: 16px;
+  transition: background 0.12s;
 }
 
-.quoteIcon {
-  background: #f0fdf4;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid #bbf7d0;
+.row:hover {
+  background: #fafafa;
+}
+
+.rowMain {
   display: flex;
-}
-
-.quoteTitleRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.quoteTitle {
-  font-size: 15px;
-  font-weight: 700;
-  color: #0f172a;
-  text-transform: capitalize;
-  margin: 0;
-}
-
-.quoteMeta {
-  font-size: 12px;
-  color: #64748b;
-  margin-top: 3px;
-  margin-bottom: 0;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.dateFlex {
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 4px;
 }
 
-.quoteRight {
-  text-align: right;
+.rowTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111111;
+  text-transform: capitalize;
+}
+
+.rowMeta {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.rowRight {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   flex-shrink: 0;
 }
 
-.priceLabel {
-  font-size: 11px;
-  color: #64748b;
-  font-weight: 600;
+/* ── Price ── */
+.price {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111111;
   margin: 0;
-}
-
-.priceValue {
-  font-size: 20px;
-  font-weight: 800;
-  color: #16a34a;
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 3px;
-  margin: 0;
+  align-items: baseline;
+  gap: 2px;
 }
 
 .priceCurrency {
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
 }
 
-.acceptBtn {
-  margin-top: 8px;
-  padding: 7px 10px;
-  font-size: 12px;
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
 }
 
-.ordersSection {
-  margin-top: 28px;
+.statusGreen  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.statusBlue   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.statusPurple { background: #faf5ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+.statusOrange { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+.statusTeal   { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.statusYellow { background: #fefce8; color: #a16207; border: 1px solid #fef08a; }
+.statusGray   { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+
+/* ── Action button ── */
+.actionBtn {
+  padding: 8px 18px;
+  background: #111111;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
 }
 
-.sectionTitle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 800;
-  color: #0f172a;
-  margin-bottom: 16px;
-}
+.actionBtn:hover  { background: #333333; }
+.actionBtn:disabled { background: #9ca3af; cursor: not-allowed; }
 
-.orderList {
+/* ── Order card ── */
+.orderCard {
+  background: #ffffff;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  transition: background 0.12s;
 }
 
-.orderCard {
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  border-radius: 12px;
-  padding: 18px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+.orderCard:hover {
+  background: #fafafa;
 }
 
-.orderHeader {
+.orderTop {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid #f1f5f9;
-  padding-bottom: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
 }
 
-.orderHeaderLeft {
+.orderTopLeft {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .orderNumber {
-  color: #0f172a;
-  font-size: 16px;
-  font-family: monospace;
-  letter-spacing: 0.5px;
-}
-
-.statusBadge {
-  padding: 3px 10px;
-  border-radius: 20px;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
+  color: #111111;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  letter-spacing: 0.3px;
 }
 
 .orderDate {
-  font-size: 12px;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  font-size: 13px;
+  color: #9ca3af;
 }
 
-.orderDetailsGrid {
+.orderBody {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
   gap: 16px;
-  align-items: center;
+  align-items: start;
 }
 
-.fieldCategory {
+.fieldLabel {
   font-size: 11px;
-  color: #64748b;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  color: #9ca3af;
+  margin: 0 0 4px;
+}
+
+.fieldValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111111;
   margin: 0;
 }
 
-.deviceTitle {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1e293b;
-  margin-top: 2px;
-  margin-bottom: 0;
-}
-
-.conditionText {
+.fieldMeta {
   font-size: 12px;
-  color: #475569;
-  margin-top: 2px;
-  margin-bottom: 0;
+  color: #6b7280;
+  margin: 3px 0 0;
 }
 
-.priceText {
+.orderPrice {
   font-size: 18px;
-  font-weight: 800;
-  color: #16a34a;
-  margin-top: 2px;
-  margin-bottom: 0;
-}
-
-.addressShort {
-  font-size: 11px;
-  color: #2563eb;
-  margin-top: 2px;
-  margin-bottom: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0;
 }
 
 .trackingBadge {
-  font-size: 12px;
-  font-weight: 700;
-  color: #6b21a8;
-  margin-top: 4px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b21a8;
   background: #faf5ff;
-  padding: 3px 8px;
-  border-radius: 6px;
   border: 1px solid #e9d5ff;
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-top: 6px;
   width: fit-content;
 }
 
+.orderActions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+/* ── Modal ── */
 .modalOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(15, 23, 42, 0.6);
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -330,32 +311,37 @@
   padding: 28px;
   max-width: 480px;
   width: 100%;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
 }
 
 .modalHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .modalTitle {
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
-  color: #0f172a;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: #111111;
   margin: 0;
 }
 
 .closeBtn {
   background: none;
   border: none;
+  font-size: 16px;
+  color: #9ca3af;
   cursor: pointer;
-  color: #64748b;
-  display: flex;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.closeBtn:hover {
+  background: #f3f4f6;
+  color: #374151;
 }
 
 .modalForm {
@@ -368,17 +354,26 @@
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: #334155;
-  margin-bottom: 4px;
+  color: #374151;
+  margin-bottom: 5px;
 }
 
-.input {
+.input,
+.textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 13px;
+  border: 1px solid #d1d5db;
   border-radius: 8px;
-  border: 1px solid #cbd5e1;
   font-size: 14px;
+  font-family: inherit;
   box-sizing: border-box;
+  transition: border-color 0.15s;
+  outline: none;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: #111111;
 }
 
 .grid2 {
@@ -387,18 +382,25 @@
   gap: 12px;
 }
 
-.textarea {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  font-size: 14px;
-  box-sizing: border-box;
-}
-
 .modalActions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 10px;
+  margin-top: 8px;
+}
+
+.cancelBtn {
+  padding: 9px 18px;
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cancelBtn:hover {
+  background: #f3f4f6;
 }
