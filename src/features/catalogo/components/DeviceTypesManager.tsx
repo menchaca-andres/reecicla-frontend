@@ -4,11 +4,10 @@ import { ApiService } from '../../../services/api';
 import type { DeviceType } from '../../../types';
 
 interface DeviceTypesManagerProps {
-  tenantId: string;
   token: string;
 }
 
-export function DeviceTypesManager({ tenantId, token }: DeviceTypesManagerProps) {
+export function DeviceTypesManager({ token }: DeviceTypesManagerProps) {
   const [deviceTypes, setDeviceTypes] = useState<DeviceType[]>([]);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
@@ -24,7 +23,7 @@ export function DeviceTypesManager({ tenantId, token }: DeviceTypesManagerProps)
   const loadDeviceTypes = async () => {
     setLoading(true);
     try {
-      const response = await ApiService.getDeviceTypes(tenantId, token, true);
+      const response = await ApiService.getDeviceTypes(token, true);
       const list = response?.device_types || response?.deviceTypes || [];
       setDeviceTypes(list);
       setError(null);
@@ -38,7 +37,7 @@ export function DeviceTypesManager({ tenantId, token }: DeviceTypesManagerProps)
 
   useEffect(() => {
     void loadDeviceTypes();
-  }, [tenantId, token]);
+  }, [token]);
 
   const handleCreate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

@@ -10,13 +10,12 @@ import { TypesTab } from './TypesTab';
 import { RulesTab } from './RulesTab';
 
 interface CatalogManagerProps {
-  tenantId: string;
   token: string | null;
 }
 
 type Tab = 'devices' | 'brands' | 'types' | 'rules';
 
-export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token }) => {
+export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
   const [activeTab, setActiveTab] = useState<Tab>('devices');
 
   const [deviceTypes, setDeviceTypes] = useState<DeviceType[]>([]);
@@ -69,7 +68,7 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token 
   const loadTypes = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await ApiService.getDeviceTypes(tenantId, token, true);
+      const res = await ApiService.getDeviceTypes(token, true);
       const list = res.device_types || (res as any).deviceTypes || [];
       setDeviceTypes(list);
       if (list.length > 0) {
@@ -82,37 +81,37 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token 
     } finally {
       setLoading(false);
     }
-  }, [tenantId, token, selectedTypeForBrand, devTypeId, selectedTypeForRule]);
+  }, [token, selectedTypeForBrand, devTypeId, selectedTypeForRule]);
 
   const loadBrandsForType = useCallback(async (typeId: string) => {
     if (!typeId) return;
     setBrandsLoading(true);
     try {
-      const res = await ApiService.getBrands(tenantId, typeId, token, true);
+      const res = await ApiService.getBrands(typeId, token, true);
       setBrandsForType(res.brands || []);
     } catch { setBrandsForType([]); }
     finally { setBrandsLoading(false); }
-  }, [tenantId, token]);
+  }, [token]);
 
   const loadDevBrandsForType = useCallback(async (typeId: string) => {
     if (!typeId) return;
     try {
-      const res = await ApiService.getBrands(tenantId, typeId, token, false);
+      const res = await ApiService.getBrands(typeId, token, false);
       setDevBrands(res.brands || []);
       if ((res.brands || []).length > 0) setDevBrandId(res.brands[0].id);
       else setDevBrandId('');
     } catch { setDevBrands([]); }
-  }, [tenantId, token]);
+  }, [token]);
 
   const loadDevices = useCallback(async () => {
     try {
       const typeId = devicesFilterType || undefined;
-      const res = await ApiService.getDevices(tenantId, typeId, token, true);
+      const res = await ApiService.getDevices(typeId, token, true);
       setDevices(res.devices || []);
     } catch (err: any) {
       setError(err.message || 'Error al cargar dispositivos.');
     }
-  }, [tenantId, token, devicesFilterType]);
+  }, [token, devicesFilterType]);
 
   const loadRulesForType = useCallback(async (typeId: string) => {
     if (!typeId) return;

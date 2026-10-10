@@ -5,7 +5,6 @@ import type { PricingRule, DeviceBrand, Device } from '../../../types';
 import styles from '../PricingRulesManager.module.css';
 
 interface PricingRulesManagerProps {
-  tenantId: string;
   token: string | null;
 }
 
@@ -37,7 +36,7 @@ function formatRuleValue(ruleKey: string, value: any): string {
   return JSON.stringify(value);
 }
 
-export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenantId, token }) => {
+export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ token }) => {
   const [deviceTypes, setDeviceTypes] = useState<Array<{ id?: string; code: string; name: string }>>(DEFAULT_DEVICE_TYPES);
   const [brands, setBrands] = useState<DeviceBrand[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
@@ -62,14 +61,14 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
 
   // Load catalog device types and brands
   useEffect(() => {
-    ApiService.getDeviceTypes(tenantId, token, false)
+    ApiService.getDeviceTypes(token, false)
       .then((res) => {
         if (res.device_types && res.device_types.length > 0) {
           setDeviceTypes(res.device_types.map((dt) => ({ id: dt.id, code: dt.code, name: dt.name })));
         }
       })
       .catch(() => undefined);
-  }, [tenantId, token]);
+  }, [token]);
 
   // Load brands when device type changes
   useEffect(() => {
@@ -79,13 +78,13 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
     setDevices([]);
     setModel('');
     if (currentDt?.id) {
-      ApiService.getBrands(tenantId, currentDt.id, token)
+      ApiService.getBrands(currentDt.id, token)
         .then((res) => setBrands(res.brands))
         .catch(() => setBrands([]));
     } else {
       setBrands([]);
     }
-  }, [tenantId, token, deviceType, deviceTypes]);
+  }, [token, deviceType, deviceTypes]);
 
   // Load devices (models) when brand changes
   useEffect(() => {
@@ -95,26 +94,26 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
       return;
     }
     const currentDt = deviceTypes.find((dt) => dt.code === deviceType);
-    ApiService.getDevices(tenantId, currentDt?.id, token, false)
+    ApiService.getDevices(currentDt?.id, token, false)
       .then((res) => {
         const filtered = res.devices.filter((d) => d.brand_id === selectedBrandId);
         setDevices(filtered);
       })
       .catch(() => setDevices([]));
-  }, [tenantId, token, selectedBrandId, deviceType, deviceTypes]);
+  }, [token, selectedBrandId, deviceType, deviceTypes]);
 
   const loadRules = useCallback(async () => {
     if (!token) return;
     setRulesLoading(true);
     try {
-      const res = await ApiService.getRules(tenantId, token);
+      const res = await ApiService.getRules(token);
       setRules(res.rules);
     } catch {
       // silently fail — table stays empty
     } finally {
       setRulesLoading(false);
     }
-  }, [tenantId, token]);
+  }, [token]);
 
   useEffect(() => {
     loadRules();
@@ -127,7 +126,6 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ tenant
     setError(null);
 
     const payloadMeta = {
-      tenant_id: tenantId,
       device_type: deviceType,
       brand_id: selectedBrandId || undefined,
       brand_name: selectedBrandName.trim() || undefined,

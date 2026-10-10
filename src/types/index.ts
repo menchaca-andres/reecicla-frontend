@@ -17,7 +17,6 @@ export interface AuthResponse {
 }
 
 export interface QuoteRequest {
-  tenant_id: string;
   device_type: string;
   brand?: string;
   model?: string;

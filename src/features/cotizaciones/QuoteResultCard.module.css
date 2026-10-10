@@ -1,12 +1,16 @@
 .card {
-  padding: 36px;
+  padding: 40px;
   max-width: 640px;
-  margin: 0 auto;
+  margin: 16px auto;
   text-align: center;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
 }
 
 .iconWrapper {
-  background: rgba(16, 185, 129, 0.15);
+  background: rgba(0, 113, 227, 0.06);
   width: 64px;
   height: 64px;
   border-radius: 20px;
@@ -14,7 +18,7 @@
   align-items: center;
   justify-content: center;
   margin-bottom: 16px;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid rgba(0, 113, 227, 0.15);
 }
 
 .badgeMargin {
@@ -23,29 +27,32 @@
 
 .title {
   font-size: 28px;
-  font-weight: 800;
-  color: #ffffff;
-  margin-bottom: 4px;
+  font-weight: 700;
+  color: #1d1d1f;
+  margin-bottom: 6px;
   margin-top: 0;
+  letter-spacing: -0.02em;
 }
 
 .subtitle {
-  font-size: 14px;
-  color: #9ca3af;
+  font-size: 13px;
+  color: #86868b;
   margin-bottom: 28px;
 }
 
 .quoteIdCode {
-  color: #34d399;
-  background: rgba(0, 0, 0, 0.3);
+  color: #0071e3;
+  background: rgba(0, 113, 227, 0.06);
+  border: 1px solid rgba(0, 113, 227, 0.15);
   padding: 2px 8px;
   border-radius: 6px;
+  font-family: monospace;
 }
 
 .detailsGrid {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
+  background: #f5f5f7;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 18px;
   padding: 20px;
   margin-bottom: 24px;
   text-align: left;
@@ -56,39 +63,40 @@
 
 .fieldLabel {
   font-size: 12px;
-  color: #9ca3af;
+  color: #86868b;
   display: flex;
   align-items: center;
   gap: 4px;
   margin: 0 0 4px;
+  font-weight: 500;
 }
 
 .fieldValue {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  color: #ffffff;
+  color: #1d1d1f;
   text-transform: capitalize;
   margin: 0;
 }
 
 .fieldValuePlain {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
-  color: #ffffff;
+  color: #1d1d1f;
   margin: 0;
 }
 
 .fieldValueGreen {
   font-size: 14px;
   font-weight: 600;
-  color: #34d399;
+  color: #34c759;
   text-transform: capitalize;
   margin: 0;
 }
 
 .pricingBox {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(99, 102, 241, 0.12));
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: #f5f5f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 20px;
   padding: 24px;
   margin-bottom: 28px;
@@ -98,18 +106,18 @@
   display: flex;
   justify-content: space-between;
   padding-bottom: 12px;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
   font-size: 14px;
-  color: #9ca3af;
+  color: #86868b;
 }
 
 .pricingRowMiddle {
   display: flex;
   justify-content: space-between;
   padding: 12px 0;
-  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
   font-size: 14px;
-  color: #9ca3af;
+  color: #86868b;
 }
 
 .pricingFinalRow {
@@ -122,13 +130,13 @@
 .finalLabel {
   font-size: 16px;
   font-weight: 700;
-  color: #ffffff;
+  color: #1d1d1f;
 }
 
 .finalPrice {
   font-size: 32px;
   font-weight: 800;
-  color: #10b981;
+  color: #0071e3;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -136,7 +144,65 @@
 
 .currencyPrefix {
   font-size: 20px;
-  color: #10b981;
+  color: #0071e3;
+}
+
+.formContainer {
+  background: #f5f5f7;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 20px;
+  padding: 24px;
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.formTitle {
+  font-size: 18px;
+  color: #1d1d1f;
+  margin-bottom: 4px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.formSubtitle {
+  font-size: 13px;
+  color: #86868b;
+  margin-bottom: 20px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.inputLabel {
+  display: block;
+  font-size: 12px;
+  color: #1d1d1f;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.inputRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.successAlert {
+  background: rgba(52, 199, 89, 0.08);
+  border: 1px solid rgba(52, 199, 89, 0.2);
+  color: #248a3d;
+  padding: 16px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
 }
 
 .btnFull {

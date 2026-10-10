@@ -6,13 +6,15 @@ import styles from './Navbar.module.css';
 interface NavbarProps {
   user: User | null;
   tenantId: string;
+  tenantName?: string;
+  slug?: string;
   onOpenAuth: () => void;
   onLogout: () => void;
   activeTab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'auth';
   setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'auth') => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ user, tenantId, onOpenAuth, onLogout, activeTab, setActiveTab }) => {
+export const Navbar: React.FC<NavbarProps> = ({ user, tenantId, tenantName, slug, onOpenAuth, onLogout, activeTab, setActiveTab }) => {
   return (
     <header className="apple-global-nav">
       <div className="apple-global-nav-content">
@@ -46,7 +48,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, tenantId, onOpenAuth, onLo
         <div className={styles.actions}>
           <div className={styles.tenantBadge}>
             <ShieldCheck size={13} color="#0071e3" />
-            <span>{tenantId.slice(0, 8)}</span>
+            <span>{tenantName || (slug ? `@${slug}` : tenantId.slice(0, 8))}</span>
           </div>
 
           {user ? (
