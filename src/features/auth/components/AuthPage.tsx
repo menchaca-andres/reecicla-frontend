@@ -17,7 +17,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   defaultTenantId,
 }) => {
   const [isLogin, setIsLogin] = useState(true);
-  const [tenantId, setTenantId] = useState(defaultTenantId);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -33,11 +32,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
     try {
       if (isLogin) {
-        const res = await ApiService.login({ tenant_id: tenantId, email, password });
+        const res = await ApiService.login({ tenant_id: defaultTenantId, email, password });
         onSuccess(res);
       } else {
         const res = await ApiService.register({
-          tenant_id: tenantId,
+          tenant_id: defaultTenantId,
           email,
           password,
           name: name || undefined,
@@ -81,21 +80,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         {error && <div className={styles.alertError}>{error}</div>}
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Tenant ID Field */}
-          <div className={styles.inputGroup}>
-            <label className={styles.inputLabel}>Tenant ID</label>
-            <div className={styles.inputWrapper}>
-              <input
-                type="text"
-                className={styles.appleInput}
-                placeholder="Tenant ID"
-                value={tenantId}
-                onChange={(e) => setTenantId(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
           {/* Registration Extra Fields */}
           {!isLogin && (
             <>

@@ -10,17 +10,30 @@ import type { User, Quote, AuthResponse } from './types';
 
 import { ApiService } from './services/api';
 
-const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001';
+const tenantSlug = /^\/recicla\/([a-z0-9]+(?:-[a-z0-9]+)*)/.exec(window.location.pathname)?.[1] || 'demo';
 
 type Tab = 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'auth';
 
 export function App() {
-  const [tenantId] = useState(DEFAULT_TENANT_ID);
+  const tenantId = '';
+  const [tenantName, setTenantName] = useState('');
+  const [tenantError, setTenantError] = useState<string | null>(null);
+  const [tenantLoading, setTenantLoading] = useState(true);
   const [token, setToken] = useState<string | null>(localStorage.getItem('reecicla_token'));
   const [user, setUser] = useState<User | null>(null);
 
   const [activeTab, setActiveTab] = useState<Tab>('cotizar');
   const [latestQuote, setLatestQuote] = useState<Quote | null>(null);
+
+  useEffect(() => {
+    if (!window.location.pathname.startsWith('/recicla/')) {
+      window.history.replaceState(null, '', '/recicla/demo');
+    }
+    ApiService.resolveTenant(tenantSlug)
+      .then(({ tenant }) => setTenantName(tenant.name))
+      .catch((error: Error) => setTenantError(error.message))
+      .finally(() => setTenantLoading(false));
+  }, []);
 
   useEffect(() => {
     if (token) {
@@ -43,6 +56,7 @@ export function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('reecicla_token');
+    window.history.replaceState(null, '', `/recicla/${encodeURIComponent(tenantSlug)}`);
     setToken(null);
     setUser(null);
     setLatestQuote(null);
@@ -55,8 +69,10 @@ export function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {tenantLoading ? <main style={{ margin: 'auto' }}>Cargando negocio...</main> : tenantError ? <main style={{ margin: 'auto' }}>{tenantError}</main> : (
+        <>
       {activeTab !== 'auth' && (
-        <Navbar user={user} tenantId={tenantId} onOpenAuth={() => setActiveTab('auth')} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} />
+        <Navbar user={user} tenantId={tenantName || tenantSlug} onOpenAuth={() => setActiveTab('auth')} onLogout={handleLogout} activeTab={activeTab} setActiveTab={setActiveTab} />
       )}
       <main style={{ flex: 1, maxWidth: '1440px', width: '100%', margin: '0 auto', padding: activeTab === 'auth' ? '0' : '0 32px 64px' }}>
         {activeTab === 'auth' && (<AuthPage onSuccess={handleAuthSuccess} onCancel={() => setActiveTab('cotizar')} defaultTenantId={tenantId} />)}
@@ -102,6 +118,8 @@ export function App() {
           {!user && (<button onClick={() => setActiveTab('auth')} className="btn-primary">Iniciar Sesión</button>)}
         </div>))}
       </main>
+        </>
+      )}
     </div>
   );
 }

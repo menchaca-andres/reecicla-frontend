@@ -1,6 +1,8 @@
 import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order } from '../types';
 
-const GATEWAY_URL = 'http://localhost:3000';
+const GATEWAY_ORIGIN = 'http://localhost:3000';
+const tenantSlug = /^\/recicla\/([a-z0-9]+(?:-[a-z0-9]+)*)/.exec(window.location.pathname)?.[1] || 'demo';
+const GATEWAY_URL = `${GATEWAY_ORIGIN}/recicla/${encodeURIComponent(tenantSlug)}`;
 
 export class ApiService {
   private static getHeaders(token?: string | null): Record<string, string> {
@@ -13,13 +15,19 @@ export class ApiService {
     return headers;
   }
 
+  static async resolveTenant(slug: string): Promise<{ tenant: { name: string; slug: string } }> {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/tenants/slug/${encodeURIComponent(slug)}`);
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'No se pudo encontrar el negocio.');
+    return json;
+  }
 
   static async getDeviceTypes(
-    tenantId: string,
+    _tenantId: string,
     token?: string | null,
     includeInactive = false
   ): Promise<{ device_types: DeviceType[]; deviceTypes: DeviceType[] }> {
-    const params = new URLSearchParams({ tenant_id: tenantId });
+    const params = new URLSearchParams();
     if (includeInactive) params.set('include_inactive', 'true');
     const res = await fetch(`${GATEWAY_URL}/api/catalog/device-types?${params}`, {
       headers: this.getHeaders(token),
@@ -104,10 +112,11 @@ export class ApiService {
     phone?: string;
     role?: string;
   }): Promise<AuthResponse> {
+    const { tenant_id: _tenantId, ...registrationData } = data;
     const res = await fetch(`${GATEWAY_URL}/api/auth/register`, {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify(data),
+      body: JSON.stringify(registrationData),
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al registrarse');
@@ -119,10 +128,11 @@ export class ApiService {
     email: string;
     password: string;
   }): Promise<AuthResponse> {
+    const { tenant_id: _tenantId, ...loginData } = data;
     const res = await fetch(`${GATEWAY_URL}/api/auth/login`, {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify(data),
+      body: JSON.stringify(loginData),
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al iniciar sesión');
@@ -140,18 +150,19 @@ export class ApiService {
   }
 
   static async createQuote(quoteData: QuoteRequest, token: string, idempotencyKey: string): Promise<{ message: string; quote: Quote }> {
+    const { tenant_id: _tenantId, ...scopedQuoteData } = quoteData;
     const res = await fetch(`${GATEWAY_URL}/api/quotation/quotes`, {
       method: 'POST',
       headers: { ...this.getHeaders(token), 'Idempotency-Key': idempotencyKey },
-      body: JSON.stringify(quoteData),
+      body: JSON.stringify(scopedQuoteData),
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al solicitar cotización');
     return json;
   }
 
-  static async getUserQuotes(tenantId: string, token: string): Promise<{ quotes: Quote[] }> {
-    const res = await fetch(`${GATEWAY_URL}/api/quotation/quotes/user?tenant_id=${tenantId}`, {
+  static async getUserQuotes(_tenantId: string, token: string): Promise<{ quotes: Quote[] }> {
+    const res = await fetch(`${GATEWAY_URL}/api/quotation/quotes/user`, {
       method: 'GET',
       headers: this.getHeaders(token),
     });
@@ -206,8 +217,8 @@ export class ApiService {
     return json;
   }
 
-  static async getRules(tenantId: string, token: string): Promise<{ rules: PricingRule[] }> {
-    const res = await fetch(`${GATEWAY_URL}/api/quotation/rules?tenant_id=${tenantId}`, {
+  static async getRules(_tenantId: string, token: string): Promise<{ rules: PricingRule[] }> {
+    const res = await fetch(`${GATEWAY_URL}/api/quotation/rules`, {
       method: 'GET',
       headers: this.getHeaders(token),
     });
@@ -230,6 +241,39 @@ export class ApiService {
     return json;
   }
 
+  static async createTenant(
+    data: { name: string; slug: string; email: string; password: string; admin_name?: string; phone?: string },
+    token: string
+  ): Promise<{ tenant: { id: string; name: string; slug: string }; admin: User }> {
+    const res = await fetch(`${GATEWAY_URL}/api/auth/tenants`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al crear el negocio');
+    return json;
+  }
+
+  static async listTenants(token: string): Promise<{ tenants: Array<{ id: string; name: string; slug: string; status: string }> }> {
+    const res = await fetch(`${GATEWAY_URL}/api/auth/tenants`, {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar negocios');
+    return json;
+  }
+
+  static async bootstrapTenantCatalog(tenantId: string, token: string): Promise<void> {
+    const res = await fetch(`${GATEWAY_URL}/api/catalog/bootstrap`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify({ tenant_id: tenantId }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al inicializar catálogo');
+  }
+
   static async defineRule(
     ruleData: {
       tenant_id: string;
@@ -244,10 +288,11 @@ export class ApiService {
     },
     token?: string
   ): Promise<{ message: string; rule: PricingRule }> {
+    const { tenant_id: _tenantId, ...scopedRuleData } = ruleData;
     const res = await fetch(`${GATEWAY_URL}/api/quotation/rules`, {
       method: 'POST',
       headers: this.getHeaders(token),
-      body: JSON.stringify(ruleData),
+      body: JSON.stringify(scopedRuleData),
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al guardar regla');
@@ -255,12 +300,12 @@ export class ApiService {
   }
 
   static async getBrands(
-    tenantId: string,
+    _tenantId: string,
     deviceTypeId?: string,
     token?: string | null,
     includeInactive = false
   ): Promise<{ brands: DeviceBrand[] }> {
-    const params = new URLSearchParams({ tenant_id: tenantId });
+    const params = new URLSearchParams();
     if (deviceTypeId) params.set('device_type_id', deviceTypeId);
     if (includeInactive) params.set('include_inactive', 'true');
 
@@ -317,12 +362,12 @@ export class ApiService {
   }
 
   static async getDevices(
-    tenantId: string,
+    _tenantId: string,
     deviceTypeId?: string,
     token?: string | null,
     includeInactive = false
   ): Promise<{ devices: Device[] }> {
-    const params = new URLSearchParams({ tenant_id: tenantId });
+    const params = new URLSearchParams();
     if (deviceTypeId) params.set('device_type_id', deviceTypeId);
     if (includeInactive) params.set('include_inactive', 'true');
 
@@ -444,5 +489,3 @@ export class ApiService {
     return json;
   }
 }
-
-

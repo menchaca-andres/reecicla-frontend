@@ -46,7 +46,7 @@ export const Navbar: React.FC<NavbarProps> = ({ user, tenantId, onOpenAuth, onLo
         <div className={styles.actions}>
           <div className={styles.tenantBadge}>
             <ShieldCheck size={13} color="#0071e3" />
-            <span>{tenantId.slice(0, 8)}</span>
+            <span>{tenantId}</span>
           </div>
 
           {user ? (
