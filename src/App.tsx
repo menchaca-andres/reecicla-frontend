@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { AuthPage } from './features/auth';
-import { QuotationWizard, QuoteResultCard, QuoteHistory } from './features/cotizaciones';
+import { QuotationWizard, QuoteResultCard, QuoteHistory, GuestOrderTracking } from './features/cotizaciones';
 import { PricingRulesManager } from './features/reglas-precios';
 import { CatalogManager } from './features/catalogo';
 import { AdminManager } from './features/admins';
@@ -19,6 +19,7 @@ function getInitialSlug(): string {
   if (paramSlug) return paramSlug;
 
   const pathSegments = window.location.pathname.split('/').filter(Boolean);
+  if (pathSegments[0] === 'seguimiento') return 'demo';
   if (pathSegments.length > 0) {
     if (pathSegments[0] === 'recicla' && pathSegments[1]) {
       return pathSegments[1];
@@ -29,6 +30,12 @@ function getInitialSlug(): string {
     }
   }
   return 'demo';
+}
+
+function getInitialTrackingToken(): string | null {
+  const pathSegments = window.location.pathname.split('/').filter(Boolean);
+  const trackingIdx = pathSegments.indexOf('seguimiento');
+  return trackingIdx !== -1 ? pathSegments[trackingIdx + 1] ?? null : null;
 }
 
 function getInitialQuoteIdFromUrl(): string | null {
@@ -45,6 +52,7 @@ function getInitialQuoteIdFromUrl(): string | null {
 }
 
 export function App() {
+  const [trackingToken] = useState<string | null>(getInitialTrackingToken);
   const [slug] = useState<string>(getInitialSlug);
   ApiService.setSlug(slug);
   const [tenantId, setTenantId] = useState<string>(DEFAULT_TENANT_ID);
@@ -58,7 +66,7 @@ export function App() {
   const [latestQuote, setLatestQuote] = useState<Quote | null>(null);
 
   useEffect(() => {
-    if (slug) {
+    if (slug && !trackingToken) {
       ApiService.getTenantBySlug(slug)
         .then((res) => {
           setTenantId(res.tenant_id);
@@ -69,7 +77,7 @@ export function App() {
           setTenantError(err.message || `No se encontró el negocio con la URL '/${slug}'.`);
         });
     }
-  }, [slug]);
+  }, [slug, trackingToken]);
 
   useEffect(() => {
     const urlQuoteId = getInitialQuoteIdFromUrl();
@@ -132,7 +140,7 @@ export function App() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      {activeTab !== 'auth' && (
+      {!trackingToken && activeTab !== 'auth' && (
         <Navbar
           user={user}
           tenantId={tenantId}
@@ -152,6 +160,10 @@ export function App() {
       )}
 
       <main style={{ flex: 1, maxWidth: '1440px', width: '100%', margin: '0 auto', padding: activeTab === 'auth' ? '0' : '0 32px 64px' }}>
+        {trackingToken ? (
+          <GuestOrderTracking token={trackingToken} />
+        ) : (
+          <>
         {activeTab === 'auth' && (<AuthPage onSuccess={handleAuthSuccess} onCancel={() => setActiveTab('cotizar')} />)}
 
         {activeTab === 'cotizar' && (latestQuote ? <QuoteResultCard quote={latestQuote} token={token} onNewQuote={handleNewQuoteClick} /> : <QuotationWizard token={token} onQuoteCreated={handleQuoteCreated} onNeedAuth={() => setActiveTab('auth')} />)}
@@ -190,6 +202,8 @@ export function App() {
           </p>
           {!user && (<button onClick={() => setActiveTab('auth')} className="btn-primary">Iniciar Sesión</button>)}
         </div>))}
+          </>
+        )}
       </main>
     </div>
   );

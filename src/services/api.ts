@@ -1,4 +1,5 @@
 import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order } from '../types';
+import type { GuestOrderTracking } from '../types';
 
 const GATEWAY_URL = 'http://localhost:3000';
 
@@ -177,6 +178,15 @@ export class ApiService {
     const res = await fetch(this.scoped('quotation', `/quotes/${encodeURIComponent(quoteId)}`));
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Cotización no encontrada');
+    return json;
+  }
+
+  static async getGuestOrderTracking(trackingToken: string): Promise<{ order: GuestOrderTracking }> {
+    const res = await fetch(`${GATEWAY_URL}/api/orders/tracking/${encodeURIComponent(trackingToken)}`, {
+      headers: { 'Cache-Control': 'no-store' },
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'No se pudo consultar el seguimiento del pedido');
     return json;
   }
 

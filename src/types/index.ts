@@ -170,3 +170,25 @@ export interface Order {
   } | null;
   created_at: string;
 }
+
+export interface GuestOrderTracking {
+  order_number: string;
+  device_type_name: string;
+  brand: string | null;
+  model: string | null;
+  device_year: number | null;
+  declared_condition: string;
+  quoted_price: number | string;
+  currency: string;
+  status: string;
+  accepted_at: string;
+  tracking_code: string | null;
+  box_status: string | null;
+  shipped_at: string | null;
+  status_history: Array<{
+    previous_status: string | null;
+    new_status: string;
+    reason: string | null;
+    created_at: string;
+  }>;
+}
