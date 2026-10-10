@@ -1,5 +1,4 @@
 import React from 'react';
-import { PlusCircle, Power } from 'lucide-react';
 import type { DeviceType, DeviceBrand, Device } from '../../../types';
 import styles from '../catalog.module.css';
 
@@ -48,9 +47,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({
     <div className={styles.panelStack}>
       {/* Create Device Form */}
       <div className={styles.panel}>
-        <h3 className={styles.sectionTitle}>
-          <PlusCircle size={18} color="#2563eb" /> Registrar Nuevo Dispositivo en Catálogo
-        </h3>
+        <h3 className={styles.sectionTitle}>Registrar dispositivo</h3>
         <form onSubmit={handleCreateDevice} className={styles.formGrid3}>
           <div>
             <label className={styles.label}>Tipo de Equipo *</label>
@@ -123,38 +120,40 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({
         {devices.length === 0 ? (
           <p className={styles.emptyText}>No hay dispositivos registrados.</p>
         ) : (
-          <table className={styles.table}>
-            <thead className={styles.thead}>
-              <tr>
-                <th>Tipo</th>
-                <th>Marca</th>
-                <th>Modelo</th>
-                <th>Año</th>
-                <th>Estado</th>
-                <th className={styles.thRight}>Acciones</th>
-              </tr>
-            </thead>
-            <tbody className={styles.tbody}>
-              {devices.map((dev) => (
-                <tr key={dev.id}>
-                  <td>{dev.device_type_name || '—'}</td>
-                  <td>{dev.brand_name || '—'}</td>
-                  <td className={styles.codeText}>{dev.model}</td>
-                  <td>{dev.year || 'N/A'}</td>
-                  <td>
-                    <span className={dev.status === 'ACTIVE' ? styles.badgeActive : styles.badgeInactive}>
-                      {dev.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </td>
-                  <td className={styles.tdRight}>
-                    <button onClick={() => handleToggleDevice(dev)} title={dev.status === 'ACTIVE' ? 'Inactivar' : 'Activar'} className={styles.btnIcon} style={{ color: dev.status === 'ACTIVE' ? '#ef4444' : '#22c55e' }}>
-                      <Power size={15} />
-                    </button>
-                  </td>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead className={styles.thead}>
+                <tr>
+                  <th>Tipo</th>
+                  <th>Marca</th>
+                  <th>Modelo</th>
+                  <th>Año</th>
+                  <th>Estado</th>
+                  <th className={styles.thRight}>Acciones</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className={styles.tbody}>
+                {devices.map((dev) => (
+                  <tr key={dev.id}>
+                    <td>{dev.device_type_name || '—'}</td>
+                    <td>{dev.brand_name || '—'}</td>
+                    <td className={styles.codeText}>{dev.model}</td>
+                    <td>{dev.year || 'N/A'}</td>
+                    <td>
+                      <span className={dev.status === 'ACTIVE' ? styles.badgeActive : styles.badgeInactive}>
+                        {dev.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                    <td className={styles.tdRight}>
+                      <button onClick={() => handleToggleDevice(dev)} title={dev.status === 'ACTIVE' ? 'Inactivar' : 'Activar'} className={styles.actionTextButton}>
+                        {dev.status === 'ACTIVE' ? 'Inactivar' : 'Activar'}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

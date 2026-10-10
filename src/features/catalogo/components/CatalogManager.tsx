@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Cpu, AlertCircle, CheckCircle2, RefreshCw, Package, Tag, ClipboardCheck } from 'lucide-react';
 import { ApiService } from '../../../services/api';
 import type { DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem } from '../../../types';
 import styles from '../catalog.module.css';
@@ -277,14 +276,9 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token 
     <div className={styles.container}>
       {/* Header */}
       <div className={styles.header}>
-        <div className={styles.headerLeft}>
-          <div className={styles.headerIcon}>
-            <Cpu size={22} />
-          </div>
-          <div>
-            <h2 className={styles.headerTitle}>Gestión de Catálogo</h2>
-            <p className={styles.headerSubtitle}>Dispositivos · Marcas · Tipos · Reglas de Evaluación</p>
-          </div>
+        <div>
+          <h2 className={styles.headerTitle}>Catálogo</h2>
+          <p className={styles.headerSubtitle}>Administra dispositivos, marcas, tipos y reglas de evaluación.</p>
         </div>
         <button
           onClick={() => {
@@ -296,19 +290,19 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token 
           disabled={loading}
           className={styles.refreshButton}
         >
-          <RefreshCw size={14} style={{ animation: loading ? 'spin 1s linear infinite' : 'none' }} /> Actualizar
+          {loading ? 'Actualizando...' : 'Actualizar'}
         </button>
       </div>
 
       {/* Alerts */}
       {error && (
         <div className={styles.alertError}>
-          <AlertCircle size={16} /> {error}
+          {error}
         </div>
       )}
       {success && (
         <div className={styles.alertSuccess}>
-          <CheckCircle2 size={16} /> {success}
+          {success}
         </div>
       )}
 
@@ -318,25 +312,25 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ tenantId, token 
           className={`${styles.tabButton} ${activeTab === 'devices' ? styles.active : ''}`}
           onClick={() => setActiveTab('devices')}
         >
-          <Package size={15} /> Dispositivos
+          Dispositivos
         </button>
         <button
           className={`${styles.tabButton} ${activeTab === 'brands' ? styles.active : ''}`}
           onClick={() => setActiveTab('brands')}
         >
-          <Tag size={15} /> Marcas por Tipo
+          Marcas
         </button>
         <button
           className={`${styles.tabButton} ${activeTab === 'types' ? styles.active : ''}`}
           onClick={() => setActiveTab('types')}
         >
-          <Cpu size={15} /> Tipos de Equipo
+          Tipos de equipo
         </button>
         <button
           className={`${styles.tabButton} ${activeTab === 'rules' ? styles.active : ''}`}
           onClick={() => setActiveTab('rules')}
         >
-          <ClipboardCheck size={15} /> Reglas de Evaluación
+          Reglas de evaluación
         </button>
       </div>
 
