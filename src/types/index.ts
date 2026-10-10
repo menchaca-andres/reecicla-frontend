@@ -156,6 +156,7 @@ export interface Order {
   status: string;
   customer_name?: string | null;
   customer_email?: string | null;
+  customer_phone?: string | null;
   tracking_code?: string | null;
   box_status?: string | null;
   shipped_at?: string | null;
@@ -165,6 +166,7 @@ export interface Order {
     state?: string;
     zip_code?: string;
     notes?: string;
+    address?: string;
   } | null;
   created_at: string;
 }

@@ -154,7 +154,7 @@ export function App() {
       <main style={{ flex: 1, maxWidth: '1440px', width: '100%', margin: '0 auto', padding: activeTab === 'auth' ? '0' : '0 32px 64px' }}>
         {activeTab === 'auth' && (<AuthPage onSuccess={handleAuthSuccess} onCancel={() => setActiveTab('cotizar')} />)}
 
-        {activeTab === 'cotizar' && (latestQuote ? <QuoteResultCard quote={latestQuote} token={token} onNewQuote={handleNewQuoteClick} onGuestRegistered={handleAuthSuccess} onNeedAuth={() => setActiveTab('auth')} /> : <QuotationWizard token={token} onQuoteCreated={handleQuoteCreated} onNeedAuth={() => setActiveTab('auth')} />)}
+        {activeTab === 'cotizar' && (latestQuote ? <QuoteResultCard quote={latestQuote} token={token} onNewQuote={handleNewQuoteClick} /> : <QuotationWizard token={token} onQuoteCreated={handleQuoteCreated} onNeedAuth={() => setActiveTab('auth')} />)}
 
         {activeTab === 'historial' && (token ? (<QuoteHistory token={token} />) : (<div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '540px', margin: '32px auto', background: '#ffffff' }}>
           <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px', fontWeight: 700 }}>Autenticación Reequerida</h3>

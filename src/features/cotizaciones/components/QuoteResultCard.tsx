@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Calendar, Cpu, Tag, ArrowRight, UserCheck } from 'lucide-react';
-import type { AuthResponse, Quote } from '../../../types';
+import type { Quote } from '../../../types';
 import { ApiService } from '../../../services/api';
 import styles from '../QuoteResultCard.module.css';
 
@@ -8,21 +8,20 @@ interface QuoteResultCardProps {
   quote: Quote;
   token?: string | null;
   onNewQuote: () => void;
-  onGuestRegistered?: (authData: AuthResponse) => void;
-  onNeedAuth: () => void;
 }
 
-export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({ quote: initialQuote, token, onNewQuote, onGuestRegistered, onNeedAuth }) => {
+export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({ quote: initialQuote, token, onNewQuote }) => {
   const [quote, setQuote] = useState<Quote>(initialQuote);
   const [showForm, setShowForm] = useState(false);
+  const [verificationRequired, setVerificationRequired] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const needsSignIn = error?.includes('Inicia sesión') ?? false;
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
 
   const basePrice = Number(quote.base_price);
   const adjustment = Number(quote.adjustment);
@@ -39,14 +38,38 @@ export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({ quote: initial
         customer_email: email,
         phone,
         address,
+        ...(verificationRequired ? { verification_code: verificationCode } : {}),
       });
+      if ('verification_required' in res) {
+        setVerificationRequired(true);
+        setError(null);
+        return;
+      }
       setQuote(res.quote);
       setShowForm(false);
-      if (res.token && res.user) {
-        onGuestRegistered?.({ message: 'Cliente vinculado a la cotización.', token: res.token, user: res.user });
-      }
     } catch (err: any) {
       setError(err.message || 'Error al aceptar la cotización');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await ApiService.acceptQuote(quote.id, token, {
+        customer_name: name,
+        customer_email: email,
+        phone,
+        address,
+      });
+      if ('verification_required' in res) {
+        setVerificationCode('');
+        setError(null);
+      }
+    } catch (err: any) {
+      setError(err.message || 'No se pudo reenviar el código');
     } finally {
       setLoading(false);
     }
@@ -76,11 +99,6 @@ export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({ quote: initial
       {error && (
         <div style={{ background: 'rgba(255, 59, 48, 0.08)', border: '1px solid rgba(255, 59, 48, 0.2)', color: '#ff3b30', padding: '12px 16px', borderRadius: '14px', marginBottom: '24px', fontSize: '13px' }}>
           {error}
-          {needsSignIn && (
-            <button type="button" onClick={onNeedAuth} className="btn-secondary" style={{ display: 'block', marginTop: '12px' }}>
-              Iniciar sesión
-            </button>
-          )}
         </div>
       )}
 
@@ -140,47 +158,82 @@ export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({ quote: initial
             <UserCheck size={20} color="#0071e3" /> Datos para coordinar el retiro
           </h3>
           <p className={styles.formSubtitle}>
-            Completá tus datos de contacto para que coordinemos el retiro o envío del equipo.
+            {verificationRequired
+              ? `Enviamos un código a ${email}. Ingrésalo para verificar tu correo y aceptar la cotización.`
+              : 'Completá tus datos de contacto para coordinar el retiro. Te enviaremos un código para verificar el correo.'}
           </p>
 
           <div className={styles.inputGroup}>
-            <div>
-              <label className={styles.inputLabel}>Nombre Completo *</label>
-              <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="input-field" placeholder="Ej: Juan Pérez" style={{ width: '100%', boxSizing: 'border-box' }} />
-            </div>
+            {!verificationRequired && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div>
+                  <label className={styles.inputLabel}>Nombre Completo *</label>
+                  <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="input-field" placeholder="Ej: Juan Pérez" style={{ width: '100%', boxSizing: 'border-box' }} />
+                </div>
 
-            <div>
-              <label className={styles.inputLabel}>Correo Electrónico *</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input-field" placeholder="ejemplo@correo.com" style={{ width: '100%', boxSizing: 'border-box' }} />
-            </div>
+                <div>
+                  <label className={styles.inputLabel}>Correo Electrónico *</label>
+                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input-field" placeholder="ejemplo@correo.com" style={{ width: '100%', boxSizing: 'border-box' }} />
+                </div>
 
-            <div className={styles.inputRow}>
-              <div>
-                <label className={styles.inputLabel}>Teléfono / Celular *</label>
-                <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className="input-field" placeholder="70012345" style={{ width: '100%', boxSizing: 'border-box' }} />
+                <div className={styles.inputRow}>
+                  <div>
+                    <label className={styles.inputLabel}>Teléfono / Celular *</label>
+                    <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className="input-field" placeholder="70012345" style={{ width: '100%', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label className={styles.inputLabel}>Dirección de Recolección</label>
+                    <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="input-field" placeholder="Av. Principal #123" style={{ width: '100%', boxSizing: 'border-box' }} />
+                  </div>
+                </div>
               </div>
+            )}
+            {verificationRequired && (
               <div>
-                <label className={styles.inputLabel}>Dirección de Recolección</label>
-                <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="input-field" placeholder="Av. Principal #123" style={{ width: '100%', boxSizing: 'border-box' }} />
+                <label className={styles.inputLabel}>Código de verificación *</label>
+                <input
+                  type="text"
+                  required
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="input-field"
+                  placeholder="123456"
+                  style={{ width: '100%', boxSizing: 'border-box' }}
+                />
               </div>
-            </div>
+            )}
           </div>
 
           <div style={{ display: 'flex', gap: '12px' }}>
             <button type="submit" disabled={loading} className="btn-primary" style={{ flex: 1, padding: '12px' }}>
-              {loading ? 'Confirmando...' : 'Confirmar y Aceptar'}
+              {loading ? 'Confirmando...' : verificationRequired ? 'Verificar y Aceptar' : 'Enviar código'}
             </button>
             <button type="button" onClick={() => setShowForm(false)} className="btn-secondary" style={{ padding: '12px 20px' }}>
               Cancelar
             </button>
           </div>
+          {verificationRequired && (
+            <button
+              type="button"
+              onClick={handleResendCode}
+              disabled={loading}
+              className="btn-secondary"
+              style={{ width: '100%', marginTop: '12px' }}
+            >
+              Reenviar código
+            </button>
+          )}
         </form>
       )}
 
       {/* Confirmación exitosa */}
       {isAccepted && (
         <div className={styles.successAlert}>
-          ✓ Cotización aceptada exitosamente. Te contactaremos a la brevedad para coordinar el retiro del equipo.
+          ✓ Cotización aceptada exitosamente. No necesitas crear una cuenta; te contactaremos a la brevedad para coordinar el retiro del equipo.
         </div>
       )}
 

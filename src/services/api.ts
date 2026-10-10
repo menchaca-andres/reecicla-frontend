@@ -193,8 +193,8 @@ export class ApiService {
   static async acceptQuote(
     quoteId: string,
     token?: string | null,
-    customerData?: { customer_name?: string; customer_email?: string; phone?: string; address?: string }
-  ): Promise<{ quote: Quote; token?: string; user?: User }> {
+    customerData?: { customer_name?: string; customer_email?: string; phone?: string; address?: string; verification_code?: string }
+  ): Promise<{ quote: Quote } | { verification_required: true; message: string }> {
     const res = await fetch(this.scoped('quotation', `/quotes/${encodeURIComponent(quoteId)}/accept`), {
       method: 'POST',
       headers: this.getHeaders(token),
@@ -488,5 +488,3 @@ export class ApiService {
     return json;
   }
 }
-
-

@@ -150,6 +150,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                   </div>
                   <span className={styles.customerText}>
                     Cliente: <strong>{order.customer_name || 'Cliente'}</strong> ({order.customer_email || '—'})
+                    {order.customer_phone && ` · ${order.customer_phone}`}
                   </span>
                 </div>
 
@@ -166,7 +167,8 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                     <p className={styles.fieldCategory}>Dirección de Recojo</p>
                     {order.pickup_address ? (
                       <p className={styles.addressText}>
-                        {order.pickup_address.street}, {order.pickup_address.city} ({order.pickup_address.state})
+                        {order.pickup_address.address ||
+                          [order.pickup_address.street, order.pickup_address.city, order.pickup_address.state].filter(Boolean).join(', ')}
                         {order.pickup_address.notes && <span className={styles.addressNotes}>Notas: {order.pickup_address.notes}</span>}
                       </p>
                     ) : (
