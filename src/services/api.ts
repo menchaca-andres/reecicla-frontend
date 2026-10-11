@@ -206,6 +206,16 @@ export class ApiService {
     return json;
   }
 
+  static async receiveOrder(orderId: string, token: string): Promise<{ message: string; order: Order }> {
+    const res = await fetch(`${GATEWAY_URL}/api/orders/${encodeURIComponent(orderId)}/receive`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al registrar la recepción del equipo');
+    return json;
+  }
+
   static async getRules(tenantId: string, token: string): Promise<{ rules: PricingRule[] }> {
     const res = await fetch(`${GATEWAY_URL}/api/quotation/rules?tenant_id=${tenantId}`, {
       method: 'GET',
