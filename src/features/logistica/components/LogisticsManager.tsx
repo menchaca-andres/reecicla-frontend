@@ -69,6 +69,22 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     }
   };
 
+  const handleReceiveOrder = async (order: Order) => {
+    if (!token || !window.confirm(`¿Confirmas la recepción del equipo de la orden ${order.order_number}?`)) return;
+    setSubmitting(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      const result = await ApiService.receiveOrder(order.id, token);
+      setSuccessMsg(result.message);
+      await fetchOrders();
+    } catch (err: any) {
+      setError(err.message || 'Error al registrar la recepción del equipo.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const filteredOrders = orders.filter((o) => {
     if (statusFilter === 'ALL') return true;
     return o.status === statusFilter;
@@ -94,8 +110,8 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
             <Truck size={24} />
           </div>
           <div>
-            <h2 className={styles.title}>Gestión de Logística y Envíos (HU-013)</h2>
-            <p className={styles.subtitle}>Registra guías de rastreo y actualiza estados de envío para las cajas solicitadas por clientes.</p>
+            <h2 className={styles.title}>Gestión de Logística y Recepción (HU-013/HU-014)</h2>
+              <p className={styles.subtitle}>Registra guías, seguimiento y recepción de equipos en almacén.</p>
           </div>
         </div>
 
@@ -121,6 +137,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
           { code: 'BOX_REQUESTED', label: 'Cajas Solicitadas (Pendientes Guía)' },
           { code: 'BOX_SHIPPED', label: 'Cajas Enviadas' },
           { code: 'IN_TRANSIT', label: 'En Tránsito' },
+          { code: 'RECEIVED', label: 'Recibidos' },
         ].map((f) => (
           <button key={f.code} onClick={() => setStatusFilter(f.code)} className={statusFilter === f.code ? styles.filterChipActive : styles.filterChip}>
             {f.label}
@@ -179,6 +196,16 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
 
                     {(order.status === 'BOX_REQUESTED' || order.status === 'ACCEPTED' || order.status === 'BOX_SHIPPED') && (
                       <button onClick={() => handleOpenDispatchModal(order)} className={`btn-primary ${styles.dispatchBtn}`}><Box size={14} /> {order.tracking_code ? 'Editar Guía / Tracking' : 'Registrar Guía de Envío'}</button>
+                    )}
+                    {order.status === 'IN_TRANSIT' && (
+                      <button
+                        type="button"
+                        onClick={() => void handleReceiveOrder(order)}
+                        disabled={submitting}
+                        className={`btn-primary ${styles.dispatchBtn}`}
+                      >
+                        <CheckCircle2 size={14} /> Registrar Recepción
+                      </button>
                     )}
                   </div>
                 </div>

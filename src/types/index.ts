@@ -160,6 +160,13 @@ export interface Order {
   tracking_code?: string | null;
   box_status?: string | null;
   shipped_at?: string | null;
+  received_at?: string | null;
+  status_history?: Array<{
+    previous_status: string | null;
+    new_status: string;
+    reason: string | null;
+    created_at: string;
+  }>;
   pickup_address?: {
     street?: string;
     city?: string;
