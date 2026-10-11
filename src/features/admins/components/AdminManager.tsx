@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, Building2, CheckCircle, Lock, Mail, Phone, User as UserIcon, UserPlus } from 'lucide-react';
 import { ApiService } from '../../../services/api';
 import styles from '../AdminManager.module.css';
 
@@ -130,18 +129,12 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.headerRow}>
-          <div className={styles.headerIcon}><Building2 size={20} color="#ffffff" /></div>
-          <div>
-            <h2 className={styles.title}>Negocios y administradores</h2>
-            <p className={styles.subtitle}>Crea negocios con su administrador principal o agrega personal a un negocio existente.</p>
-          </div>
-        </div>
+        <h1 className={styles.title}>Negocios y administradores</h1>
+        <p className={styles.subtitle}>Crea negocios con su administrador principal o agrega personal a un negocio existente.</p>
       </div>
 
       {success && (
-        <div className={styles.successBanner}>
-          <CheckCircle size={20} color="#22c55e" />
+        <div className={styles.successBanner} role="status">
           <div>
             <p className={styles.successDesc}>{success}</p>
             {createdTenantSlug && (
@@ -153,8 +146,7 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
         </div>
       )}
       {error && (
-        <div className={styles.errorBanner}>
-          <AlertCircle size={15} color="#f87171" />
+        <div className={styles.errorBanner} role="alert">
           <span className={styles.errorText}>{error}</span>
           {pendingCatalog && <button type="button" onClick={retryCatalog} disabled={loading} className={styles.clearBtn}>Reintentar catálogo</button>}
           {pendingCatalog && (
@@ -165,8 +157,8 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
         </div>
       )}
 
-      <div className={`glass-panel ${styles.formCard}`}>
-        <h3 className={styles.cardTitle}><Building2 size={16} color="#7c3aed" /> Crear negocio y administrador principal</h3>
+      <section className={styles.formCard}>
+        <h2 className={styles.cardTitle}>Crear negocio y administrador principal</h2>
         <form onSubmit={createBusiness} className={styles.form}>
           <div>
             <label className={styles.label}>Nombre del negocio *</label>
@@ -182,27 +174,27 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
             <small>reecicla.app/recicla/{slug || 'mi-negocio'}</small>
           </div>
           <div>
-            <label className={styles.label}><UserIcon size={12} /> Nombre del administrador principal</label>
+            <label className={styles.label}>Nombre del administrador principal</label>
             <input className="input-field" value={adminName} onChange={(event) => setAdminName(event.target.value)} />
           </div>
           <div>
-            <label className={styles.label}><Phone size={12} /> Teléfono</label>
+            <label className={styles.label}>Teléfono</label>
             <input className="input-field" value={phone} onChange={(event) => setPhone(event.target.value)} />
           </div>
           <div>
-            <label className={styles.label}><Mail size={12} /> Correo del administrador principal *</label>
+            <label className={styles.label}>Correo del administrador principal *</label>
             <input className="input-field" type="email" value={adminEmail} onChange={(event) => setAdminEmail(event.target.value)} required />
           </div>
           <div>
-            <label className={styles.label}><Lock size={12} /> Contraseña inicial *</label>
+            <label className={styles.label}>Contraseña inicial *</label>
             <input className="input-field" type="password" value={adminPassword} onChange={(event) => setAdminPassword(event.target.value)} required minLength={8} />
           </div>
-          <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading}>{loading ? 'Creando...' : 'Crear negocio'}</button>
+          <button type="submit" className={styles.submitBtn} disabled={loading}>{loading ? 'Creando...' : 'Crear negocio'}</button>
         </form>
-      </div>
+      </section>
 
-      <div className={`glass-panel ${styles.formCard}`}>
-        <h3 className={styles.cardTitle}><UserPlus size={16} color="#7c3aed" /> Agregar administrador a un negocio</h3>
+      <section className={styles.formCard}>
+        <h2 className={styles.cardTitle}>Agregar administrador a un negocio</h2>
         <form onSubmit={createAdditionalAdmin} className={styles.form}>
           <div>
             <label className={styles.label}>Negocio *</label>
@@ -222,9 +214,9 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
           <div><label className={styles.label}>Teléfono</label><input className="input-field" value={additionalPhone} onChange={(event) => setAdditionalPhone(event.target.value)} /></div>
           <div><label className={styles.label}>Correo *</label><input className="input-field" type="email" value={additionalEmail} onChange={(event) => setAdditionalEmail(event.target.value)} required /></div>
           <div><label className={styles.label}>Contraseña *</label><input className="input-field" type="password" value={additionalPassword} onChange={(event) => setAdditionalPassword(event.target.value)} required minLength={8} /></div>
-          <button type="submit" className={`btn-primary ${styles.submitBtn}`} disabled={loading || !tenants.length}>{loading ? 'Guardando...' : 'Agregar administrador'}</button>
+          <button type="submit" className={styles.submitBtn} disabled={loading || !tenants.length}>{loading ? 'Guardando...' : 'Agregar administrador'}</button>
         </form>
-      </div>
+      </section>
 
       <p className={styles.infoNote}>Los negocios nuevos reciben un catálogo base. Configura sus reglas de precios antes de habilitar las cotizaciones.</p>
     </div>

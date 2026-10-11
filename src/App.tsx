@@ -9,12 +9,13 @@ import { LogisticsManager } from './features/logistica';
 import type { User, Quote, AuthResponse } from './types';
 
 import { ApiService } from './services/api';
+import { PlatformAdminPage } from './features/admins/components/PlatformAdminPage';
 
 const tenantSlug = /^\/recicla\/([a-z0-9]+(?:-[a-z0-9]+)*)/.exec(window.location.pathname)?.[1] || 'demo';
 
 type Tab = 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'auth';
 
-export function App() {
+function TenantApp() {
   const tenantId = '';
   const [tenantName, setTenantName] = useState('');
   const [tenantError, setTenantError] = useState<string | null>(null);
@@ -122,6 +123,12 @@ export function App() {
       )}
     </div>
   );
+}
+
+export function App() {
+  return window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin/')
+    ? <PlatformAdminPage />
+    : <TenantApp />;
 }
 
 export default App;

@@ -16,6 +16,17 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface PlatformAuthResponse {
+  message: string;
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: 'SUPER_ADMIN';
+  };
+}
+
 export interface QuoteRequest {
   tenant_id: string;
   device_type: string;

@@ -1,4 +1,4 @@
-import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order } from '../types';
+import type { AuthResponse, PlatformAuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order } from '../types';
 
 const GATEWAY_ORIGIN = 'http://localhost:3000';
 const tenantSlug = /^\/recicla\/([a-z0-9]+(?:-[a-z0-9]+)*)/.exec(window.location.pathname)?.[1] || 'demo';
@@ -19,6 +19,26 @@ export class ApiService {
     const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/tenants/slug/${encodeURIComponent(slug)}`);
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'No se pudo encontrar el negocio.');
+    return json;
+  }
+
+  static async platformLogin(data: { email: string; password: string }): Promise<PlatformAuthResponse> {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/platform/login`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al iniciar sesión en administración');
+    return json as PlatformAuthResponse;
+  }
+
+  static async getPlatformProfile(token: string): Promise<{ user: { id: string; email: string; name: string; role: 'SUPER_ADMIN' } }> {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/platform/me`, {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'La sesión de plataforma expiró');
     return json;
   }
 
@@ -231,7 +251,7 @@ export class ApiService {
     data: { tenant_id: string; email: string; password: string; name?: string; phone?: string; role?: string },
     token: string
   ): Promise<{ message: string; user: User }> {
-    const res = await fetch(`${GATEWAY_URL}/api/auth/admin`, {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/admin`, {
       method: 'POST',
       headers: this.getHeaders(token),
       body: JSON.stringify(data),
@@ -245,7 +265,7 @@ export class ApiService {
     data: { name: string; slug: string; email: string; password: string; admin_name?: string; phone?: string },
     token: string
   ): Promise<{ tenant: { id: string; name: string; slug: string }; admin: User }> {
-    const res = await fetch(`${GATEWAY_URL}/api/auth/tenants`, {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/tenants`, {
       method: 'POST',
       headers: this.getHeaders(token),
       body: JSON.stringify(data),
@@ -256,7 +276,7 @@ export class ApiService {
   }
 
   static async listTenants(token: string): Promise<{ tenants: Array<{ id: string; name: string; slug: string; status: string }> }> {
-    const res = await fetch(`${GATEWAY_URL}/api/auth/tenants`, {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/tenants`, {
       headers: this.getHeaders(token),
     });
     const json = await res.json();
@@ -265,7 +285,7 @@ export class ApiService {
   }
 
   static async bootstrapTenantCatalog(tenantId: string, token: string): Promise<void> {
-    const res = await fetch(`${GATEWAY_URL}/api/catalog/bootstrap`, {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/catalog/bootstrap`, {
       method: 'POST',
       headers: this.getHeaders(token),
       body: JSON.stringify({ tenant_id: tenantId }),
