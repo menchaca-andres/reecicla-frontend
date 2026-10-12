@@ -1,4 +1,4 @@
-import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order } from '../types';
+import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection } from '../types';
 
 const GATEWAY_URL = 'http://localhost:3000';
 
@@ -451,6 +451,67 @@ export class ApiService {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al consultar solicitudes de caja');
+    return json;
+  }
+
+  private static inspectionError(res: Response, json: any, fallback: string): Error {
+    const details = Array.isArray(json.details) ? ` ${json.details.join(' ')}` : '';
+    const error = new Error(`${json.error || fallback}${details}`);
+    (error as any).status = res.status;
+    return error;
+  }
+
+  static async getPendingInspections(token: string): Promise<{ pending: PendingInspection[] }> {
+    const res = await fetch(`${GATEWAY_URL}/api/inspections/pending`, {
+      method: 'GET',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw this.inspectionError(res, json, 'Error al consultar equipos pendientes de inspección');
+    return json;
+  }
+
+  static async getInspectionChecklist(orderId: string, token: string): Promise<InspectionChecklist> {
+    const res = await fetch(`${GATEWAY_URL}/api/inspections/orders/${encodeURIComponent(orderId)}/checklist`, {
+      method: 'GET',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw this.inspectionError(res, json, 'Error al consultar la checklist');
+    return json;
+  }
+
+  static async registerInspection(
+    data: RegisterInspectionInput,
+    token: string
+  ): Promise<{ message: string; inspection: Inspection }> {
+    const res = await fetch(`${GATEWAY_URL}/api/inspections`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw this.inspectionError(res, json, 'Error al registrar la inspección');
+    return json;
+  }
+
+  static async getInspections(token: string): Promise<{ inspections: Inspection[] }> {
+    const res = await fetch(`${GATEWAY_URL}/api/inspections`, {
+      method: 'GET',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw this.inspectionError(res, json, 'Error al consultar inspecciones');
+    return json;
+  }
+
+  static async getInspectionByOrder(orderId: string, token: string): Promise<{ inspection: Inspection }> {
+    const res = await fetch(`${GATEWAY_URL}/api/inspections/orders/${encodeURIComponent(orderId)}`, {
+      method: 'GET',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw this.inspectionError(res, json, 'Error al consultar la inspección');
     return json;
   }
 }

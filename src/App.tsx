@@ -6,13 +6,14 @@ import { PricingRulesManager } from './features/reglas-precios';
 import { CatalogManager } from './features/catalogo';
 import { AdminManager } from './features/admins';
 import { LogisticsManager } from './features/logistica';
+import { InspectionManager } from './features/inspeccion';
 import type { User, Quote, AuthResponse } from './types';
 
 import { ApiService } from './services/api';
 
 const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001';
 
-type Tab = 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'auth';
+type Tab = 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'inspeccion' | 'auth';
 
 export function App() {
   const [tenantId] = useState(DEFAULT_TENANT_ID);
@@ -98,6 +99,15 @@ export function App() {
           <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px', fontWeight: 700 }}>Acceso Restringido</h3>
           <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>
             La gestión de logística está reservada para personal autorizado y administradores.
+          </p>
+          {!user && (<button onClick={() => setActiveTab('auth')} className="btn-primary">Iniciar Sesión</button>)}
+        </div>))}
+
+
+        {activeTab === 'inspeccion' && (user && (user.role === 'TENANT_ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'INSPECTOR') ? (<InspectionManager token={token} canRegister={user.role === 'INSPECTOR'} />) : (<div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '540px', margin: '32px auto', background: '#ffffff' }}>
+          <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px', fontWeight: 700 }}>Acceso Restringido</h3>
+          <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>
+            La inspección de equipos está reservada para inspectores (<strong>INSPECTOR</strong>) y administradores.
           </p>
           {!user && (<button onClick={() => setActiveTab('auth')} className="btn-primary">Iniciar Sesión</button>)}
         </div>))}
