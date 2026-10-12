@@ -1,5 +1,4 @@
 import React from 'react';
-import { History, Plus, PlusCircle, Trash2, AlertCircle } from 'lucide-react';
 import type { DeviceType, EvaluationRule, ChecklistItem } from '../../../types';
 import styles from '../catalog.module.css';
 
@@ -75,13 +74,13 @@ export const RulesTab: React.FC<RulesTabProps> = ({
             onClick={() => setShowHistoryModal(!showHistoryModal)}
             className={styles.btnSecondary}
           >
-            <History size={15} /> Historial de Versiones ({ruleHistory.length})
+            Historial de versiones ({ruleHistory.length})
           </button>
           <button
             onClick={() => setShowNewRuleForm(!showNewRuleForm)}
             className={styles.btnPrimary}
           >
-            <Plus size={15} /> Crear Nueva Versión
+            Crear nueva versión
           </button>
         </div>
       </div>
@@ -90,43 +89,43 @@ export const RulesTab: React.FC<RulesTabProps> = ({
       {showHistoryModal && (
         <div className={styles.historyPanel}>
           <h4 className={styles.historyTitle}>
-            <History size={16} /> Historial de Reglas de Evaluación para {deviceTypes.find(t => t.id === selectedTypeForRule)?.name}
+            Historial de reglas de evaluación para {deviceTypes.find(t => t.id === selectedTypeForRule)?.name}
           </h4>
-          <table className={styles.tableSmall}>
-            <thead className={styles.thead}>
-              <tr>
-                <th>Versión</th>
-                <th>Estado</th>
-                <th>Vigencia Desde</th>
-                <th>Vigencia Hasta</th>
-                <th>Ítems Checklist</th>
-              </tr>
-            </thead>
-            <tbody className={styles.tbody}>
-              {ruleHistory.map(r => (
-                <tr key={r.id}>
-                  <td style={{ fontWeight: 700 }}>v{r.version}</td>
-                  <td>
-                    <span className={r.is_active ? styles.badgeVersionActive : styles.badgeVersionHistory}>
-                      {r.is_active ? 'VIGENTE' : 'HISTÓRICA'}
-                    </span>
-                  </td>
-                  <td style={{ color: '#475569' }}>{new Date(r.effective_from).toLocaleString()}</td>
-                  <td style={{ color: '#475569' }}>{r.effective_until ? new Date(r.effective_until).toLocaleString() : 'Vigente'}</td>
-                  <td style={{ fontWeight: 600 }}>{r.checklist?.length || 0} ítems</td>
+          <div className={styles.tableWrap}>
+            <table className={styles.tableSmall}>
+              <thead className={styles.thead}>
+                <tr>
+                  <th>Versión</th>
+                  <th>Estado</th>
+                  <th>Vigencia Desde</th>
+                  <th>Vigencia Hasta</th>
+                  <th>Ítems Checklist</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className={styles.tbody}>
+                {ruleHistory.map(r => (
+                  <tr key={r.id}>
+                    <td style={{ fontWeight: 700 }}>v{r.version}</td>
+                    <td>
+                      <span className={r.is_active ? styles.badgeVersionActive : styles.badgeVersionHistory}>
+                        {r.is_active ? 'VIGENTE' : 'HISTÓRICA'}
+                      </span>
+                    </td>
+                    <td style={{ color: '#475569' }}>{new Date(r.effective_from).toLocaleString()}</td>
+                    <td style={{ color: '#475569' }}>{r.effective_until ? new Date(r.effective_until).toLocaleString() : 'Vigente'}</td>
+                    <td style={{ fontWeight: 600 }}>{r.checklist?.length || 0} ítems</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
       {/* New Rule Form */}
       {showNewRuleForm && (
         <div className={styles.panelHighlight}>
-          <h3 className={styles.sectionTitle}>
-            <PlusCircle size={18} color="#2563eb" /> Diseñar Nueva Versión de Regla (v{(activeRule?.version || 0) + 1})
-          </h3>
+          <h3 className={styles.sectionTitle}>Diseñar nueva versión de regla (v{(activeRule?.version || 0) + 1})</h3>
           <p className={styles.headerSubtitle} style={{ marginBottom: '16px' }}>
             Al guardar, la versión actual (v{activeRule?.version || 1}) pasará a estado histórico y esta nueva versión guiará las inspecciones futuras.
           </p>
@@ -158,7 +157,7 @@ export const RulesTab: React.FC<RulesTabProps> = ({
               className={styles.btnPrimary}
               style={{ padding: '8px 14px', fontSize: '12px' }}
             >
-              + Agregar Ítem
+              Agregar ítem
             </button>
           </div>
 
@@ -175,8 +174,8 @@ export const RulesTab: React.FC<RulesTabProps> = ({
                     <span className={styles.checklistItemType}>{item.type}</span>
                     {item.required && <span className={styles.checklistItemRequired}>* Requerido</span>}
                   </div>
-                  <button onClick={() => handleRemoveChecklistItem(idx)} className={styles.btnIcon} style={{ color: '#ef4444' }}>
-                    <Trash2 size={15} />
+                  <button onClick={() => handleRemoveChecklistItem(idx)} className={styles.actionTextButton}>
+                    Quitar
                   </button>
                 </li>
               ))}
@@ -209,14 +208,13 @@ export const RulesTab: React.FC<RulesTabProps> = ({
           <p className={styles.loadingText}>Cargando regla de evaluación activa...</p>
         ) : !activeRule ? (
           <div className={styles.emptyCenter}>
-            <AlertCircle size={32} color="#94a3b8" style={{ marginBottom: '8px' }} />
             <p className={styles.emptyMutedText}>No hay regla de evaluación definida para este tipo de equipo.</p>
             <button
               onClick={() => setShowNewRuleForm(true)}
               className={styles.btnPrimary}
               style={{ marginTop: '12px' }}
             >
-              + Definir Regla Inicial
+              Definir regla inicial
             </button>
           </div>
         ) : (
@@ -231,7 +229,7 @@ export const RulesTab: React.FC<RulesTabProps> = ({
                 </span>
               </div>
               <span className={styles.activeBadge}>
-                ✓ ACTIVA PARA INSPECCIONES
+                Activa para inspecciones
               </span>
             </div>
 

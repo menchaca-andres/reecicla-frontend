@@ -80,39 +80,41 @@ export const TypesTab: React.FC<TypesTabProps> = ({
       {/* List Types */}
       <div className={styles.panel}>
         <h3 className={styles.sectionTitle}>Tipos de Equipo Registrados</h3>
-        <table className={styles.table}>
-          <thead className={styles.thead}>
-            <tr>
-              <th>Código</th>
-              <th>Nombre</th>
-              <th>Estado</th>
-              <th className={styles.thRight}>Acción</th>
-            </tr>
-          </thead>
-          <tbody className={styles.tbody}>
-            {deviceTypes.map(t => (
-              <tr key={t.id}>
-                <td className={styles.codeText}>{t.code}</td>
-                <td>{t.name}</td>
-                <td>
-                  <span className={t.status === 'ACTIVE' ? styles.badgeActive : styles.badgeInactive}>
-                    {t.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
-                  </span>
-                </td>
-                <td className={styles.tdRight}>
-                  {t.status === 'ACTIVE' && (
-                    <button
-                      onClick={() => handleInactivateType(t.id, t.name)}
-                      className={styles.btnDanger}
-                    >
-                      Inactivar
-                    </button>
-                  )}
-                </td>
+        <div className={styles.tableWrap}>
+          <table className={styles.table}>
+            <thead className={styles.thead}>
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Estado</th>
+                <th className={styles.thRight}>Acción</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className={styles.tbody}>
+              {deviceTypes.map(t => (
+                <tr key={t.id}>
+                  <td className={styles.codeText}>{t.code}</td>
+                  <td>{t.name}</td>
+                  <td>
+                    <span className={t.status === 'ACTIVE' ? styles.badgeActive : styles.badgeInactive}>
+                      {t.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </td>
+                  <td className={styles.tdRight}>
+                    {t.status === 'ACTIVE' && (
+                      <button
+                        onClick={() => handleInactivateType(t.id, t.name)}
+                        className={styles.actionTextButton}
+                      >
+                        Inactivar
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

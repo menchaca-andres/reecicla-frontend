@@ -1,7 +1,7 @@
-import type { AuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order } from '../types';
+import type { AuthResponse, PlatformAuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order } from '../types';
 import type { GuestOrderTracking } from '../types';
 
-const GATEWAY_URL = 'http://localhost:3000';
+const GATEWAY_ORIGIN = 'http://localhost:3000';
 
 export class ApiService {
   private static slug = 'demo';
@@ -11,7 +11,7 @@ export class ApiService {
   }
 
   private static scoped(service: 'quotation' | 'catalog' | 'auth' | 'orders', path: string): string {
-    return `${GATEWAY_URL}/recicla/${encodeURIComponent(this.slug)}/${service}${path}`;
+    return `${GATEWAY_ORIGIN}/recicla/${encodeURIComponent(this.slug)}/api/${service}${path}`;
   }
 
   private static getHeaders(token?: string | null): Record<string, string> {
@@ -24,9 +24,28 @@ export class ApiService {
     return headers;
   }
 
+  static async platformLogin(data: { email: string; password: string }): Promise<PlatformAuthResponse> {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/platform/login`, {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al iniciar sesión en administración');
+    return json as PlatformAuthResponse;
+  }
+
+  static async getPlatformProfile(token: string): Promise<{ user: { id: string; email: string; name: string; role: 'SUPER_ADMIN' } }> {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/platform/me`, {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'La sesión de plataforma expiró');
+    return json;
+  }
 
   static async getTenantBySlug(slug: string): Promise<{ tenant_id: string; slug: string; name: string }> {
-    const res = await fetch(`${GATEWAY_URL}/api/auth/tenants/slug/${encodeURIComponent(slug)}`);
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/tenants/slug/${encodeURIComponent(slug)}`);
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Negocio no encontrado');
     return json;
@@ -146,7 +165,7 @@ export class ApiService {
   }
 
   static async getProfile(token: string): Promise<{ user: User }> {
-    const res = await fetch(`${GATEWAY_URL}/api/auth/me`, {
+    const res = await fetch(this.scoped('auth', '/me'), {
       method: 'GET',
       headers: this.getHeaders(token),
     });
@@ -182,7 +201,7 @@ export class ApiService {
   }
 
   static async getGuestOrderTracking(trackingToken: string): Promise<{ order: GuestOrderTracking }> {
-    const res = await fetch(`${GATEWAY_URL}/api/orders/tracking/${encodeURIComponent(trackingToken)}`, {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/orders/tracking/${encodeURIComponent(trackingToken)}`, {
       headers: { 'Cache-Control': 'no-store' },
     });
     const json = await res.json();
@@ -275,7 +294,7 @@ export class ApiService {
     data: { tenant_id: string; email: string; password: string; name?: string; phone?: string; role?: string },
     token: string
   ): Promise<{ message: string; user: User }> {
-    const res = await fetch(`${GATEWAY_URL}/api/auth/admin`, {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/admin`, {
       method: 'POST',
       headers: this.getHeaders(token),
       body: JSON.stringify(data),
@@ -283,6 +302,39 @@ export class ApiService {
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al crear administrador');
     return json;
+  }
+
+  static async createTenant(
+    data: { name: string; slug: string; email: string; password: string; admin_name?: string; phone?: string },
+    token: string
+  ): Promise<{ tenant: { id: string; name: string; slug: string }; admin: User }> {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/tenants`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al crear el negocio');
+    return json;
+  }
+
+  static async listTenants(token: string): Promise<{ tenants: Array<{ id: string; name: string; slug: string; status: string }> }> {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/auth/tenants`, {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar negocios');
+    return json;
+  }
+
+  static async bootstrapTenantCatalog(tenantId: string, token: string): Promise<void> {
+    const res = await fetch(`${GATEWAY_ORIGIN}/api/catalog/bootstrap`, {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify({ tenant_id: tenantId }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al inicializar catálogo');
   }
 
   static async defineRule(

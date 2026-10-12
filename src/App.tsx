@@ -8,8 +8,7 @@ import { AdminManager } from './features/admins';
 import { LogisticsManager } from './features/logistica';
 import type { User, Quote, AuthResponse } from './types';
 import { ApiService } from './services/api';
-
-const DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001';
+import { PlatformAdminPage } from './features/admins/components/PlatformAdminPage';
 
 type Tab = 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'auth';
 
@@ -51,14 +50,14 @@ function getInitialQuoteIdFromUrl(): string | null {
   return null;
 }
 
-export function App() {
+function TenantApp() {
   const [trackingToken] = useState<string | null>(getInitialTrackingToken);
   const [slug] = useState<string>(getInitialSlug);
   ApiService.setSlug(slug);
-  const [tenantId, setTenantId] = useState<string>(DEFAULT_TENANT_ID);
-  const [tenantName, setTenantName] = useState<string>('Reecicla Demo');
+  const [tenantId, setTenantId] = useState<string>('');
+  const [tenantName, setTenantName] = useState<string>('');
   const [tenantError, setTenantError] = useState<string | null>(null);
-
+  const [tenantLoading, setTenantLoading] = useState(!trackingToken);
   const [token, setToken] = useState<string | null>(localStorage.getItem('reecicla_token'));
   const [user, setUser] = useState<User | null>(null);
 
@@ -66,39 +65,41 @@ export function App() {
   const [latestQuote, setLatestQuote] = useState<Quote | null>(null);
 
   useEffect(() => {
-    if (slug && !trackingToken) {
-      ApiService.getTenantBySlug(slug)
-        .then((res) => {
-          setTenantId(res.tenant_id);
-          setTenantName(res.name);
-          setTenantError(null);
-        })
-        .catch((err) => {
-          setTenantError(err.message || `No se encontró el negocio con la URL '/${slug}'.`);
-        });
+    if (trackingToken) return;
+    if (!window.location.pathname.startsWith('/recicla/')) {
+      window.history.replaceState(null, '', `/recicla/${encodeURIComponent(slug)}`);
     }
+    ApiService.getTenantBySlug(slug)
+      .then((tenant) => {
+        setTenantId(tenant.tenant_id);
+        setTenantName(tenant.name);
+        setTenantError(null);
+      })
+      .catch((err: Error) => {
+        setTenantError(err.message || `No se encontró el negocio con la URL '/${slug}'.`);
+      })
+      .finally(() => setTenantLoading(false));
   }, [slug, trackingToken]);
 
   useEffect(() => {
+    if (!tenantId || trackingToken) return;
     const urlQuoteId = getInitialQuoteIdFromUrl();
     const storedQuoteId = urlQuoteId || localStorage.getItem(`reecicla_guest_quote_${tenantId}`) || localStorage.getItem('reecicla_guest_quote');
 
     if (storedQuoteId) {
       ApiService.getQuoteById(storedQuoteId)
         .then((res) => {
-          if (res.quote) {
-            setLatestQuote(res.quote);
-          }
+          if (res.quote) setLatestQuote(res.quote);
         })
         .catch(() => {
           localStorage.removeItem(`reecicla_guest_quote_${tenantId}`);
           localStorage.removeItem('reecicla_guest_quote');
         });
     }
-  }, [tenantId]);
+  }, [tenantId, trackingToken]);
 
   useEffect(() => {
-    if (token) {
+    if (token && !trackingToken) {
       ApiService.getProfile(token)
         .then((res) => setUser(res.user))
         .catch(() => {
@@ -107,7 +108,7 @@ export function App() {
           setUser(null);
         });
     }
-  }, [token]);
+  }, [token, trackingToken]);
 
   const handleAuthSuccess = (authData: AuthResponse) => {
     localStorage.setItem('reecicla_token', authData.token);
@@ -118,6 +119,7 @@ export function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('reecicla_token');
+    window.history.replaceState(null, '', `/recicla/${encodeURIComponent(slug)}`);
     setToken(null);
     setUser(null);
     setLatestQuote(null);
@@ -137,6 +139,10 @@ export function App() {
     localStorage.removeItem('reecicla_guest_quote');
     setLatestQuote(null);
   };
+
+  if (tenantLoading) {
+    return <main style={{ margin: 'auto' }}>Cargando negocio...</main>;
+  }
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -207,6 +213,12 @@ export function App() {
       </main>
     </div>
   );
+}
+
+export function App() {
+  return window.location.pathname === '/admin' || window.location.pathname.startsWith('/admin/')
+    ? <PlatformAdminPage />
+    : <TenantApp />;
 }
 
 export default App;
