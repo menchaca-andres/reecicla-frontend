@@ -16,8 +16,18 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface PlatformAuthResponse {
+  message: string;
+  token: string;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: 'SUPER_ADMIN';
+  };
+}
+
 export interface QuoteRequest {
-  tenant_id: string;
   device_type: string;
   brand?: string;
   model?: string;
@@ -157,6 +167,7 @@ export interface Order {
   status: string;
   customer_name?: string | null;
   customer_email?: string | null;
+  customer_phone?: string | null;
   tracking_code?: string | null;
   box_status?: string | null;
   shipped_at?: string | null;
@@ -173,6 +184,29 @@ export interface Order {
     state?: string;
     zip_code?: string;
     notes?: string;
+    address?: string;
   } | null;
   created_at: string;
+}
+
+export interface GuestOrderTracking {
+  order_number: string;
+  device_type_name: string;
+  brand: string | null;
+  model: string | null;
+  device_year: number | null;
+  declared_condition: string;
+  quoted_price: number | string;
+  currency: string;
+  status: string;
+  accepted_at: string;
+  tracking_code: string | null;
+  box_status: string | null;
+  shipped_at: string | null;
+  status_history: Array<{
+    previous_status: string | null;
+    new_status: string;
+    reason: string | null;
+    created_at: string;
+  }>;
 }

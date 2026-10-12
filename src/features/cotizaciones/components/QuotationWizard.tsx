@@ -4,10 +4,9 @@ import { ApiService } from '../../../services/api';
 import styles from '../QuotationWizard.module.css';
 
 interface QuotationWizardProps {
-  tenantId: string;
   token: string | null;
   onQuoteCreated: (quote: Quote) => void;
-  onNeedAuth: () => void;
+  onNeedAuth?: () => void;
 }
 
 const CONDITIONS = [
@@ -17,16 +16,13 @@ const CONDITIONS = [
 ];
 
 export const QuotationWizard: React.FC<QuotationWizardProps> = ({
-  tenantId,
   token,
   onQuoteCreated,
-  onNeedAuth,
+  onNeedAuth: _onNeedAuth,
 }) => {
-  // Step 1: filter by device type
   const [deviceTypes, setDeviceTypes] = useState<DeviceType[]>([]);
   const [selectedTypeCode, setSelectedTypeCode] = useState('');
 
-  // Step 2: select from device catalog
   const [devices, setDevices] = useState<Device[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [search, setSearch] = useState('');
@@ -39,10 +35,9 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
   const [loadingDevices, setLoadingDevices] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load device types
   useEffect(() => {
     let cancelled = false;
-    ApiService.getDeviceTypes(tenantId)
+    ApiService.getDeviceTypes()
       .then((res) => {
         if (cancelled) return;
         const types = (res?.device_types || res?.deviceTypes || []).filter(
@@ -56,9 +51,8 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
       })
       .finally(() => { if (!cancelled) setLoadingTypes(false); });
     return () => { cancelled = true; };
-  }, [tenantId]);
+  }, []);
 
-  // Load devices when type changes
   useEffect(() => {
     if (!selectedTypeCode) return;
     const dt = deviceTypes.find((d) => d.code === selectedTypeCode);
@@ -69,7 +63,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
     setSelectedDeviceId('');
     setSearch('');
 
-    ApiService.getDevices(tenantId, dt.id)
+    ApiService.getDevices(dt.id)
       .then((res) => {
         if (cancelled) return;
         setDevices(res.devices || []);
@@ -81,7 +75,7 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
       .finally(() => { if (!cancelled) setLoadingDevices(false); });
 
     return () => { cancelled = true; };
-  }, [selectedTypeCode, deviceTypes, tenantId]);
+  }, [selectedTypeCode, deviceTypes]);
 
   const filteredDevices = devices.filter((d) => {
     if (!search.trim()) return true;
@@ -99,13 +93,11 @@ export const QuotationWizard: React.FC<QuotationWizardProps> = ({
     e.preventDefault();
     setError(null);
 
-    if (!token) { onNeedAuth(); return; }
     if (!selectedDevice) { setError('Seleccioná un dispositivo del catálogo.'); return; }
 
     setLoading(true);
     try {
       const quoteData: QuoteRequest = {
-        tenant_id: tenantId,
         device_type: selectedDevice.device_type_code?.toLowerCase() || selectedTypeCode.toLowerCase(),
         brand: selectedDevice.brand_name,
         model: selectedDevice.model,

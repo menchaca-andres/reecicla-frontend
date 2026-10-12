@@ -4,11 +4,10 @@ import { ApiService } from '../../../services/api';
 import styles from '../QuoteHistory.module.css';
 
 interface QuoteHistoryProps {
-  tenantId: string;
   token: string;
 }
 
-export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) => {
+export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +29,7 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
     setLoading(true);
     setError(null);
     try {
-      const res = await ApiService.getUserQuotes(tenantId, token);
+      const res = await ApiService.getUserQuotes(token);
       setQuotes(res.quotes);
       const orderRes = await ApiService.getUserOrders(token);
       setOrders(orderRes.orders);
@@ -83,7 +82,7 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ tenantId, token }) =
 
   useEffect(() => {
     fetchHistory();
-  }, [tenantId, token]);
+  }, [token]);
 
   const statusMap: Record<string, { label: string; cls: string }> = {
     ACCEPTED: { label: 'Cotización Aceptada', cls: styles.statusGreen },

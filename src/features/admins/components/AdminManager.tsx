@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { UserPlus, Building2, Mail, Lock, User as UserIcon, Phone, CheckCircle, AlertCircle } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { ApiService } from '../../../services/api';
 import styles from '../AdminManager.module.css';
 
@@ -7,60 +6,121 @@ interface AdminManagerProps {
   token: string | null;
 }
 
-interface CreatedAdmin {
-  email: string;
-  tenant_id: string;
-  name?: string;
-  role: string;
+interface TenantOption {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
 }
 
 export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
-  const [tenantId, setTenantId] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [tenants, setTenants] = useState<TenantOption[]>([]);
+  const [selectedTenantId, setSelectedTenantId] = useState('');
+  const [businessName, setBusinessName] = useState('');
+  const [slug, setSlug] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminName, setAdminName] = useState('');
   const [phone, setPhone] = useState('');
+  const [additionalEmail, setAdditionalEmail] = useState('');
+  const [additionalPassword, setAdditionalPassword] = useState('');
+  const [additionalName, setAdditionalName] = useState('');
+  const [additionalPhone, setAdditionalPhone] = useState('');
   const [role, setRole] = useState<'TENANT_ADMIN' | 'CATALOG_ADMIN' | 'INSPECTOR'>('TENANT_ADMIN');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [created, setCreated] = useState<CreatedAdmin | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [pendingCatalog, setPendingCatalog] = useState<TenantOption | null>(null);
+  const [createdTenantSlug, setCreatedTenantSlug] = useState<string | null>(null);
 
-  const resetForm = () => {
-    setTenantId('');
-    setEmail('');
-    setPassword('');
-    setName('');
-    setPhone('');
-    setRole('TENANT_ADMIN');
-    setError(null);
-    setCreated(null);
-  };
+  useEffect(() => {
+    if (!token) return;
+    ApiService.listTenants(token)
+      .then(({ tenants: items }) => {
+        setTenants(items);
+        setSelectedTenantId(items[0]?.id || '');
+      })
+      .catch((requestError: Error) => setError(requestError.message));
+  }, [token]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const createBusiness = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!token) return;
     setError(null);
+    setSuccess(null);
     setLoading(true);
-
     try {
-      const res = await ApiService.createAdmin(
-        { tenant_id: tenantId, email, password, name: name || undefined, phone: phone || undefined, role },
-        token
-      );
-      setCreated({
-        email: res.user.email,
-        tenant_id: res.user.tenant_id,
-        name: res.user.name,
-        role: res.user.role,
-      });
-      setTenantId('');
-      setEmail('');
-      setPassword('');
-      setName('');
+      const result = await ApiService.createTenant({
+        name: businessName,
+        slug,
+        email: adminEmail,
+        password: adminPassword,
+        admin_name: adminName || undefined,
+        phone: phone || undefined,
+      }, token);
+      const tenant = { ...result.tenant, status: 'ACTIVE' };
+      setTenants((current) => [...current, tenant].sort((a, b) => a.name.localeCompare(b.name)));
+      setSelectedTenantId(tenant.id);
+      setBusinessName('');
+      setSlug('');
+      setAdminEmail('');
+      setAdminPassword('');
+      setAdminName('');
       setPhone('');
-      setRole('TENANT_ADMIN');
-    } catch (err: any) {
-      setError(err.message || 'Error al crear el administrador');
+      setPendingCatalog(tenant);
+      setCreatedTenantSlug(tenant.slug);
+      try {
+        await ApiService.bootstrapTenantCatalog(tenant.id, token);
+        setPendingCatalog(null);
+        setSuccess(`Negocio "${tenant.name}" (${tenant.slug}) y su administrador principal fueron creados. Catálogo base listo.`);
+      } catch (bootstrapError) {
+        setError(`El negocio "${tenant.name}" y su administrador sí se crearon, pero no se pudo inicializar el catálogo: ${(bootstrapError as Error).message}`);
+      }
+    } catch (requestError) {
+      setError((requestError as Error).message || 'Error al crear el negocio.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const retryCatalog = async () => {
+    if (!token || !pendingCatalog) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await ApiService.bootstrapTenantCatalog(pendingCatalog.id, token);
+      setSuccess(`Catálogo base inicializado para "${pendingCatalog.name}".`);
+      setPendingCatalog(null);
+    } catch (requestError) {
+      setError(`No se pudo inicializar el catálogo: ${(requestError as Error).message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createAdditionalAdmin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!token || !selectedTenantId) return;
+    setError(null);
+    setSuccess(null);
+    setLoading(true);
+    try {
+      const result = await ApiService.createAdmin({
+        tenant_id: selectedTenantId,
+        email: additionalEmail,
+        password: additionalPassword,
+        name: additionalName || undefined,
+        phone: additionalPhone || undefined,
+        role,
+      }, token);
+      const tenant = tenants.find((item) => item.id === selectedTenantId);
+      setSuccess(`${result.user.email} fue agregado como ${result.user.role} en "${tenant?.name || 'el negocio'}".`);
+      setAdditionalEmail('');
+      setAdditionalPassword('');
+      setAdditionalName('');
+      setAdditionalPhone('');
+    } catch (requestError) {
+      setError((requestError as Error).message || 'Error al crear el administrador.');
     } finally {
       setLoading(false);
     }
@@ -68,170 +128,97 @@ export const AdminManager: React.FC<AdminManagerProps> = ({ token }) => {
 
   return (
     <div className={styles.container}>
-      {/* Header */}
       <div className={styles.header}>
-        <div className={styles.headerRow}>
-          <div className={styles.headerIcon}>
-            <UserPlus size={20} color="#ffffff" />
-          </div>
-          <div>
-            <h2 className={styles.title}>
-              Gestión de Administradores
-            </h2>
-            <p className={styles.subtitle}>
-              Crea administradores para cualquier tenant de la plataforma
-            </p>
-          </div>
-        </div>
+        <h1 className={styles.title}>Negocios y administradores</h1>
+        <p className={styles.subtitle}>Crea negocios con su administrador principal o agrega personal a un negocio existente.</p>
       </div>
 
-      {/* Success banner */}
-      {created && (
-        <div className={styles.successBanner}>
-          <CheckCircle size={20} color="#22c55e" className={styles.successIcon} />
+      {success && (
+        <div className={styles.successBanner} role="status">
           <div>
-            <p className={styles.successTitle}>
-              Administrador creado exitosamente
-            </p>
-            <p className={styles.successDesc}>
-              <strong className={styles.highlightText}>{created.email}</strong> asignado como{' '}
-              <strong className={styles.highlightRole}>{created.role}</strong> en el tenant{' '}
-              <strong className={styles.highlightText}>{created.tenant_id}</strong>
-            </p>
+            <p className={styles.successDesc}>{success}</p>
+            {createdTenantSlug && (
+              <a href={`/recicla/${encodeURIComponent(createdTenantSlug)}`} target="_blank" rel="noreferrer">
+                Abrir página de {createdTenantSlug}
+              </a>
+            )}
           </div>
         </div>
       )}
+      {error && (
+        <div className={styles.errorBanner} role="alert">
+          <span className={styles.errorText}>{error}</span>
+          {pendingCatalog && <button type="button" onClick={retryCatalog} disabled={loading} className={styles.clearBtn}>Reintentar catálogo</button>}
+          {pendingCatalog && (
+            <a href={`/recicla/${encodeURIComponent(pendingCatalog.slug)}`} target="_blank" rel="noreferrer">
+              Abrir página de {pendingCatalog.slug}
+            </a>
+          )}
+        </div>
+      )}
 
-      {/* Form card */}
-      <div className={`glass-panel ${styles.formCard}`}>
-        <h3 className={styles.cardTitle}>
-          <UserPlus size={16} color="#7c3aed" /> Nuevo Administrador
-        </h3>
-
-        {error && (
-          <div className={styles.errorBanner}>
-            <AlertCircle size={15} color="#f87171" />
-            <span className={styles.errorText}>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Tenant ID */}
+      <section className={styles.formCard}>
+        <h2 className={styles.cardTitle}>Crear negocio y administrador principal</h2>
+        <form onSubmit={createBusiness} className={styles.form}>
           <div>
-            <label className={styles.label}>
-              <Building2 size={12} color="#ea580c" /> ID del Tenant *
-            </label>
-            <input
-              type="text"
-              className="input-field"
-              placeholder="00000000-0000-0000-0000-000000000001"
-              value={tenantId}
-              onChange={(e) => setTenantId(e.target.value)}
-              required
-            />
+            <label className={styles.label}>Nombre del negocio *</label>
+            <input className="input-field" value={businessName} onChange={(event) => {
+              const value = event.target.value;
+              setBusinessName(value);
+              setSlug(value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
+            }} required maxLength={255} />
           </div>
-
-          {/* Role selector */}
           <div>
-            <label className={styles.label}>
-              <UserIcon size={12} color="#7c3aed" /> Rol Asignado *
-            </label>
-            <select
-              className="input-field"
-              value={role}
-              onChange={(e) => setRole(e.target.value as any)}
-              required
-            >
-              <option value="TENANT_ADMIN">TENANT_ADMIN (Admin Principal de Tenant)</option>
-              <option value="CATALOG_ADMIN">CATALOG_ADMIN (Admin de Catálogo)</option>
-              <option value="INSPECTOR">INSPECTOR (Inspector Técnico)</option>
+            <label className={styles.label}>Dirección web (slug) *</label>
+            <input className="input-field" value={slug} onChange={(event) => setSlug(event.target.value.toLowerCase())} required maxLength={60} pattern="[a-z0-9]+(-[a-z0-9]+)*" />
+            <small>reecicla.app/recicla/{slug || 'mi-negocio'}</small>
+          </div>
+          <div>
+            <label className={styles.label}>Nombre del administrador principal</label>
+            <input className="input-field" value={adminName} onChange={(event) => setAdminName(event.target.value)} />
+          </div>
+          <div>
+            <label className={styles.label}>Teléfono</label>
+            <input className="input-field" value={phone} onChange={(event) => setPhone(event.target.value)} />
+          </div>
+          <div>
+            <label className={styles.label}>Correo del administrador principal *</label>
+            <input className="input-field" type="email" value={adminEmail} onChange={(event) => setAdminEmail(event.target.value)} required />
+          </div>
+          <div>
+            <label className={styles.label}>Contraseña inicial *</label>
+            <input className="input-field" type="password" value={adminPassword} onChange={(event) => setAdminPassword(event.target.value)} required minLength={8} />
+          </div>
+          <button type="submit" className={styles.submitBtn} disabled={loading}>{loading ? 'Creando...' : 'Crear negocio'}</button>
+        </form>
+      </section>
+
+      <section className={styles.formCard}>
+        <h2 className={styles.cardTitle}>Agregar administrador a un negocio</h2>
+        <form onSubmit={createAdditionalAdmin} className={styles.form}>
+          <div>
+            <label className={styles.label}>Negocio *</label>
+            <select className="input-field" value={selectedTenantId} onChange={(event) => setSelectedTenantId(event.target.value)} required>
+              {tenants.map((tenant) => <option key={tenant.id} value={tenant.id}>{tenant.name} ({tenant.slug})</option>)}
             </select>
           </div>
-
-          {/* Name */}
           <div>
-            <label className={styles.label}>
-              <UserIcon size={12} color="#2563eb" /> Nombre Completo
-            </label>
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Ej. Ana García"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+            <label className={styles.label}>Rol *</label>
+            <select className="input-field" value={role} onChange={(event) => setRole(event.target.value as typeof role)}>
+              <option value="TENANT_ADMIN">TENANT_ADMIN</option>
+              <option value="CATALOG_ADMIN">CATALOG_ADMIN</option>
+              <option value="INSPECTOR">INSPECTOR</option>
+            </select>
           </div>
-
-          {/* Phone */}
-          <div>
-            <label className={styles.label}>
-              <Phone size={12} color="#16a34a" /> Celular / Teléfono
-            </label>
-            <input
-              type="text"
-              className="input-field"
-              placeholder="Ej. +591 71234567"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className={styles.label}>
-              <Mail size={12} color="#2563eb" /> Correo Electrónico *
-            </label>
-            <input
-              type="email"
-              className="input-field"
-              placeholder="admin@empresa.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className={styles.label}>
-              <Lock size={12} color="#2563eb" /> Contraseña *
-            </label>
-            <input
-              type="password"
-              className="input-field"
-              placeholder="Mínimo 8 caracteres"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-          </div>
-
-          <div className={styles.buttonRow}>
-            <button
-              type="submit"
-              className={`btn-primary ${styles.submitBtn}`}
-              disabled={loading}
-            >
-              {loading ? 'Creando...' : 'Crear Administrador'}
-            </button>
-            {(tenantId || email || password || name || phone) && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className={styles.clearBtn}
-              >
-                Limpiar
-              </button>
-            )}
-          </div>
+          <div><label className={styles.label}>Nombre</label><input className="input-field" value={additionalName} onChange={(event) => setAdditionalName(event.target.value)} /></div>
+          <div><label className={styles.label}>Teléfono</label><input className="input-field" value={additionalPhone} onChange={(event) => setAdditionalPhone(event.target.value)} /></div>
+          <div><label className={styles.label}>Correo *</label><input className="input-field" type="email" value={additionalEmail} onChange={(event) => setAdditionalEmail(event.target.value)} required /></div>
+          <div><label className={styles.label}>Contraseña *</label><input className="input-field" type="password" value={additionalPassword} onChange={(event) => setAdditionalPassword(event.target.value)} required minLength={8} /></div>
+          <button type="submit" className={styles.submitBtn} disabled={loading || !tenants.length}>{loading ? 'Guardando...' : 'Agregar administrador'}</button>
         </form>
-      </div>
+      </section>
 
-      {/* Info note */}
-      <div className={styles.infoNote}>
-        <strong>Nota:</strong> Solo el <code>SUPER_ADMIN</code> puede crear usuarios con roles administrativos (<code>TENANT_ADMIN</code>, <code>CATALOG_ADMIN</code>, <code>INSPECTOR</code>).
-      </div>
+      <p className={styles.infoNote}>Los negocios nuevos reciben un catálogo base. Configura sus reglas de precios antes de habilitar las cotizaciones.</p>
     </div>
   );
 };
