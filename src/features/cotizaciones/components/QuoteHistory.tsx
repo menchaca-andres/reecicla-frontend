@@ -26,6 +26,18 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
   });
   const [submittingBoxRequest, setSubmittingBoxRequest] = useState(false);
 
+  const openBoxRequest = (order: Order) => {
+    const address = order.pickup_address;
+    setBoxAddress({
+      street: address?.street || address?.address || '',
+      city: address?.city || '',
+      state: address?.state || '',
+      zip_code: address?.zip_code || '',
+      notes: address?.notes || '',
+    });
+    setSelectedOrderIdForBox(order.id);
+  };
+
   const fetchHistory = async () => {
     setLoading(true);
     setError(null);
@@ -287,8 +299,11 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
                         <div>
                           <p className={styles.fieldLabel}>Monto Aceptado</p>
                           <p className={styles.orderPrice}>Bs. {Number(order.final_price ?? order.quoted_price ?? 0).toFixed(2)}</p>
-                          {order.pickup_address && (
-                            <p className={styles.fieldMeta}> {order.pickup_address.street}, {order.pickup_address.city}</p>
+                          {(order.pickup_address?.street || order.pickup_address?.address || order.pickup_address?.city) && (
+                            <p className={styles.fieldMeta}>
+                              Dirección: {order.pickup_address.street || order.pickup_address.address}
+                              {order.pickup_address.city ? `, ${order.pickup_address.city}` : ''}
+                            </p>
                           )}
                           {order.tracking_code && (
                             <p className={styles.trackingBadge}>Guía: <code>{order.tracking_code}</code></p>
@@ -297,7 +312,7 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
 
                         <div className={styles.orderActions}>
                           {(order.status === 'ACCEPTED' || order.status === 'BOX_REQUESTED') && (
-                            <button onClick={() => setSelectedOrderIdForBox(order.id)} className={styles.actionBtn}> {order.status === 'BOX_REQUESTED' ? 'Ver / Editar Dirección' : 'Solicitar Caja'}</button>
+                            <button onClick={() => openBoxRequest(order)} className={styles.actionBtn}> {order.status === 'BOX_REQUESTED' ? 'Ver / Editar Dirección' : 'Solicitar Caja'}</button>
                           )}
                         </div>
                       </div>
@@ -320,6 +335,9 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
             </div>
 
             <form onSubmit={handleRequestBox} className={styles.modalForm}>
+              <p className={styles.rowMeta}>
+                Precargamos la dirección que registraste al cotizar. Puedes completarla o editarla antes de solicitar la caja.
+              </p>
               <div>
                 <label className={styles.label}>Calle y Número / Dirección *</label>
                 <input type="text" required value={boxAddress.street} onChange={(e) => setBoxAddress({ ...boxAddress, street: e.target.value })} placeholder="Ej: Av. 6 de Agosto #1234" className={styles.input} />
@@ -332,13 +350,13 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
                 </div>
                 <div>
                   <label className={styles.label}>Departamento / Estado *</label>
-                  <input type="text" required value={boxAddress.state} onChange={(e) => setBoxAddress({ ...boxAddress, state: e.target.value })} placeholder="Ej: La Paz" className={styles.input} />
+                  <input type="text" value={boxAddress.state} onChange={(e) => setBoxAddress({ ...boxAddress, state: e.target.value })} placeholder="Ej: La Paz" className={styles.input} />
                 </div>
               </div>
 
               <div>
-                <label className={styles.label}>Código Postal *</label>
-                <input type="text" required value={boxAddress.zip_code} onChange={(e) => setBoxAddress({ ...boxAddress, zip_code: e.target.value })} placeholder="Ej: 0000" className={styles.input} />
+                <label className={styles.label}>Código Postal (Opcional)</label>
+                <input type="text" value={boxAddress.zip_code} onChange={(e) => setBoxAddress({ ...boxAddress, zip_code: e.target.value })} placeholder="Ej: 0000" className={styles.input} />
               </div>
 
               <div>
