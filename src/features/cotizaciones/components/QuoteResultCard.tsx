@@ -1,27 +1,46 @@
 import React, { useState } from 'react';
 import { CheckCircle2, Calendar, Cpu, Tag, ArrowRight, UserCheck } from 'lucide-react';
-import type { Quote } from '../../../types';
+import type { AuthResponse, Quote, User } from '../../../types';
 import { ApiService } from '../../../services/api';
 import styles from '../QuoteResultCard.module.css';
 
 interface QuoteResultCardProps {
   quote: Quote;
   token?: string | null;
+  user?: User | null;
+  onUserUpdate?: (user: User) => void;
+  onAuthSuccess?: (authData: AuthResponse) => void;
   onNewQuote: () => void;
 }
 
-export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({ quote: initialQuote, token, onNewQuote }) => {
+export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({
+  quote: initialQuote,
+  token,
+  user,
+  onUserUpdate,
+  onAuthSuccess,
+  onNewQuote,
+}) => {
   const [quote, setQuote] = useState<Quote>(initialQuote);
-  const [showForm, setShowForm] = useState(false);
+  const [acceptanceStep, setAcceptanceStep] = useState<
+    'closed' | 'choice' | 'guest' | 'login' | 'register' | 'registration-verify' | 'authenticated'
+  >('closed');
   const [verificationRequired, setVerificationRequired] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [registrationNotice, setRegistrationNotice] = useState<string | null>(null);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [sessionUser, setSessionUser] = useState<User | null>(null);
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+  const [name, setName] = useState(user?.name ?? '');
+  const [email, setEmail] = useState(user?.email ?? '');
+  const [phone, setPhone] = useState(user?.phone ?? '');
+  const [address, setAddress] = useState(user?.pickup_address ?? '');
+  const [password, setPassword] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
+
+  const activeToken = sessionToken ?? token;
+  const activeUser = sessionUser ?? user;
 
   const basePrice = Number(quote.base_price);
   const adjustment = Number(quote.adjustment);
@@ -33,7 +52,15 @@ export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({ quote: initial
     setLoading(true);
 
     try {
-      const res = await ApiService.acceptQuote(quote.id, token, {
+      if (activeToken && activeUser) {
+        const profile = await ApiService.updateProfile(
+          { name, phone, pickup_address: address },
+          activeToken
+        );
+        setSessionUser(profile.user);
+        onUserUpdate?.(profile.user);
+      }
+      const res = await ApiService.acceptQuote(quote.id, activeToken, {
         customer_name: name,
         customer_email: email,
         phone,
@@ -46,7 +73,7 @@ export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({ quote: initial
         return;
       }
       setQuote(res.quote);
-      setShowForm(false);
+      setAcceptanceStep('closed');
     } catch (err: any) {
       setError(err.message || 'Error al aceptar la cotización');
     } finally {
@@ -58,7 +85,7 @@ export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({ quote: initial
     setError(null);
     setLoading(true);
     try {
-      const res = await ApiService.acceptQuote(quote.id, token, {
+      const res = await ApiService.acceptQuote(quote.id, activeToken, {
         customer_name: name,
         customer_email: email,
         phone,
@@ -70,6 +97,45 @@ export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({ quote: initial
       }
     } catch (err: any) {
       setError(err.message || 'No se pudo reenviar el código');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      if (acceptanceStep === 'login') {
+        const result = await ApiService.login({ email, password });
+        setSessionToken(result.token);
+        setSessionUser(result.user);
+        setName(result.user.name ?? '');
+        setEmail(result.user.email);
+        setPhone(result.user.phone ?? '');
+        setAddress(result.user.pickup_address ?? '');
+        onAuthSuccess?.(result);
+        setAcceptanceStep('authenticated');
+      } else if (acceptanceStep === 'register') {
+        const result = await ApiService.register({
+          email,
+          password,
+          name,
+          phone: phone || undefined,
+        });
+        setAcceptanceStep('registration-verify');
+        setRegistrationNotice(result.message);
+      } else if (acceptanceStep === 'registration-verify') {
+        const result = await ApiService.verifyRegistration({ email, code: verificationCode });
+        setSessionToken(result.token);
+        setSessionUser(result.user);
+        onAuthSuccess?.(result);
+        setVerificationCode('');
+        setAcceptanceStep('authenticated');
+      }
+    } catch (err: any) {
+      setError(err.message || 'No se pudo completar la autenticación');
     } finally {
       setLoading(false);
     }
@@ -143,97 +209,216 @@ export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({ quote: initial
       </div>
 
       {/* Botón para abrir formulario de aceptación */}
-      {!isAccepted && !showForm && (
+      {!isAccepted && acceptanceStep === 'closed' && (
         <div style={{ marginBottom: '16px' }}>
-          <button onClick={() => setShowForm(true)} className="btn-primary" style={{ width: '100%', padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 600, fontSize: '15px' }}>
-            Aceptar esta Cotización <ArrowRight size={18} />
+          <button
+            onClick={() => setAcceptanceStep('choice')}
+            disabled={Boolean(token && !user)}
+            className="btn-primary"
+            style={{ width: '100%', padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 600, fontSize: '15px' }}
+          >
+            {token && !user ? 'Cargando tus datos...' : 'Aceptar esta Cotización'}
+            {!(token && !user) && <ArrowRight size={18} />}
           </button>
         </div>
       )}
 
-      {/* Formulario de aceptación */}
-      {showForm && !isAccepted && (
-        <form onSubmit={handleAccept} className={styles.formContainer}>
-          <h3 className={styles.formTitle}>
-            <UserCheck size={20} color="#0071e3" /> Datos para coordinar el retiro
-          </h3>
-          <p className={styles.formSubtitle}>
-            {verificationRequired
-              ? `Enviamos un código a ${email}. Ingrésalo para verificar tu correo y aceptar la cotización.`
-              : 'Completá tus datos de contacto para coordinar el retiro. Te enviaremos un código para verificar el correo.'}
-          </p>
-
-          <div className={styles.inputGroup}>
-            {!verificationRequired && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div>
-                  <label className={styles.inputLabel}>Nombre Completo *</label>
-                  <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="input-field" placeholder="Ej: Juan Pérez" style={{ width: '100%', boxSizing: 'border-box' }} />
-                </div>
-
-                <div>
-                  <label className={styles.inputLabel}>Correo Electrónico *</label>
-                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input-field" placeholder="ejemplo@correo.com" style={{ width: '100%', boxSizing: 'border-box' }} />
-                </div>
-
-                <div className={styles.inputRow}>
-                  <div>
-                    <label className={styles.inputLabel}>Teléfono / Celular *</label>
-                    <input type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} className="input-field" placeholder="70012345" style={{ width: '100%', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label className={styles.inputLabel}>Dirección de Recolección</label>
-                    <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className="input-field" placeholder="Av. Principal #123" style={{ width: '100%', boxSizing: 'border-box' }} />
-                  </div>
-                </div>
+      {!isAccepted && acceptanceStep !== 'closed' && (
+        <section className={styles.formContainer}>
+          {acceptanceStep === 'choice' && (
+            <>
+              <h3 className={styles.formTitle}>¿Cómo deseas continuar?</h3>
+              <p className={styles.formSubtitle}>
+                Inicia sesión o crea una cuenta para guardar tus datos y consultar tus cotizaciones.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <button type="button" className="btn-primary" onClick={() => setAcceptanceStep('login')}>
+                  Iniciar sesión
+                </button>
+                <button type="button" className="btn-secondary" onClick={() => {
+                  setPassword('');
+                  setAcceptanceStep('register');
+                }}>
+                  Crear cuenta
+                </button>
+                <button type="button" className="btn-secondary" onClick={() => setAcceptanceStep('guest')}>
+                  Continuar como invitado
+                </button>
               </div>
-            )}
-            {verificationRequired && (
-              <div>
-                <label className={styles.inputLabel}>Código de verificación *</label>
-                <input
-                  type="text"
-                  required
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  pattern="[0-9]{6}"
-                  maxLength={6}
-                  value={verificationCode}
-                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="input-field"
-                  placeholder="123456"
-                  style={{ width: '100%', boxSizing: 'border-box' }}
-                />
-              </div>
-            )}
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button type="submit" disabled={loading} className="btn-primary" style={{ flex: 1, padding: '12px' }}>
-              {loading ? 'Confirmando...' : verificationRequired ? 'Verificar y Aceptar' : 'Enviar código'}
-            </button>
-            <button type="button" onClick={() => setShowForm(false)} className="btn-secondary" style={{ padding: '12px 20px' }}>
-              Cancelar
-            </button>
-          </div>
-          {verificationRequired && (
-            <button
-              type="button"
-              onClick={handleResendCode}
-              disabled={loading}
-              className="btn-secondary"
-              style={{ width: '100%', marginTop: '12px' }}
-            >
-              Reenviar código
-            </button>
+            </>
           )}
-        </form>
+
+          {(acceptanceStep === 'login' || acceptanceStep === 'register' || acceptanceStep === 'registration-verify') && (
+            <form onSubmit={handleAuth}>
+              <h3 className={styles.formTitle}>
+                {acceptanceStep === 'login'
+                  ? 'Inicia sesión para continuar'
+                  : acceptanceStep === 'register'
+                    ? 'Crea tu cuenta'
+                    : 'Confirma tu correo'}
+              </h3>
+              <p className={styles.formSubtitle}>
+                {acceptanceStep === 'registration-verify'
+                  ? `Ingresa el código que enviamos a ${email} para activar tu cuenta.`
+                  : acceptanceStep === 'register'
+                    ? 'Verifica tu correo con un código para crear la cuenta y continuar con la cotización.'
+                    : 'Al iniciar sesión, usaremos los datos guardados en este negocio.'}
+              </p>
+              {registrationNotice && acceptanceStep === 'registration-verify' && (
+                <p className={styles.formSubtitle} role="status">{registrationNotice}</p>
+              )}
+              <div className={styles.inputGroup} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {acceptanceStep === 'register' && (
+                  <>
+                    <div>
+                      <label className={styles.inputLabel}>Nombre completo *</label>
+                      <input className="input-field" required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+                    </div>
+                    <div>
+                      <label className={styles.inputLabel}>Teléfono / Celular</label>
+                      <input className="input-field" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
+                    </div>
+                  </>
+                )}
+                <div>
+                  <label className={styles.inputLabel}>Correo electrónico *</label>
+                  <input
+                    className="input-field"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    readOnly={acceptanceStep === 'registration-verify'}
+                    autoComplete="email"
+                  />
+                </div>
+                {acceptanceStep !== 'registration-verify' ? (
+                  <div>
+                    <label className={styles.inputLabel}>Contraseña *</label>
+                    <input
+                      className="input-field"
+                      type="password"
+                      required
+                      minLength={8}
+                      maxLength={72}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete={acceptanceStep === 'login' ? 'current-password' : 'new-password'}
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <label className={styles.inputLabel}>Código de verificación *</label>
+                    <input
+                      className="input-field"
+                      required
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]{6}"
+                      maxLength={6}
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    />
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                <button type="submit" disabled={loading} className="btn-primary" style={{ flex: 1 }}>
+                  {loading
+                    ? 'Procesando...'
+                    : acceptanceStep === 'login'
+                      ? 'Iniciar sesión'
+                      : acceptanceStep === 'register'
+                        ? 'Enviar código y continuar'
+                        : 'Verificar y continuar'}
+                </button>
+                <button type="button" className="btn-secondary" onClick={() => {
+                  setError(null);
+                  setRegistrationNotice(null);
+                  setAcceptanceStep('choice');
+                }}>
+                  Volver
+                </button>
+              </div>
+            </form>
+          )}
+
+          {(acceptanceStep === 'guest' || acceptanceStep === 'authenticated') && (
+            <form onSubmit={handleAccept}>
+              <h3 className={styles.formTitle}>
+                <UserCheck size={20} color="#0071e3" /> Datos para coordinar el retiro
+              </h3>
+              <p className={styles.formSubtitle}>
+                {verificationRequired
+                  ? `Enviamos un código a ${email}. Ingrésalo para verificar tu correo y aceptar la cotización.`
+                  : acceptanceStep === 'authenticated'
+                    ? 'Revisa tus datos guardados y confirma dónde recolectar el equipo.'
+                    : 'Completa tus datos. Te enviaremos un código para verificar el correo antes de aceptar.'}
+              </p>
+              <div className={styles.inputGroup}>
+                {!verificationRequired ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div>
+                      <label className={styles.inputLabel}>Nombre completo *</label>
+                      <input className="input-field" required value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" />
+                    </div>
+                    <div>
+                      <label className={styles.inputLabel}>Correo electrónico *</label>
+                      <input className="input-field" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} readOnly={acceptanceStep === 'authenticated'} autoComplete="email" />
+                    </div>
+                    <div>
+                      <label className={styles.inputLabel}>Teléfono / Celular *</label>
+                      <input className="input-field" type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" />
+                    </div>
+                    <div>
+                      <label className={styles.inputLabel}>Dirección de recolección</label>
+                      <input className="input-field" value={address} onChange={(e) => setAddress(e.target.value)} autoComplete="street-address" />
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className={styles.inputLabel}>Código de verificación *</label>
+                    <input
+                      className="input-field"
+                      required
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]{6}"
+                      maxLength={6}
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    />
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                <button type="submit" disabled={loading} className="btn-primary" style={{ flex: 1 }}>
+                  {loading
+                    ? 'Procesando...'
+                    : verificationRequired
+                      ? 'Verificar y aceptar'
+                      : acceptanceStep === 'authenticated'
+                        ? 'Confirmar y aceptar cotización'
+                        : 'Enviar código'}
+                </button>
+                <button type="button" className="btn-secondary" onClick={() => setAcceptanceStep('choice')}>
+                  Volver
+                </button>
+              </div>
+              {verificationRequired && (
+                <button type="button" onClick={handleResendCode} disabled={loading} className="btn-secondary" style={{ width: '100%', marginTop: '12px' }}>
+                  Reenviar código
+                </button>
+              )}
+            </form>
+          )}
+        </section>
       )}
 
       {/* Confirmación exitosa */}
       {isAccepted && (
         <div className={styles.successAlert}>
-          ✓ Cotización aceptada exitosamente. No necesitas crear una cuenta; te contactaremos a la brevedad para coordinar el retiro del equipo.
+          ✓ Cotización aceptada exitosamente. Te contactaremos a la brevedad para coordinar el retiro del equipo.
         </div>
       )}
 

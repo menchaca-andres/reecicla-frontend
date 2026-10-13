@@ -91,6 +91,8 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
     IN_TRANSIT: { label: 'En Tránsito', cls: styles.statusOrange },
     RECEIVED: { label: 'Recibido en Almacén', cls: styles.statusTeal },
     INSPECTING: { label: 'En Evaluación', cls: styles.statusYellow },
+    INSPECTED: { label: 'Inspección completada', cls: styles.statusBlue },
+    ADJUSTMENT_PENDING: { label: 'Ajuste de cotización pendiente', cls: styles.statusYellow },
     PAID: { label: 'Pagado', cls: styles.statusGreen },
     CLOSED: { label: 'Completado', cls: styles.statusGray },
   };
@@ -123,10 +125,15 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
                 <div key={q.id} className={styles.row}>
                   <div className={styles.rowMain}>
                     <span className={styles.rowTitle}>
+                      {q.quote_type === 'ADJUSTED' ? 'Cotización ajustada · ' : ''}
                       {q.device_type}{q.brand ? ` · ${q.brand}` : ''}
                     </span>
                     <span className={styles.rowMeta}>
                       Condición: <strong>{q.condition}</strong>
+                      {q.adjustment_reason && <> · {q.adjustment_reason}</>}
+                      {q.adjustment_audit?.outcome === 'UNCHANGED' && (
+                        <> · Inspección sin cambio de precio: {q.adjustment_audit.justification}</>
+                      )}
                       &nbsp;·&nbsp;
                       {new Date(q.created_at).toLocaleDateString()}
                     </span>
@@ -136,16 +143,19 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
                     <span className={`${styles.badge} ${q.status === 'PENDING' ? styles.statusYellow :
                       q.status === 'ACCEPTED' ? styles.statusGreen : styles.statusGray
                       }`}>
-                      {q.status}
+                      {q.quote_type === 'ADJUSTED' && q.status === 'PENDING' ? 'Ajuste pendiente' : q.status}
                     </span>
                     <p className={styles.price}>
                       <span className={styles.priceCurrency}>Bs.</span>
                       {Number(q.final_price).toFixed(2)}
                     </p>
-                    {q.status === 'PENDING' && (
+                    {q.status === 'PENDING' && q.quote_type !== 'ADJUSTED' && (
                       <button type="button" onClick={() => handleAcceptQuote(q.id)} disabled={acceptingQuoteId !== null} className={styles.actionBtn}>
                         {acceptingQuoteId === q.id ? 'Aceptando…' : 'Aceptar'}
                       </button>
+                    )}
+                    {q.status === 'PENDING' && q.quote_type === 'ADJUSTED' && (
+                      <span className={styles.rowMeta}>Pendiente de respuesta (HU-018)</span>
                     )}
                   </div>
                 </div>

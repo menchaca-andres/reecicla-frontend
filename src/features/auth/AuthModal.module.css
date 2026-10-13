@@ -103,6 +103,19 @@
   box-sizing: border-box;
 }
 
+.alertSuccess {
+  width: 100%;
+  background: rgba(52, 199, 89, 0.1);
+  border: 1px solid rgba(52, 199, 89, 0.25);
+  color: #176b32;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  margin-bottom: 18px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
 .form {
   width: 100%;
   display: flex;

@@ -1,4 +1,4 @@
-import type { AuthResponse, PlatformAuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection, CompleteInspectionInput } from '../types';
+import type { AuthResponse, PlatformAuthResponse, RegistrationStartResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection, CompleteInspectionInput } from '../types';
 import type { GuestOrderTracking } from '../types';
 
 const GATEWAY_ORIGIN = 'http://localhost:3000';
@@ -139,7 +139,7 @@ export class ApiService {
     name?: string;
     phone?: string;
     role?: string;
-  }): Promise<AuthResponse> {
+  }): Promise<RegistrationStartResponse> {
     const res = await fetch(this.scoped('auth', '/register'), {
       method: 'POST',
       headers: this.getHeaders(),
@@ -147,6 +147,20 @@ export class ApiService {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al registrarse');
+    return json;
+  }
+
+  static async verifyRegistration(data: {
+    email: string;
+    code: string;
+  }): Promise<AuthResponse> {
+    const res = await fetch(this.scoped('auth', '/register/verify'), {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'No se pudo verificar el correo');
     return json;
   }
 
@@ -171,6 +185,20 @@ export class ApiService {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al obtener perfil');
+    return json;
+  }
+
+  static async updateProfile(
+    data: { name: string; phone: string; pickup_address: string },
+    token: string
+  ): Promise<{ message: string; user: User }> {
+    const res = await fetch(this.scoped('auth', '/me'), {
+      method: 'PATCH',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al guardar los datos de contacto');
     return json;
   }
 
