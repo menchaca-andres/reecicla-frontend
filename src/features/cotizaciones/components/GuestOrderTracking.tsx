@@ -17,6 +17,7 @@ const STATUS_LABELS: Record<string, string> = {
   INSPECTED: 'Inspección completada',
   ADJUSTMENT_PENDING: 'Ajuste de cotización pendiente',
   ADJUSTMENT_REJECTED: 'Ajuste rechazado',
+  RETURN_REQUESTED: 'Devolución solicitada',
   PAYMENT_PENDING: 'Pago pendiente',
   PAID: 'Pago realizado',
   DISPOSED: 'Equipo procesado',
@@ -33,6 +34,9 @@ export const GuestOrderTracking: React.FC<GuestOrderTrackingProps> = ({ token })
   const [quote, setQuote] = useState<Quote | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [quoteError, setQuoteError] = useState<string | null>(null);
+  const [decisionError, setDecisionError] = useState<string | null>(null);
+  const [decisionNotice, setDecisionNotice] = useState<string | null>(null);
+  const [submittingDecision, setSubmittingDecision] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -62,6 +66,50 @@ export const GuestOrderTracking: React.FC<GuestOrderTrackingProps> = ({ token })
     }
   }, [token]);
 
+  const respondToAdjustedQuote = async (decision: 'ACCEPT' | 'REJECT') => {
+    if (!quote?.adjusted_quote || !window.confirm(
+      decision === 'ACCEPT'
+        ? '¿Aceptas el precio ajustado?'
+        : '¿Rechazas el precio ajustado? Después podrás elegir devolución o reciclaje.'
+    )) return;
+    setSubmittingDecision(true);
+    setDecisionError(null);
+    setDecisionNotice(null);
+    try {
+      const result = await ApiService.respondToAdjustedQuote(
+        quote.adjusted_quote.id,
+        decision,
+        null,
+        token
+      );
+      setDecisionNotice(result.message);
+      await refresh();
+    } catch (requestError) {
+      setDecisionError(requestError instanceof Error ? requestError.message : 'No se pudo responder el ajuste.');
+    } finally {
+      setSubmittingDecision(false);
+    }
+  };
+
+  const resolveRejectedAdjustment = async (resolution: 'RETURN' | 'RECYCLE') => {
+    const prompt = resolution === 'RETURN'
+      ? '¿Solicitas la devolución del equipo? El costo de devolución queda a tu cargo.'
+      : '¿Confirmas el reciclaje del equipo sin pago?';
+    if (!window.confirm(prompt)) return;
+    setSubmittingDecision(true);
+    setDecisionError(null);
+    setDecisionNotice(null);
+    try {
+      const result = await ApiService.resolveGuestAdjustment(token, resolution);
+      setDecisionNotice(result.message);
+      await refresh();
+    } catch (requestError) {
+      setDecisionError(requestError instanceof Error ? requestError.message : 'No se pudo elegir el destino.');
+    } finally {
+      setSubmittingDecision(false);
+    }
+  };
+
   useEffect(() => {
     void refresh();
   }, [refresh]);
@@ -73,6 +121,8 @@ export const GuestOrderTracking: React.FC<GuestOrderTrackingProps> = ({ token })
         <h1 className={styles.title}>{order ? `Pedido ${order.order_number}` : 'Consulta tu pedido'}</h1>
 
         {loading && <p className={styles.message}>Cargando el estado más reciente…</p>}
+        {decisionNotice && <p role="status" className={styles.message}>{decisionNotice}</p>}
+        {decisionError && <p role="alert" className={styles.error}>{decisionError}</p>}
         {error && (
           <div className={styles.error}>
             <p>{error}</p>
@@ -95,8 +145,8 @@ export const GuestOrderTracking: React.FC<GuestOrderTrackingProps> = ({ token })
                 </strong>
               </div>
               <div>
-                <span className={styles.label}>Cotización aceptada</span>
-                <strong>{order.currency} {Number(order.quoted_price).toFixed(2)}</strong>
+                <span className={styles.label}>Precio final</span>
+                <strong>{order.currency} {Number(order.final_price ?? order.quoted_price).toFixed(2)}</strong>
               </div>
               <div>
                 <span className={styles.label}>Estado actual</span>
@@ -122,8 +172,64 @@ export const GuestOrderTracking: React.FC<GuestOrderTrackingProps> = ({ token })
                   {quote.adjusted_quote.currency || order.currency}{' '}
                   {Number(quote.adjusted_quote.final_price).toFixed(2)}
                 </strong>
-                <p className={styles.message}>Estado: pendiente de respuesta del cliente.</p>
+                {quote.adjusted_quote.status === 'PENDING' ? (
+                  <>
+                    <p className={styles.message}>Responde al precio ajustado para continuar con el pedido.</p>
+                    <div className={styles.adjustmentActions}>
+                      <button
+                        type="button"
+                        className={styles.primaryButton}
+                        onClick={() => void respondToAdjustedQuote('ACCEPT')}
+                        disabled={submittingDecision}
+                      >
+                        Aceptar precio
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.secondaryButton}
+                        onClick={() => void respondToAdjustedQuote('REJECT')}
+                        disabled={submittingDecision}
+                      >
+                        Rechazar
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <p className={styles.message}>
+                    Estado de la cotización: {quote.adjusted_quote.status === 'ACCEPTED' ? 'aceptada' :
+                      quote.adjusted_quote.status === 'REJECTED' ? 'rechazada' : quote.adjusted_quote.status}.
+                  </p>
+                )}
               </section>
+            )}
+            {order.status === 'ADJUSTMENT_REJECTED' && !order.adjustment_resolution && (
+              <section className={styles.adjustedQuote} aria-labelledby="adjustment-resolution-title">
+                <h2 id="adjustment-resolution-title" className={styles.historyTitle}>Elige qué hacer con tu equipo</h2>
+                <p>Solicita la devolución a tu cargo o elige reciclarlo sin pago. Si no respondes en 7 días, se reciclará sin pago.</p>
+                <div className={styles.adjustmentActions}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={() => void resolveRejectedAdjustment('RETURN')}
+                    disabled={submittingDecision}
+                  >
+                    Solicitar devolución
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.primaryButton}
+                    onClick={() => void resolveRejectedAdjustment('RECYCLE')}
+                    disabled={submittingDecision}
+                  >
+                    Reciclar sin pago
+                  </button>
+                </div>
+              </section>
+            )}
+            {order.adjustment_resolution && (
+              <p className={styles.message}>
+                Destino registrado: {order.adjustment_resolution === 'RETURN' ? 'devolución a cargo del cliente' : 'reciclaje sin pago'}.
+              </p>
             )}
             {quote?.adjustment_audit?.outcome === 'UNCHANGED' && (
               <section className={styles.adjustedQuote} aria-live="polite">

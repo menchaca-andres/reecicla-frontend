@@ -195,6 +195,26 @@
 .actionBtn:hover  { background: #333333; }
 .actionBtn:disabled { background: #9ca3af; cursor: not-allowed; }
 
+.adjustmentActions {
+  display: flex;
+  gap: 8px;
+}
+
+.secondaryActionBtn {
+  padding: 8px 14px;
+  background: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.secondaryActionBtn:hover { background: #f3f4f6; }
+.secondaryActionBtn:disabled { color: #9ca3af; cursor: not-allowed; }
+
 /* ── Order card ── */
 .orderCard {
   background: #ffffff;

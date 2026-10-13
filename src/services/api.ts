@@ -272,6 +272,57 @@ export class ApiService {
     return json;
   }
 
+  static async respondToAdjustedQuote(
+    quoteId: string,
+    decision: 'ACCEPT' | 'REJECT',
+    token?: string | null,
+    trackingToken?: string
+  ): Promise<{ quote: Quote; message: string }> {
+    const res = await fetch(this.scoped('quotation', `/quotes/${encodeURIComponent(quoteId)}/adjusted-response`), {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify({
+        decision,
+        ...(trackingToken ? { tracking_token: trackingToken } : {}),
+      }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al responder la cotización ajustada');
+    return json;
+  }
+
+  static async resolveGuestAdjustment(
+    trackingToken: string,
+    resolution: 'RETURN' | 'RECYCLE'
+  ): Promise<{ resolution: 'RETURN' | 'RECYCLE'; automatic: boolean; message: string }> {
+    const res = await fetch(
+      `${GATEWAY_ORIGIN}/api/orders/tracking/${encodeURIComponent(trackingToken)}/adjustment-resolution`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+        body: JSON.stringify({ resolution }),
+      }
+    );
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al elegir el destino del equipo');
+    return json;
+  }
+
+  static async resolveUserAdjustment(
+    orderId: string,
+    resolution: 'RETURN' | 'RECYCLE',
+    token: string
+  ): Promise<{ resolution: 'RETURN' | 'RECYCLE'; automatic: boolean; message: string }> {
+    const res = await fetch(this.scoped('orders', `/${encodeURIComponent(orderId)}/adjustment-resolution`), {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify({ resolution }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al elegir el destino del equipo');
+    return json;
+  }
+
   static async getUserOrders(token: string): Promise<{ orders: Order[] }> {
     const res = await fetch(this.scoped('orders', '/'), {
       method: 'GET',

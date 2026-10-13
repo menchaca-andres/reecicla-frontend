@@ -12,6 +12,7 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [acceptingQuoteId, setAcceptingQuoteId] = useState<string | null>(null);
+  const [resolvingOrderId, setResolvingOrderId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +61,44 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
     }
   };
 
+  const handleAdjustedQuoteResponse = async (quoteId: string, decision: 'ACCEPT' | 'REJECT') => {
+    const prompt = decision === 'ACCEPT'
+      ? '¿Aceptas el precio ajustado?'
+      : '¿Rechazas el precio ajustado? Después podrás elegir devolución o reciclaje.';
+    if (!window.confirm(prompt)) return;
+    setAcceptingQuoteId(quoteId);
+    setNotice(null);
+    setError(null);
+    try {
+      const result = await ApiService.respondToAdjustedQuote(quoteId, decision, token);
+      setNotice(result.message);
+      await fetchHistory();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo responder la cotización ajustada.');
+    } finally {
+      setAcceptingQuoteId(null);
+    }
+  };
+
+  const handleResolveAdjustment = async (orderId: string, resolution: 'RETURN' | 'RECYCLE') => {
+    const prompt = resolution === 'RETURN'
+      ? '¿Solicitas la devolución del equipo? El costo de devolución queda a tu cargo.'
+      : '¿Confirmas el reciclaje del equipo sin pago?';
+    if (!window.confirm(prompt)) return;
+    setResolvingOrderId(orderId);
+    setNotice(null);
+    setError(null);
+    try {
+      const result = await ApiService.resolveUserAdjustment(orderId, resolution, token);
+      setNotice(result.message);
+      await fetchHistory();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo elegir el destino del equipo.');
+    } finally {
+      setResolvingOrderId(null);
+    }
+  };
+
   const handleRequestBox = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedOrderIdForBox) return;
@@ -93,6 +132,9 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
     INSPECTING: { label: 'En Evaluación', cls: styles.statusYellow },
     INSPECTED: { label: 'Inspección completada', cls: styles.statusBlue },
     ADJUSTMENT_PENDING: { label: 'Ajuste de cotización pendiente', cls: styles.statusYellow },
+    ADJUSTMENT_REJECTED: { label: 'Ajuste rechazado', cls: styles.statusOrange },
+    PAYMENT_PENDING: { label: 'Pago pendiente', cls: styles.statusYellow },
+    DISPOSED: { label: 'Equipo procesado', cls: styles.statusGray },
     PAID: { label: 'Pagado', cls: styles.statusGreen },
     CLOSED: { label: 'Completado', cls: styles.statusGray },
   };
@@ -155,7 +197,24 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
                       </button>
                     )}
                     {q.status === 'PENDING' && q.quote_type === 'ADJUSTED' && (
-                      <span className={styles.rowMeta}>Pendiente de respuesta (HU-018)</span>
+                      <div className={styles.adjustmentActions}>
+                        <button
+                          type="button"
+                          onClick={() => handleAdjustedQuoteResponse(q.id, 'ACCEPT')}
+                          disabled={acceptingQuoteId !== null}
+                          className={styles.actionBtn}
+                        >
+                          {acceptingQuoteId === q.id ? 'Procesando…' : 'Aceptar ajuste'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleAdjustedQuoteResponse(q.id, 'REJECT')}
+                          disabled={acceptingQuoteId !== null}
+                          className={styles.secondaryActionBtn}
+                        >
+                          Rechazar
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -198,10 +257,36 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
                             <p className={styles.fieldMeta}>Condición: <strong>{order.declared_condition}</strong></p>
                           )}
                         </div>
+                        {order.status === 'ADJUSTMENT_REJECTED' && !order.adjustment_resolution && (
+                          <div className={styles.adjustmentActions}>
+                            <span className={styles.rowMeta}>Elige el destino; sin respuesta en 7 días se reciclará sin pago.</span>
+                            <button
+                              type="button"
+                              onClick={() => handleResolveAdjustment(order.id, 'RETURN')}
+                              disabled={resolvingOrderId !== null}
+                              className={styles.secondaryActionBtn}
+                            >
+                              Solicitar devolución
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleResolveAdjustment(order.id, 'RECYCLE')}
+                              disabled={resolvingOrderId !== null}
+                              className={styles.actionBtn}
+                            >
+                              Reciclar sin pago
+                            </button>
+                          </div>
+                        )}
+                        {order.adjustment_resolution && (
+                          <p className={styles.rowMeta}>
+                            Destino elegido: {order.adjustment_resolution === 'RETURN' ? 'devolución a cargo del cliente' : 'reciclaje sin pago'}.
+                          </p>
+                        )}
 
                         <div>
                           <p className={styles.fieldLabel}>Monto Aceptado</p>
-                          <p className={styles.orderPrice}>Bs. {Number(order.quoted_price || 0).toFixed(2)}</p>
+                          <p className={styles.orderPrice}>Bs. {Number(order.final_price ?? order.quoted_price ?? 0).toFixed(2)}</p>
                           {order.pickup_address && (
                             <p className={styles.fieldMeta}> {order.pickup_address.street}, {order.pickup_address.city}</p>
                           )}
