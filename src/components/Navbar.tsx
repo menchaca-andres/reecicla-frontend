@@ -7,8 +7,8 @@ interface NavbarProps {
   tenantId: string;
   onOpenAuth: () => void;
   onLogout: () => void;
-  activeTab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'inspeccion';
-  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'inspeccion') => void;
+  activeTab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica';
+  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -149,24 +149,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               }}
             >
               Logística
-            </button>
-          )}
-          {user && ['TENANT_ADMIN', 'SUPER_ADMIN', 'INSPECTOR'].includes(user.role) && (
-            <button
-              onClick={() => setActiveTab('inspeccion')}
-              style={{
-                padding: '7px 14px',
-                fontSize: '13px',
-                fontWeight: 600,
-                borderRadius: '8px',
-                border: 'none',
-                cursor: 'pointer',
-                background: activeTab === 'inspeccion' ? '#2563eb' : 'transparent',
-                color: activeTab === 'inspeccion' ? '#ffffff' : '#64748b',
-                transition: 'all 0.15s ease',
-              }}
-            >
-              Inspección
             </button>
           )}
         </nav>

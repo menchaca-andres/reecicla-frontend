@@ -1,0 +1,21 @@
+.page {
+  min-height: 100vh;
+  background: #ffffff;
+  color: #111111;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.content {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 44px 24px 72px;
+}
+
+.loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  color: #6b7280;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+}

@@ -1,30 +1,40 @@
 import React, { useState } from 'react';
 import { ArrowLeft, ArrowRight, RefreshCw, ExternalLink } from 'lucide-react';
 import { ApiService } from '../../../services/api';
-import type { AuthResponse } from '../../../types';
+import type { AuthResponse, PlatformAuthResponse } from '../../../types';
 import { AppleDotsRing } from './AppleDotsRing';
 import styles from '../AuthModal.module.css';
 
-interface AuthPageProps {
+interface TenantAuthPageProps {
+  mode?: 'tenant';
   onSuccess: (authData: AuthResponse) => void;
   onCancel: () => void;
-  defaultTenantId: string;
 }
 
+interface PlatformAuthPageProps {
+  mode: 'platform';
+  onPlatformSuccess: (authData: PlatformAuthResponse) => void;
+  onCancel: () => void;
+  initialError?: string | null;
+}
+
+type AuthPageProps = TenantAuthPageProps | PlatformAuthPageProps;
+
 export const AuthPage: React.FC<AuthPageProps> = ({
-  onSuccess,
   onCancel,
-  defaultTenantId,
+  ...props
 }) => {
+  const platformMode = props.mode === 'platform';
   const [isLogin, setIsLogin] = useState(true);
-  const [tenantId, setTenantId] = useState(defaultTenantId);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    props.mode === 'platform' ? props.initialError ?? null : null
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,17 +43,23 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
     try {
       if (isLogin) {
-        const res = await ApiService.login({ tenant_id: tenantId, email, password });
-        onSuccess(res);
+        if (props.mode === 'platform') {
+          const res = await ApiService.platformLogin({ email, password });
+          props.onPlatformSuccess(res);
+        } else {
+          const res = await ApiService.login({ email, password });
+          props.onSuccess(res);
+        }
       } else {
-        const res = await ApiService.register({
-          tenant_id: tenantId,
-          email,
-          password,
-          name: name || undefined,
-          phone: phone || undefined,
-        });
-        onSuccess(res);
+        if (props.mode !== 'platform') {
+          const res = await ApiService.register({
+            email,
+            password,
+            name: name || undefined,
+            phone: phone || undefined,
+          });
+          props.onSuccess(res);
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error en la autenticación');
@@ -81,23 +97,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         {error && <div className={styles.alertError}>{error}</div>}
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          {/* Tenant ID Field */}
-          <div className={styles.inputGroup}>
-            <label className={styles.inputLabel}>Tenant ID</label>
-            <div className={styles.inputWrapper}>
-              <input
-                type="text"
-                className={styles.appleInput}
-                placeholder="Tenant ID"
-                value={tenantId}
-                onChange={(e) => setTenantId(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
           {/* Registration Extra Fields */}
-          {!isLogin && (
+          {!platformMode && !isLogin && (
             <>
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>Nombre completo</label>
@@ -173,7 +174,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
         {/* Footer Links */}
         <div className={styles.linksContainer}>
-          {isLogin ? (
+          {platformMode ? (
+            <button
+              type="button"
+              className={styles.linkButton}
+              onClick={() => alert('Contacta a soporte@reecicla.bo para restablecer tu contraseña.')}
+            >
+              ¿Olvidaste tu Reecicla ID o la contraseña? <ExternalLink size={12} />
+            </button>
+          ) : isLogin ? (
             <>
               <button
                 type="button"
