@@ -180,6 +180,7 @@ export interface Order {
   device_year?: number | null;
   declared_condition?: string | null;
   quoted_price: number | string;
+  final_price?: number | string | null;
   currency: string;
   status: string;
   customer_name?: string | null;
@@ -189,6 +190,9 @@ export interface Order {
   box_status?: string | null;
   shipped_at?: string | null;
   received_at?: string | null;
+  adjustment_rejected_at?: string | null;
+  adjustment_resolution?: 'RETURN' | 'RECYCLE' | null;
+  adjustment_resolution_at?: string | null;
   status_history?: Array<{
     previous_status: string | null;
     new_status: string;
@@ -294,8 +298,12 @@ export interface GuestOrderTracking {
   device_year: number | null;
   declared_condition: string;
   quoted_price: number | string;
+  final_price?: number | string | null;
   currency: string;
   status: string;
+  adjustment_rejected_at: string | null;
+  adjustment_resolution: 'RETURN' | 'RECYCLE' | null;
+  adjustment_resolution_at: string | null;
   accepted_at: string;
   tracking_code: string | null;
   box_status: string | null;
