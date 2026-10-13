@@ -1,0 +1,406 @@
+/* ─────────────────────────────────────────────
+   QuoteHistory — minimalist style
+   Mirrors QuotationWizard visual language:
+   pure white, Inter, no icons, clean rows
+   ───────────────────────────────────────────── */
+
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+  background: #ffffff;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ── Top bar ── */
+.topBar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 40px;
+}
+
+.pageTitle {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #111111;
+  margin: 0;
+}
+
+.refreshBtn {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.refreshBtn:hover {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+/* ── Section headings ── */
+.sectionHeading {
+  font-size: 22px;
+  font-weight: 600;
+  color: #111111;
+  margin: 0 0 16px;
+  letter-spacing: -0.3px;
+}
+
+.ordersSection {
+  margin-top: 48px;
+}
+
+/* ── Status messages ── */
+.loadingText {
+  font-size: 15px;
+  color: #6b7280;
+  padding: 40px 0;
+  text-align: center;
+}
+
+.alertError {
+  font-size: 14px;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin-bottom: 20px;
+}
+
+.noticeText {
+  font-size: 14px;
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin-bottom: 20px;
+}
+
+.emptyText {
+  font-size: 15px;
+  color: #9ca3af;
+  text-align: center;
+  padding: 40px 0;
+}
+
+/* ── Generic list ── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ── Quote row ── */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: #ffffff;
+  gap: 16px;
+  transition: background 0.12s;
+}
+
+.row:hover {
+  background: #fafafa;
+}
+
+.rowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rowTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111111;
+  text-transform: capitalize;
+}
+
+.rowMeta {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.rowRight {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+/* ── Price ── */
+.price {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.priceCurrency {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.statusGreen  { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.statusBlue   { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.statusPurple { background: #faf5ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+.statusOrange { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; }
+.statusTeal   { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.statusYellow { background: #fefce8; color: #a16207; border: 1px solid #fef08a; }
+.statusGray   { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+
+/* ── Action button ── */
+.actionBtn {
+  padding: 8px 18px;
+  background: #111111;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.actionBtn:hover  { background: #333333; }
+.actionBtn:disabled { background: #9ca3af; cursor: not-allowed; }
+
+/* ── Order card ── */
+.orderCard {
+  background: #ffffff;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: background 0.12s;
+}
+
+.orderCard:hover {
+  background: #fafafa;
+}
+
+.orderTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.orderTopLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.orderNumber {
+  font-size: 15px;
+  font-weight: 700;
+  color: #111111;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  letter-spacing: 0.3px;
+}
+
+.orderDate {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.orderBody {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.fieldLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #9ca3af;
+  margin: 0 0 4px;
+}
+
+.fieldValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111111;
+  margin: 0;
+}
+
+.fieldMeta {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 3px 0 0;
+}
+
+.orderPrice {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0;
+}
+
+.trackingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b21a8;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-top: 6px;
+  width: fit-content;
+}
+
+.orderActions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+}
+
+/* ── Modal ── */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modalContent {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.modalTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.closeBtn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 5px;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  outline: none;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: #111111;
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.cancelBtn {
+  padding: 9px 18px;
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cancelBtn:hover {
+  background: #f3f4f6;
+}

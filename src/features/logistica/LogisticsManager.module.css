@@ -1,0 +1,344 @@
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.headerCard {
+  padding: 28px 32px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.headerIcon {
+  background: #f0fdf4;
+  padding: 12px;
+  border-radius: 14px;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  display: flex;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.refreshBtn {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+
+.alertSuccess {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alertError {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filterRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filterLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filterChip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #64748b;
+  transition: all 0.15s ease;
+}
+
+.filterChipActive {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+  transition: all 0.15s ease;
+}
+
+.loadingText {
+  text-align: center;
+  padding: 48px;
+  color: #64748b;
+}
+
+.emptyBox {
+  text-align: center;
+  padding: 48px;
+  background: #f8fafc;
+  border-radius: 14px;
+  border: 1px dashed #cbd5e1;
+}
+
+.emptyText {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.orderList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.orderCard {
+  padding: 20px 24px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.orderCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 10px;
+}
+
+.orderNumberGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.orderNumber {
+  font-size: 17px;
+  color: #0f172a;
+  font-family: monospace;
+}
+
+.statusBadge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.customerText {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: 1.5fr 1.5fr 1fr;
+  gap: 16px;
+  align-items: center;
+}
+
+.fieldCategory {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.deviceTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+
+.priceText {
+  font-size: 12px;
+  color: #475569;
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+
+.addressText {
+  font-size: 12px;
+  color: #1e293b;
+  margin-top: 2px;
+  margin-bottom: 0;
+  line-height: 1.4;
+}
+
+.addressNotes {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.noAddress {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+
+.actionsColumn {
+  justify-self: end;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.trackingBadge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #6b21a8;
+  background: #faf5ff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #e9d5ff;
+  font-family: monospace;
+}
+
+.dispatchBtn {
+  padding: 8px 14px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modalContent {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.modalCloseBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  display: flex;
+}
+
+.modalSubText {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 4px;
+}
+
+.inputMonospace {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 14px;
+  font-family: monospace;
+  box-sizing: border-box;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}

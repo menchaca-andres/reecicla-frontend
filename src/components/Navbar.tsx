@@ -7,8 +7,8 @@ interface NavbarProps {
   tenantId: string;
   onOpenAuth: () => void;
   onLogout: () => void;
-  activeTab: 'cotizar' | 'historial' | 'reglas' | 'admins';
-  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'admins') => void;
+  activeTab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica';
+  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               Mis Cotizaciones
             </button>
           )}
-          {user && (user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
+          {user && (user.role === 'TENANT_ADMIN' || user.role === 'CATALOG_ADMIN' || user.role === 'SUPER_ADMIN') && (
             <button
               onClick={() => setActiveTab('reglas')}
               style={{
@@ -115,6 +115,42 @@ export const Navbar: React.FC<NavbarProps> = ({
               <Users size={15} /> Administradores
             </button>
           )}
+          {user && ['CATALOG_ADMIN', 'TENANT_ADMIN', 'ADMIN', 'SUPER_ADMIN'].includes(user.role) && (
+            <button
+              onClick={() => setActiveTab('catalogo')}
+              style={{
+                padding: '7px 14px',
+                fontSize: '13px',
+                fontWeight: 600,
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                background: activeTab === 'catalogo' ? '#2563eb' : 'transparent',
+                color: activeTab === 'catalogo' ? '#ffffff' : '#64748b',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Tipos de equipos
+            </button>
+          )}
+          {user && ['TENANT_ADMIN', 'SUPER_ADMIN', 'INSPECTOR'].includes(user.role) && (
+            <button
+              onClick={() => setActiveTab('logistica')}
+              style={{
+                padding: '7px 14px',
+                fontSize: '13px',
+                fontWeight: 600,
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                background: activeTab === 'logistica' ? '#2563eb' : 'transparent',
+                color: activeTab === 'logistica' ? '#ffffff' : '#64748b',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              Logística
+            </button>
+          )}
         </nav>
 
         {/* User Auth Section */}
@@ -140,9 +176,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                         fontWeight: 700,
                         padding: '2px 6px',
                         borderRadius: '4px',
-                        background: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? '#dcfce7' : '#e2e8f0',
-                        color: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? '#15803d' : '#475569',
-                        border: user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' ? '1px solid #86efac' : '1px solid #cbd5e1',
+                        background: user.role === 'TENANT_ADMIN' || user.role === 'CATALOG_ADMIN' || user.role === 'SUPER_ADMIN' ? '#dcfce7' : '#e2e8f0',
+                        color: user.role === 'TENANT_ADMIN' || user.role === 'CATALOG_ADMIN' || user.role === 'SUPER_ADMIN' ? '#15803d' : '#475569',
+                        border: user.role === 'TENANT_ADMIN' || user.role === 'CATALOG_ADMIN' || user.role === 'SUPER_ADMIN' ? '1px solid #86efac' : '1px solid #cbd5e1',
                         textTransform: 'uppercase'
                       }}>
                         {user.role}
