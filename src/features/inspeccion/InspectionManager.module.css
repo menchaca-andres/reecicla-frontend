@@ -339,3 +339,172 @@
   color: #334155;
   word-break: break-all;
 }
+
+.container {
+  max-width: 960px;
+  padding: 16px 0 40px;
+  gap: 24px;
+  color: #111111;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.headerCard,
+.panel,
+.itemCard,
+.emptyBox,
+.resultPanel {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.headerCard,
+.panel {
+  padding: 24px;
+}
+
+.headerLeft {
+  gap: 0;
+}
+
+.title,
+.panelTitle,
+.fieldValue,
+.sectionTitle,
+.itemLabel {
+  color: #111111;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.panelTitle {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.subtitle,
+.fieldCategory,
+.hint,
+.cardMeta,
+.loadingText,
+.emptyBox {
+  color: #6b7280;
+}
+
+.alertSuccess,
+.alertError,
+.alertInfo {
+  border-radius: 8px;
+}
+
+.alertSuccess,
+.alertInfo {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  color: #374151;
+}
+
+.tabRow {
+  gap: 24px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.tabChip,
+.tabChipActive {
+  padding: 12px 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #6b7280;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tabChipActive {
+  border-bottom-color: #111111;
+  color: #111111;
+  font-weight: 600;
+}
+
+.summaryGrid {
+  background: #fafafa;
+  border-color: #e5e7eb;
+  border-radius: 8px;
+}
+
+.resultPanel {
+  border-color: #e5e7eb;
+  gap: 14px;
+}
+
+.itemCard {
+  padding: 16px;
+}
+
+.choice,
+.choiceActive {
+  border-radius: 8px;
+}
+
+.choice {
+  border-color: #d1d5db;
+}
+
+.choiceActive {
+  background: #111111;
+  border-color: #111111;
+}
+
+.container :global(input),
+.container :global(select),
+.container :global(textarea) {
+  border-color: #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+}
+
+.container :global(input:focus),
+.container :global(select:focus),
+.container :global(textarea:focus) {
+  outline: none;
+  border-color: #111111;
+}
+
+.container :global(.btn-primary) {
+  background: #111111;
+  border-radius: 8px;
+}
+
+.container :global(.btn-primary:hover:not(:disabled)) {
+  background: #333333;
+}
+
+.container :global(.btn-secondary) {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 16px 0 32px;
+  }
+
+  .headerCard,
+  .panel {
+    padding: 18px;
+  }
+
+  .panelHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -292,3 +292,160 @@
   border-radius: 4px;
   font-size: 11px;
 }
+
+.container {
+  max-width: 960px;
+  padding: 16px 0 40px;
+  gap: 24px;
+  color: #111111;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.formCard,
+.deviceGroupCard,
+.emptyCard {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.formCard {
+  padding: 24px;
+}
+
+.headerRow {
+  gap: 0;
+  margin-bottom: 20px;
+}
+
+.title,
+.sectionTitle,
+.deviceName {
+  color: #111111;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.subtitle,
+.deviceCode {
+  color: #6b7280;
+}
+
+.alertSuccess,
+.alertError {
+  border-radius: 8px;
+}
+
+.alertSuccess {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  color: #374151;
+}
+
+.tabRow {
+  gap: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tabChip,
+.tabChipActive {
+  padding: 12px 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.tabChipActive {
+  border-bottom-color: #111111;
+  color: #111111;
+  font-weight: 600;
+}
+
+.countBadge,
+.modelBadge,
+.yearBadge {
+  background: #f9fafb;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
+.refreshBtn {
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.deviceHeader,
+.theadTr {
+  background: #ffffff;
+}
+
+.deviceHeader,
+.tbodyTr,
+.th {
+  border-color: #e5e7eb;
+}
+
+.emptyCard {
+  padding: 32px;
+}
+
+.emptyText,
+.loadingText {
+  color: #6b7280;
+}
+
+.formCard :global(input),
+.formCard :global(select),
+.formCard :global(textarea) {
+  border-color: #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+}
+
+.formCard :global(input:focus),
+.formCard :global(select:focus),
+.formCard :global(textarea:focus) {
+  outline: none;
+  border-color: #111111;
+}
+
+.formCard :global(.btn-primary),
+.saveBtn {
+  background: #111111;
+  border-radius: 8px;
+}
+
+.formCard :global(.btn-primary:hover),
+.saveBtn:hover:not(:disabled) {
+  background: #333333;
+}
+
+.container :global(.btn-secondary) {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 16px 0 32px;
+  }
+
+  .formCard {
+    padding: 18px;
+  }
+
+  .tabRow {
+    gap: 16px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+}

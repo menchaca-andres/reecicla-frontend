@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Settings, Save, AlertCircle, CheckCircle2, RefreshCw, Tag, Cpu } from 'lucide-react';
 import { ApiService } from '../../../services/api';
 import type { PricingRule, DeviceBrand, Device } from '../../../types';
 import styles from '../PricingRulesManager.module.css';
@@ -180,9 +179,6 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ token 
       {/* ── FORM ── */}
       <div className={`glass-panel ${styles.formCard}`}>
         <div className={styles.headerRow}>
-          <div className={styles.headerIcon}>
-            <Settings size={22} />
-          </div>
           <div>
             <h2 className={styles.title}>Reglas de Valoración</h2>
             <p className={styles.subtitle}>Configura precios base y descuentos por tipo, marca, modelo y año (Bs.)</p>
@@ -191,12 +187,12 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ token 
 
         {message && (
           <div className={styles.alertSuccess}>
-            <CheckCircle2 size={16} /> {message}
+            {message}
           </div>
         )}
         {error && (
           <div className={styles.alertError}>
-            <AlertCircle size={16} /> {error}
+            {error}
           </div>
         )}
 
@@ -315,7 +311,7 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ token 
           </div>
 
           <button type="submit" className={`btn-primary ${styles.saveBtn}`} disabled={loading}>
-            <Save size={16} /> {loading ? 'Guardando...' : 'Guardar Regla de Valoración'}
+            {loading ? 'Guardando...' : 'Guardar regla de valoración'}
           </button>
         </form>
       </div>
@@ -324,9 +320,8 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ token 
       <div>
         <div className={styles.rulesHeader}>
           <div className={styles.rulesHeaderLeft}>
-            <Tag size={16} color="#2563eb" />
             <h3 className={styles.sectionTitle}>
-              Reglas Configuradas
+              Reglas configuradas
             </h3>
             {rules.length > 0 && (
               <span className={styles.countBadge}>
@@ -340,8 +335,7 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ token 
             title="Actualizar"
             className={styles.refreshBtn}
           >
-            <RefreshCw size={13} style={{ animation: rulesLoading ? 'spin 1s linear infinite' : 'none' }} />
-            Actualizar
+            {rulesLoading ? 'Actualizando...' : 'Actualizar'}
           </button>
         </div>
 
@@ -351,7 +345,6 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ token 
           </div>
         ) : rules.length === 0 ? (
           <div className={`glass-panel ${styles.emptyCard}`}>
-            <Settings size={28} color="#cbd5e1" style={{ marginBottom: '8px' }} />
             <p className={styles.emptyText}>
               Aún no hay reglas configuradas para este tenant.
             </p>
@@ -361,7 +354,6 @@ export const PricingRulesManager: React.FC<PricingRulesManagerProps> = ({ token 
             <div key={device} className={`glass-panel ${styles.deviceGroupCard}`}>
               {/* Device header */}
               <div className={styles.deviceHeader}>
-                <Cpu size={14} color="#2563eb" />
                 <span className={styles.deviceName}>
                   {deviceTypes.find((dt) => dt.code === device)?.name || device}
                 </span>

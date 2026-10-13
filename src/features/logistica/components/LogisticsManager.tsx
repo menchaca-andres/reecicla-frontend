@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Truck, Box, RefreshCw, AlertCircle, CheckCircle2, Search, X } from 'lucide-react';
 import { ApiService } from '../../../services/api';
 import type { Order } from '../../../types';
 import styles from '../LogisticsManager.module.css';
@@ -90,16 +89,16 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     return o.status === statusFilter;
   });
 
-  const statusMap: Record<string, { label: string; bg: string; color: string; border: string }> = {
-    ACCEPTED: { label: 'Cotización Aceptada', bg: '#f0fdf4', color: '#166534', border: '#bbf7d0' },
-    BOX_REQUESTED: { label: 'Caja Solicitada', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
-    BOX_SHIPPED: { label: 'Caja Enviada', bg: '#faf5ff', color: '#6b21a8', border: '#e9d5ff' },
-    IN_TRANSIT: { label: 'En Tránsito', bg: '#fff7ed', color: '#c2410c', border: '#ffedd5' },
-    RECEIVED: { label: 'Recibido en Almacén', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
-    INSPECTING: { label: 'En Evaluación', bg: '#fefce8', color: '#a16207', border: '#fef08a' },
-    INSPECTED: { label: 'Inspeccionado', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
-    PAID: { label: 'Pagado', bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
-    CLOSED: { label: 'Completado', bg: '#f8fafc', color: '#475569', border: '#e2e8f0' },
+  const statusMap: Record<string, string> = {
+    ACCEPTED: 'Cotización aceptada',
+    BOX_REQUESTED: 'Caja solicitada',
+    BOX_SHIPPED: 'Caja enviada',
+    IN_TRANSIT: 'En tránsito',
+    RECEIVED: 'Recibido en almacén',
+    INSPECTING: 'En evaluación',
+    INSPECTED: 'Inspeccionado',
+    PAID: 'Pagado',
+    CLOSED: 'Completado',
   };
 
   return (
@@ -107,32 +106,30 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
 
       <div className={`glass-panel ${styles.headerCard}`}>
         <div className={styles.headerLeft}>
-          <div className={styles.headerIcon}>
-            <Truck size={24} />
-          </div>
           <div>
-            <h2 className={styles.title}>Gestión de Logística y Recepción (HU-013/HU-014)</h2>
-              <p className={styles.subtitle}>Registra guías, seguimiento y recepción de equipos en almacén.</p>
+            <h2 className={styles.title}>Logística</h2>
+            <p className={styles.subtitle}>Gestiona envíos, guías y recepción de equipos.</p>
           </div>
         </div>
 
-        <button onClick={fetchOrders} className={`btn-secondary ${styles.refreshBtn}`}><RefreshCw size={14} /> Actualizar
+        <button onClick={fetchOrders} className={`btn-secondary ${styles.refreshBtn}`}>
+          {loading ? 'Actualizando...' : 'Actualizar'}
         </button>
       </div>
 
       {successMsg && (
         <div className={styles.alertSuccess}>
-          <CheckCircle2 size={18} /> {successMsg}
+          {successMsg}
         </div>
       )}
       {error && (
         <div className={styles.alertError}>
-          <AlertCircle size={18} /> {error}
+          {error}
         </div>
       )}
 
       <div className={styles.filterRow}>
-        <span className={styles.filterLabel}><Search size={14} /> Filtrar Estado:</span>
+        <span className={styles.filterLabel}>Filtrar por estado</span>
         {[
           { code: 'ALL', label: 'Todas las Órdenes' },
           { code: 'BOX_REQUESTED', label: 'Cajas Solicitadas (Pendientes Guía)' },
@@ -155,16 +152,14 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
       ) : (
         <div className={styles.orderList}>
           {filteredOrders.map((order) => {
-            const st = statusMap[order.status] || { label: order.status, bg: '#f1f5f9', color: '#334155', border: '#cbd5e1' };
+            const statusLabel = statusMap[order.status] || order.status;
 
             return (
               <div key={order.id} className={`glass-card ${styles.orderCard}`}>
                 <div className={styles.orderCardHeader}>
                   <div className={styles.orderNumberGroup}>
                     <strong className={styles.orderNumber}>{order.order_number}</strong>
-                    <span className={styles.statusBadge} style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
-                      {st.label}
-                    </span>
+                    <span className={styles.statusBadge}>{statusLabel}</span>
                   </div>
                   <span className={styles.customerText}>
                     Cliente: <strong>{order.customer_name || 'Cliente'}</strong> ({order.customer_email || '—'})
@@ -176,9 +171,9 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                   <div>
                     <p className={styles.fieldCategory}>Equipo</p>
                     <p className={styles.deviceTitle}>
-                      {order.device_type_name} {order.brand ? `• ${order.brand}` : ''} {order.model ? `(${order.model})` : ''}
+                      {order.device_type_name} {order.brand ? `· ${order.brand}` : ''} {order.model ? `(${order.model})` : ''}
                     </p>
-                    <p className={styles.priceText}>Monto: <strong style={{ color: '#16a34a' }}>{order.currency === 'BOB' || order.currency === 'Bs' ? 'Bs.' : order.currency} {Number(order.quoted_price).toFixed(2)}</strong></p>
+                    <p className={styles.priceText}>Monto: <strong>{order.currency === 'BOB' || order.currency === 'Bs' ? 'Bs.' : order.currency} {Number(order.quoted_price).toFixed(2)}</strong></p>
                   </div>
 
                   <div>
@@ -198,7 +193,9 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                     {order.tracking_code && <span className={styles.trackingBadge}>Guía: {order.tracking_code}</span>}
 
                     {(order.status === 'BOX_REQUESTED' || order.status === 'ACCEPTED' || order.status === 'BOX_SHIPPED') && (
-                      <button onClick={() => handleOpenDispatchModal(order)} className={`btn-primary ${styles.dispatchBtn}`}><Box size={14} /> {order.tracking_code ? 'Editar Guía / Tracking' : 'Registrar Guía de Envío'}</button>
+                      <button onClick={() => handleOpenDispatchModal(order)} className={`btn-primary ${styles.dispatchBtn}`}>
+                        {order.tracking_code ? 'Editar guía' : 'Registrar guía'}
+                      </button>
                     )}
                     {order.status === 'IN_TRANSIT' && (
                       <button
@@ -207,7 +204,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                         disabled={submitting}
                         className={`btn-primary ${styles.dispatchBtn}`}
                       >
-                        <CheckCircle2 size={14} /> Registrar Recepción
+                        Registrar recepción
                       </button>
                     )}
                   </div>
@@ -224,10 +221,10 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>
-                <Truck size={20} color="#2563eb" /> Registrar Despacho / Guía
+                Registrar despacho
               </h3>
-              <button onClick={() => setSelectedOrder(null)} className={styles.modalCloseBtn}>
-                <X size={20} />
+              <button onClick={() => setSelectedOrder(null)} className={styles.modalCloseBtn} aria-label="Cerrar">
+                Cerrar
               </button>
             </div>
 

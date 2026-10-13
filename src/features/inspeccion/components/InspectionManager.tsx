@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ClipboardCheck, RefreshCw, AlertCircle, CheckCircle2, ArrowLeft, Info } from 'lucide-react';
 import { ApiService } from '../../../services/api';
 import type {
   ChecklistItem,
@@ -93,7 +92,7 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
   const orderTitle = useCallback((orderId: string, deviceTypeName?: string) => {
     const order = orders[orderId];
     if (!order) return deviceTypeName || 'Equipo';
-    return `${order.device_type_name}${order.brand ? ` • ${order.brand}` : ''}${order.model ? ` (${order.model})` : ''}`;
+    return `${order.device_type_name}${order.brand ? ` · ${order.brand}` : ''}${order.model ? ` (${order.model})` : ''}`;
   }, [orders]);
 
   const orderNumber = useCallback(
@@ -306,8 +305,8 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
 
   const alerts = (
     <>
-      {successMsg && <div className={styles.alertSuccess}><CheckCircle2 size={18} /> {successMsg}</div>}
-      {error && <div className={styles.alertError}><AlertCircle size={18} /> <span>{error}</span></div>}
+      {successMsg && <div className={styles.alertSuccess}>{successMsg}</div>}
+      {error && <div className={styles.alertError}>{error}</div>}
     </>
   );
 
@@ -318,13 +317,13 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
         <form onSubmit={handleSubmit} className={`glass-panel ${styles.panel}`}>
           <div className={styles.panelHeader}>
             <div>
-              <h2 className={styles.panelTitle}>Inspección • {orderNumber(form.order_id)}</h2>
+              <h2 className={styles.panelTitle}>Inspección · {orderNumber(form.order_id)}</h2>
               <p className={styles.subtitle}>
                 Checklist de {form.device_type_name}, versión {form.evaluation_rule_version}.
               </p>
             </div>
             <button type="button" onClick={resetForm} className={`btn-secondary ${styles.smallBtn}`}>
-              <ArrowLeft size={14} /> Volver
+              Volver
             </button>
           </div>
 
@@ -415,7 +414,7 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
           <div className={styles.actions}>
             <button type="button" onClick={resetForm} className={`btn-secondary ${styles.smallBtn}`}>Cancelar</button>
             <button type="submit" disabled={submitting} className={`btn-primary ${styles.smallBtn}`}>
-              <ClipboardCheck size={14} /> {submitting ? 'Guardando...' : 'Registrar inspección'}
+              {submitting ? 'Guardando...' : 'Registrar inspección'}
             </button>
           </div>
         </form>
@@ -430,13 +429,13 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
         <div className={`glass-panel ${styles.panel}`}>
           <div className={styles.panelHeader}>
             <div>
-              <h2 className={styles.panelTitle}>Inspección • {orderNumber(detail.order_id)}</h2>
+              <h2 className={styles.panelTitle}>Inspección · {orderNumber(detail.order_id)}</h2>
               <p className={styles.subtitle}>
                 {orderTitle(detail.order_id, detail.device_type_name)} — checklist versión {detail.evaluation_rule_version}.
               </p>
             </div>
             <button type="button" onClick={() => setDetail(null)} className={`btn-secondary ${styles.smallBtn}`}>
-              <ArrowLeft size={14} /> Volver
+              Volver
             </button>
           </div>
 
@@ -503,13 +502,13 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
               </div>
               <div className={styles.actions}>
                 <button type="submit" disabled={submitting} className={`btn-primary ${styles.smallBtn}`}>
-                  <CheckCircle2 size={14} /> {submitting ? 'Completando...' : 'Guardar resultado'}
+                  {submitting ? 'Completando...' : 'Guardar resultado'}
                 </button>
               </div>
             </form>
           ) : (
             <div className={styles.alertInfo}>
-              <Info size={18} /> Solo un usuario con rol INSPECTOR puede determinar el resultado y completar la inspección.
+              Solo un usuario con rol INSPECTOR puede determinar el resultado y completar la inspección.
             </div>
           )}
 
@@ -554,21 +553,20 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
     <div className={styles.container}>
       <div className={`glass-panel ${styles.headerCard}`}>
         <div className={styles.headerLeft}>
-          <div className={styles.headerIcon}>
-            <ClipboardCheck size={24} />
-          </div>
           <div>
-            <h2 className={styles.title}>Inspección de Equipos (HU-015 / HU-016)</h2>
-            <p className={styles.subtitle}>Registra la checklist y determina el resultado final del equipo.</p>
+            <h2 className={styles.title}>Inspección</h2>
+            <p className={styles.subtitle}>Registra la evaluación y el resultado de cada equipo.</p>
           </div>
         </div>
-        <button onClick={fetchData} className={`btn-secondary ${styles.smallBtn}`}><RefreshCw size={14} /> Actualizar</button>
+        <button onClick={fetchData} className={`btn-secondary ${styles.smallBtn}`}>
+          {loading ? 'Actualizando...' : 'Actualizar'}
+        </button>
       </div>
 
       {alerts}
       {!canRegister && (
         <div className={styles.alertInfo}>
-          <Info size={18} /> Solo un usuario con rol INSPECTOR puede registrar y completar inspecciones. Puedes consultar las ya registradas.
+          Solo un usuario con rol INSPECTOR puede registrar y completar inspecciones. Puedes consultar las ya registradas.
         </div>
       )}
 
@@ -596,7 +594,7 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
                     <span className={styles.badge}>Pendiente</span>
                   </p>
                   <p className={styles.cardMeta}>
-                    {orderTitle(device.order_id, device.device_type_name)} • Recibido {formatDate(device.received_at)}
+                    {orderTitle(device.order_id, device.device_type_name)} · Recibido {formatDate(device.received_at)}
                   </p>
                 </div>
                 {canRegister && (
@@ -605,7 +603,7 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
                     disabled={submitting}
                     className={`btn-primary ${styles.smallBtn}`}
                   >
-                    <ClipboardCheck size={14} /> Inspeccionar
+                    Inspeccionar
                   </button>
                 )}
               </div>
@@ -626,9 +624,9 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
                   </span>
                 </p>
                 <p className={styles.cardMeta}>
-                  {orderTitle(inspection.order_id, inspection.device_type_name)} • Condición real: {conditionLabel(inspection.actual_condition)}
-                  {inspection.result && ` • Resultado: ${inspection.result === 'RESALE' ? 'Reventa' : 'Reciclaje'}`}
-                  {' • '}{formatDate(inspection.inspected_at)}
+                  {orderTitle(inspection.order_id, inspection.device_type_name)} · Condición real: {conditionLabel(inspection.actual_condition)}
+                  {inspection.result && ` · Resultado: ${inspection.result === 'RESALE' ? 'Reventa' : 'Reciclaje'}`}
+                  {' · '}{formatDate(inspection.inspected_at)}
                 </p>
               </div>
               <button onClick={() => void openDetail(inspection.order_id)} className={`btn-secondary ${styles.smallBtn}`}>

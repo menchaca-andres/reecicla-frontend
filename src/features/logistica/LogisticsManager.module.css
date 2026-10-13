@@ -342,3 +342,184 @@
   gap: 10px;
   margin-top: 10px;
 }
+
+.container {
+  max-width: 960px;
+  padding: 16px 0 40px;
+  gap: 24px;
+  color: #111111;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.headerCard,
+.orderCard,
+.modalContent,
+.emptyBox {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+.headerCard {
+  padding: 24px;
+}
+
+.headerLeft {
+  gap: 0;
+}
+
+.title {
+  color: #111111;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.subtitle,
+.customerText,
+.noAddress,
+.loadingText,
+.emptyText {
+  color: #6b7280;
+}
+
+.filterRow {
+  gap: 8px;
+}
+
+.filterLabel {
+  color: #374151;
+}
+
+.filterChip,
+.filterChipActive {
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 500;
+}
+
+.filterChip {
+  border-color: #d1d5db;
+  color: #4b5563;
+}
+
+.filterChipActive {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+}
+
+.alertSuccess,
+.alertError {
+  border-radius: 8px;
+}
+
+.alertSuccess {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  color: #374151;
+}
+
+.orderCard {
+  padding: 20px 24px;
+  gap: 16px;
+}
+
+.orderCardHeader {
+  border-color: #e5e7eb;
+}
+
+.orderNumber,
+.deviceTitle {
+  color: #111111;
+}
+
+.statusBadge,
+.trackingBadge {
+  background: #f9fafb;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.trackingBadge {
+  font-weight: 600;
+}
+
+.priceText,
+.addressText {
+  color: #4b5563;
+}
+
+.dispatchBtn {
+  background: #111111;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.container :global(.btn-secondary) {
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  color: #374151;
+}
+
+.modalOverlay {
+  background: rgba(17, 24, 39, 0.45);
+}
+
+.modalContent {
+  padding: 24px;
+}
+
+.modalTitle {
+  color: #111111;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modalCloseBtn {
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.modalSubText,
+.label {
+  color: #4b5563;
+}
+
+.inputMonospace {
+  border-color: #d1d5db;
+  border-radius: 8px;
+  font-family: inherit;
+}
+
+.modalContent :global(input:focus) {
+  outline: none;
+  border-color: #111111;
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 16px 0 32px;
+  }
+
+  .headerCard {
+    align-items: flex-start;
+    padding: 18px;
+  }
+
+  .orderCard {
+    padding: 16px;
+  }
+
+  .detailsGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .actionsColumn {
+    justify-self: stretch;
+    align-items: flex-start;
+  }
+}
