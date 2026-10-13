@@ -189,6 +189,77 @@ export interface Order {
   created_at: string;
 }
 
+export type InspectionItemValue = boolean | number | string;
+
+export interface PendingInspection {
+  tenant_id: string;
+  order_id: string;
+  device_type_id: string;
+  device_type_name: string;
+  received_at: string;
+  received_by_user?: string | null;
+}
+
+export interface InspectionChecklist {
+  order_id: string;
+  device_type_id: string;
+  device_type_name: string;
+  received_at: string;
+  evaluation_rule_id: string;
+  evaluation_rule_version: number;
+  checklist: ChecklistItem[];
+}
+
+export interface InspectionItemInput {
+  criterion_key: string;
+  value: InspectionItemValue;
+  observation?: string;
+  evidence_refs?: string[];
+}
+
+export interface RegisterInspectionInput {
+  order_id: string;
+  evaluation_rule_id: string;
+  evaluation_rule_version: number;
+  actual_condition: string;
+  observations?: string;
+  evidence_refs?: string[];
+  items: InspectionItemInput[];
+}
+
+export interface InspectionItem {
+  id: string;
+  inspection_id: string;
+  criterion_key: string;
+  criterion_label: string;
+  criterion_type: ChecklistItem['type'];
+  value: InspectionItemValue;
+  result: 'PASS' | 'FAIL' | 'NOT_APPLICABLE' | null;
+  observation: string | null;
+  evidence_refs: string[];
+  created_at: string;
+}
+
+export interface Inspection {
+  id: string;
+  tenant_id: string;
+  order_id: string;
+  device_type_id: string;
+  device_type_name?: string;
+  evaluation_rule_id: string;
+  evaluation_rule_version: number;
+  status: 'REGISTERED' | 'COMPLETED';
+  result: 'RESALE' | 'RECYCLE' | null;
+  actual_condition: string;
+  observations: string | null;
+  evidence_refs: string[];
+  inspected_by_user: string;
+  inspected_at: string;
+  created_at: string;
+  updated_at: string;
+  items?: InspectionItem[];
+}
+
 export interface GuestOrderTracking {
   order_number: string;
   device_type_name: string;
