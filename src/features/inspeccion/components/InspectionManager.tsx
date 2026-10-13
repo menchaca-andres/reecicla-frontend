@@ -14,7 +14,7 @@ import styles from '../InspectionManager.module.css';
 
 interface InspectionManagerProps {
   token: string | null;
-  /** HU-015: solo el rol INSPECTOR registra; el resto consulta. */
+  /** Solo el rol INSPECTOR registra y completa inspecciones. */
   canRegister: boolean;
 }
 
@@ -58,6 +58,8 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
   const [submitting, setSubmitting] = useState(false);
 
   const [detail, setDetail] = useState<Inspection | null>(null);
+  const [completionResult, setCompletionResult] = useState<'' | 'RESALE' | 'RECYCLE'>('');
+  const [justification, setJustification] = useState('');
 
   const fetchData = useCallback(async () => {
     if (!token) return;
@@ -127,6 +129,8 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
     if (!token) return;
     setError(null);
     setSuccessMsg(null);
+    setCompletionResult('');
+    setJustification('');
     try {
       const res = await ApiService.getInspectionByOrder(orderId, token);
       setDetail(res.inspection);
@@ -208,6 +212,38 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
       } else {
         setError(err.message || 'No se pudo registrar la inspección.');
       }
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleCompleteInspection = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!detail || !token) return;
+    setError(null);
+    const reason = justification.trim();
+    if (!completionResult) {
+      setError('Selecciona si el equipo se destinará a reventa o reciclaje.');
+      return;
+    }
+    if (!reason) {
+      setError('La justificación del resultado es obligatoria.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const response = await ApiService.completeInspection(
+        detail.order_id,
+        { result: completionResult, justification: reason },
+        token
+      );
+      setDetail(response.inspection);
+      setInspections((current) =>
+        current.map((inspection) => inspection.id === response.inspection.id ? response.inspection : inspection)
+      );
+      setSuccessMsg(`${response.message} ${orderNumber(detail.order_id)}.`);
+    } catch (err: any) {
+      setError(err.message || 'No se pudo completar la inspección.');
     } finally {
       setSubmitting(false);
     }
@@ -390,6 +426,7 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
   if (detail) {
     return (
       <div className={styles.container}>
+        {alerts}
         <div className={`glass-panel ${styles.panel}`}>
           <div className={styles.panelHeader}>
             <div>
@@ -417,10 +454,64 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
               <p className={styles.fieldValue}>{formatDate(detail.inspected_at)}</p>
             </div>
             <div>
-              <p className={styles.fieldCategory}>Resultado</p>
-              <p className={styles.fieldValue}>{detail.result ?? 'Pendiente de determinar'}</p>
+              <p className={styles.fieldCategory}>Estado de inspección</p>
+              <p className={styles.fieldValue}>{detail.status === 'COMPLETED' ? 'Completada' : 'Pendiente de resultado'}</p>
             </div>
           </div>
+
+          {detail.status === 'COMPLETED' ? (
+            <div className={styles.resultPanel}>
+              <h3 className={styles.sectionTitle}>Resultado final de la inspección</h3>
+              <p className={styles.fieldValue}>
+                {detail.result === 'RESALE' ? 'Reventa' : detail.result === 'RECYCLE' ? 'Reciclaje' : '—'}
+              </p>
+              <p className={styles.fieldCategory}>Justificación</p>
+              <p className={styles.fieldValue}>{detail.result_justification}</p>
+              {detail.completed_at && (
+                <p className={styles.cardMeta}>Completada {formatDate(detail.completed_at)}</p>
+              )}
+            </div>
+          ) : canRegister ? (
+            <form onSubmit={handleCompleteInspection} className={styles.resultPanel}>
+              <h3 className={styles.sectionTitle}>Determinar destino del equipo (HU-016)</h3>
+              <div className={styles.extraGrid}>
+                <div>
+                  <label className={styles.label} htmlFor="inspection-result">Resultado final *</label>
+                  <select
+                    id="inspection-result"
+                    className="input-field"
+                    value={completionResult}
+                    onChange={(event) => setCompletionResult(event.target.value as '' | 'RESALE' | 'RECYCLE')}
+                    required
+                  >
+                    <option value="">Selecciona un resultado</option>
+                    <option value="RESALE">Reventa</option>
+                    <option value="RECYCLE">Reciclaje</option>
+                  </select>
+                </div>
+                <div>
+                  <label className={styles.label} htmlFor="inspection-justification">Justificación *</label>
+                  <textarea
+                    id="inspection-justification"
+                    className={`input-field ${styles.textarea}`}
+                    value={justification}
+                    onChange={(event) => setJustification(event.target.value)}
+                    maxLength={2000}
+                    required
+                  />
+                </div>
+              </div>
+              <div className={styles.actions}>
+                <button type="submit" disabled={submitting} className={`btn-primary ${styles.smallBtn}`}>
+                  <CheckCircle2 size={14} /> {submitting ? 'Completando...' : 'Guardar resultado'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className={styles.alertInfo}>
+              <Info size={18} /> Solo un usuario con rol INSPECTOR puede determinar el resultado y completar la inspección.
+            </div>
+          )}
 
           <h3 className={styles.sectionTitle}>Checklist</h3>
           {(detail.items ?? []).map((item) => (
@@ -467,8 +558,8 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
             <ClipboardCheck size={24} />
           </div>
           <div>
-            <h2 className={styles.title}>Inspección de Equipos (HU-015)</h2>
-            <p className={styles.subtitle}>Registra la condición real de los equipos recibidos con la checklist de su tipo.</p>
+            <h2 className={styles.title}>Inspección de Equipos (HU-015 / HU-016)</h2>
+            <p className={styles.subtitle}>Registra la checklist y determina el resultado final del equipo.</p>
           </div>
         </div>
         <button onClick={fetchData} className={`btn-secondary ${styles.smallBtn}`}><RefreshCw size={14} /> Actualizar</button>
@@ -477,7 +568,7 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
       {alerts}
       {!canRegister && (
         <div className={styles.alertInfo}>
-          <Info size={18} /> Solo un usuario con rol INSPECTOR puede registrar inspecciones. Puedes consultar las ya registradas.
+          <Info size={18} /> Solo un usuario con rol INSPECTOR puede registrar y completar inspecciones. Puedes consultar las ya registradas.
         </div>
       )}
 
@@ -530,10 +621,14 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
               <div>
                 <p className={styles.cardTitle}>
                   {orderNumber(inspection.order_id)}
-                  <span className={`${styles.badge} ${styles.badgeDone}`}>Registrada</span>
+                  <span className={`${styles.badge} ${inspection.status === 'COMPLETED' ? styles.badgeDone : ''}`}>
+                    {inspection.status === 'COMPLETED' ? 'Completada' : 'Registrada'}
+                  </span>
                 </p>
                 <p className={styles.cardMeta}>
-                  {orderTitle(inspection.order_id, inspection.device_type_name)} • Condición real: {conditionLabel(inspection.actual_condition)} • {formatDate(inspection.inspected_at)}
+                  {orderTitle(inspection.order_id, inspection.device_type_name)} • Condición real: {conditionLabel(inspection.actual_condition)}
+                  {inspection.result && ` • Resultado: ${inspection.result === 'RESALE' ? 'Reventa' : 'Reciclaje'}`}
+                  {' • '}{formatDate(inspection.inspected_at)}
                 </p>
               </div>
               <button onClick={() => void openDetail(inspection.order_id)} className={`btn-secondary ${styles.smallBtn}`}>

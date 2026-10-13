@@ -97,6 +97,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     IN_TRANSIT: { label: 'En Tránsito', bg: '#fff7ed', color: '#c2410c', border: '#ffedd5' },
     RECEIVED: { label: 'Recibido en Almacén', bg: '#ecfdf5', color: '#047857', border: '#a7f3d0' },
     INSPECTING: { label: 'En Evaluación', bg: '#fefce8', color: '#a16207', border: '#fef08a' },
+    INSPECTED: { label: 'Inspeccionado', bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
     PAID: { label: 'Pagado', bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
     CLOSED: { label: 'Completado', bg: '#f8fafc', color: '#475569', border: '#e2e8f0' },
   };

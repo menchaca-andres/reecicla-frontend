@@ -250,6 +250,9 @@ export interface Inspection {
   evaluation_rule_version: number;
   status: 'REGISTERED' | 'COMPLETED';
   result: 'RESALE' | 'RECYCLE' | null;
+  result_justification: string | null;
+  completed_by_user: string | null;
+  completed_at: string | null;
   actual_condition: string;
   observations: string | null;
   evidence_refs: string[];
@@ -258,6 +261,11 @@ export interface Inspection {
   created_at: string;
   updated_at: string;
   items?: InspectionItem[];
+}
+
+export interface CompleteInspectionInput {
+  result: 'RESALE' | 'RECYCLE';
+  justification: string;
 }
 
 export interface GuestOrderTracking {

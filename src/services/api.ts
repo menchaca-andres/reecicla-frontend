@@ -1,4 +1,4 @@
-import type { AuthResponse, PlatformAuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection } from '../types';
+import type { AuthResponse, PlatformAuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection, CompleteInspectionInput } from '../types';
 import type { GuestOrderTracking } from '../types';
 
 const GATEWAY_ORIGIN = 'http://localhost:3000';
@@ -618,6 +618,21 @@ export class ApiService {
     });
     const json = await res.json();
     if (!res.ok) throw this.inspectionError(res, json, 'Error al consultar la inspección');
+    return json;
+  }
+
+  static async completeInspection(
+    orderId: string,
+    data: CompleteInspectionInput,
+    token: string
+  ): Promise<{ message: string; inspection: Inspection }> {
+    const res = await fetch(this.scoped('inspections', `/orders/${encodeURIComponent(orderId)}/complete`), {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw this.inspectionError(res, json, 'Error al completar la inspección');
     return json;
   }
 }
