@@ -30,6 +30,9 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [registrationNotice, setRegistrationNotice] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(
@@ -52,13 +55,19 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         }
       } else {
         if (props.mode !== 'platform') {
-          const res = await ApiService.register({
-            email,
-            password,
-            name: name || undefined,
-            phone: phone || undefined,
-          });
-          props.onSuccess(res);
+          if (verificationPending) {
+            const res = await ApiService.verifyRegistration({ email, code: verificationCode });
+            props.onSuccess(res);
+          } else {
+            const res = await ApiService.register({
+              email,
+              password,
+              name: name || undefined,
+              phone: phone || undefined,
+            });
+            setVerificationPending(true);
+            setRegistrationNotice(res.message);
+          }
         }
       }
     } catch (err: any) {
@@ -88,17 +97,20 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             {isLogin ? 'Iniciar sesión' : 'Crear cuenta'}
           </h3>
           <p className={styles.subtitle}>
-            {isLogin
-              ? 'Ingresa con tu cuenta para continuar'
-              : 'Registrate para solicitar y gestionar cotizaciones'}
+            {verificationPending
+              ? 'Ingresa el código que enviamos a tu correo para activar la cuenta de este negocio.'
+              : isLogin
+                ? 'Ingresa con tu cuenta para continuar'
+                : 'Registrate para solicitar y gestionar cotizaciones'}
           </p>
         </div>
 
         {error && <div className={styles.alertError}>{error}</div>}
+        {registrationNotice && <div className={styles.alertSuccess} role="status">{registrationNotice}</div>}
 
         <form onSubmit={handleSubmit} className={styles.form}>
           {/* Registration Extra Fields */}
-          {!platformMode && !isLogin && (
+          {!platformMode && !isLogin && !verificationPending && (
             <>
               <div className={styles.inputGroup}>
                 <label className={styles.inputLabel}>Nombre completo</label>
@@ -138,37 +150,61 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 placeholder="ejemplo@reecicla.bo"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                readOnly={verificationPending}
                 required
               />
             </div>
           </div>
 
-          {/* Password Input with Action Arrow */}
-          <div className={styles.inputGroup}>
-            <label className={styles.inputLabel}>Contraseña</label>
-            <div className={styles.inputWrapper}>
-              <input
-                type="password"
-                className={styles.appleInput}
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-              <button
-                type="submit"
-                className={styles.inputActionButton}
-                disabled={loading || !email || !password}
-                title="Continuar"
-              >
-                <ArrowRight size={14} />
-              </button>
+          {!verificationPending && (
+            <div className={styles.inputGroup}>
+              <label className={styles.inputLabel}>Contraseña</label>
+              <div className={styles.inputWrapper}>
+                <input
+                  type="password"
+                  className={styles.appleInput}
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={8}
+                  maxLength={72}
+                  required
+                />
+                <button
+                  type="submit"
+                  className={styles.inputActionButton}
+                  disabled={loading || !email || !password}
+                  title="Continuar"
+                >
+                  <ArrowRight size={14} />
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
+          {verificationPending && (
+            <div className={styles.inputGroup}>
+              <label className={styles.inputLabel} htmlFor="registration-code">Código de verificación</label>
+              <div className={styles.inputWrapper}>
+                <input
+                  id="registration-code"
+                  type="text"
+                  className={styles.appleInput}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, ''))}
+                  required
+                />
+              </div>
+            </div>
+          )}
 
           {/* Submit Button */}
-          <button type="submit" className={styles.submitButton} disabled={loading}>
-            {loading ? 'Procesando...' : isLogin ? 'Iniciar sesión' : 'Crear cuenta'}
+          <button type="submit" className={styles.submitButton} disabled={loading || (verificationPending && verificationCode.length !== 6)}>
+            {loading ? 'Procesando...' : verificationPending ? 'Verificar y crear cuenta' : isLogin ? 'Iniciar sesión' : 'Enviar código'}
           </button>
         </form>
 
@@ -202,6 +238,19 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 ¿Olvidaste tu Reecicla ID o la contraseña? <ExternalLink size={12} />
               </button>
             </>
+          ) : verificationPending ? (
+            <button
+              type="button"
+              className={styles.linkButton}
+              onClick={() => {
+                setVerificationPending(false);
+                setVerificationCode('');
+                setRegistrationNotice(null);
+                setError(null);
+              }}
+            >
+              Volver al registro
+            </button>
           ) : (
             <button
               type="button"

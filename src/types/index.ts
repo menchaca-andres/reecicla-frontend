@@ -6,6 +6,7 @@ export interface User {
   email: string;
   name?: string;
   phone?: string;
+  pickup_address?: string | null;
   role: UserRole;
   created_at: string;
 }
@@ -14,6 +15,11 @@ export interface AuthResponse {
   message: string;
   token: string;
   user: User;
+}
+
+export interface RegistrationStartResponse {
+  verification_required: true;
+  message: string;
 }
 
 export interface PlatformAuthResponse {
@@ -44,9 +50,20 @@ export interface Quote {
   model?: string;
   year?: number;
   condition: string;
+  currency?: string;
   base_price: string | number;
   adjustment: string | number;
   final_price: string | number;
+  quote_type?: 'INITIAL' | 'ADJUSTED';
+  parent_quote_id?: string | null;
+  adjustment_reason?: string | null;
+  adjusted_quote?: Quote | null;
+  adjustment_audit?: {
+    outcome: 'ADJUSTED' | 'UNCHANGED';
+    declared_condition: string;
+    actual_condition: string;
+    justification: string;
+  } | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -270,6 +287,7 @@ export interface CompleteInspectionInput {
 
 export interface GuestOrderTracking {
   order_number: string;
+  quote_id: string;
   device_type_name: string;
   brand: string | null;
   model: string | null;

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ApiService } from '../../../services/api';
-import type { GuestOrderTracking as GuestOrderTrackingData } from '../../../types';
+import type { GuestOrderTracking as GuestOrderTrackingData, Quote } from '../../../types';
 import styles from './GuestOrderTracking.module.css';
 
 interface GuestOrderTrackingProps {
@@ -30,16 +30,32 @@ function formatDate(value: string): string {
 
 export const GuestOrderTracking: React.FC<GuestOrderTrackingProps> = ({ token }) => {
   const [order, setOrder] = useState<GuestOrderTrackingData | null>(null);
+  const [quote, setQuote] = useState<Quote | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [quoteError, setQuoteError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setQuoteError(null);
     try {
       const result = await ApiService.getGuestOrderTracking(token);
       setOrder(result.order);
+      try {
+        const quoteResult = await ApiService.getQuoteById(result.order.quote_id);
+        setQuote(quoteResult.quote);
+      } catch (quoteRequestError) {
+        setQuote(null);
+        setQuoteError(
+          quoteRequestError instanceof Error
+            ? quoteRequestError.message
+            : 'No se pudo consultar la cotización del pedido.'
+        );
+      }
     } catch (requestError) {
+      setOrder(null);
+      setQuote(null);
       setError(requestError instanceof Error ? requestError.message : 'No se pudo consultar el seguimiento.');
     } finally {
       setLoading(false);
@@ -93,6 +109,32 @@ export const GuestOrderTracking: React.FC<GuestOrderTrackingProps> = ({ token })
                 </div>
               )}
             </div>
+
+            {quoteError && <p role="status" className={styles.message}>{quoteError}</p>}
+            {quote?.adjusted_quote && (
+              <section className={styles.adjustedQuote} aria-labelledby="adjusted-quote-title">
+                <span className={styles.label}>Cotización ajustada</span>
+                <h2 id="adjusted-quote-title" className={styles.historyTitle}>
+                  Nueva condición: {quote.adjusted_quote.condition}
+                </h2>
+                <p>{quote.adjusted_quote.adjustment_reason}</p>
+                <strong>
+                  {quote.adjusted_quote.currency || order.currency}{' '}
+                  {Number(quote.adjusted_quote.final_price).toFixed(2)}
+                </strong>
+                <p className={styles.message}>Estado: pendiente de respuesta del cliente.</p>
+              </section>
+            )}
+            {quote?.adjustment_audit?.outcome === 'UNCHANGED' && (
+              <section className={styles.adjustedQuote} aria-live="polite">
+                <span className={styles.label}>Inspección completada</span>
+                <p>{quote.adjustment_audit.justification}</p>
+                <strong>
+                  Cotización confirmada: {quote.currency || order.currency}{' '}
+                  {Number(quote.final_price).toFixed(2)}
+                </strong>
+              </section>
+            )}
 
             <h2 className={styles.historyTitle}>Historial</h2>
             {order.status_history.length ? (

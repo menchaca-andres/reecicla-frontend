@@ -14,16 +14,16 @@ import { PlatformAdminPage } from './features/admins/components/PlatformAdminPag
 type Tab = 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'inspeccion' | 'auth';
 
 function getInitialSlug(): string {
+  const pathSegments = window.location.pathname.split('/').filter(Boolean);
+  if (pathSegments[0] === 'recicla' && pathSegments[1]) {
+    return pathSegments[1];
+  }
   const params = new URLSearchParams(window.location.search);
   const paramSlug = params.get('slug');
   if (paramSlug) return paramSlug;
 
-  const pathSegments = window.location.pathname.split('/').filter(Boolean);
   if (pathSegments[0] === 'seguimiento') return 'demo';
   if (pathSegments.length > 0) {
-    if (pathSegments[0] === 'recicla' && pathSegments[1]) {
-      return pathSegments[1];
-    }
     const knownTabs = ['cotizar', 'historial', 'reglas', 'admins', 'catalogo', 'logistica', 'inspeccion', 'auth'];
     if (!knownTabs.includes(pathSegments[0])) {
       return pathSegments[0];
@@ -54,16 +54,21 @@ function getInitialQuoteIdFromUrl(): string | null {
 function TenantApp() {
   const [trackingToken] = useState<string | null>(getInitialTrackingToken);
   const [slug] = useState<string>(getInitialSlug);
+  const tenantTokenStorageKey = `reecicla_token_${slug}`;
   ApiService.setSlug(slug);
   const [tenantId, setTenantId] = useState<string>('');
   const [tenantName, setTenantName] = useState<string>('');
   const [tenantError, setTenantError] = useState<string | null>(null);
   const [tenantLoading, setTenantLoading] = useState(!trackingToken);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('reecicla_token'));
+  const [token, setToken] = useState<string | null>(localStorage.getItem(tenantTokenStorageKey));
   const [user, setUser] = useState<User | null>(null);
 
   const [activeTab, setActiveTab] = useState<Tab>('cotizar');
   const [latestQuote, setLatestQuote] = useState<Quote | null>(null);
+
+  useEffect(() => {
+    localStorage.removeItem('reecicla_token');
+  }, []);
 
   useEffect(() => {
     if (trackingToken) return;
@@ -104,22 +109,22 @@ function TenantApp() {
       ApiService.getProfile(token)
         .then((res) => setUser(res.user))
         .catch(() => {
-          localStorage.removeItem('reecicla_token');
+          localStorage.removeItem(tenantTokenStorageKey);
           setToken(null);
           setUser(null);
         });
     }
-  }, [token, trackingToken]);
+  }, [token, trackingToken, tenantTokenStorageKey]);
 
   const handleAuthSuccess = (authData: AuthResponse) => {
-    localStorage.setItem('reecicla_token', authData.token);
+    localStorage.setItem(tenantTokenStorageKey, authData.token);
     setToken(authData.token);
     setUser(authData.user);
     setActiveTab('cotizar');
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('reecicla_token');
+    localStorage.removeItem(tenantTokenStorageKey);
     window.history.replaceState(null, '', `/recicla/${encodeURIComponent(slug)}`);
     setToken(null);
     setUser(null);
@@ -173,7 +178,7 @@ function TenantApp() {
           <>
         {activeTab === 'auth' && (<AuthPage onSuccess={handleAuthSuccess} onCancel={() => setActiveTab('cotizar')} />)}
 
-        {activeTab === 'cotizar' && (latestQuote ? <QuoteResultCard quote={latestQuote} token={token} onNewQuote={handleNewQuoteClick} /> : <QuotationWizard token={token} onQuoteCreated={handleQuoteCreated} onNeedAuth={() => setActiveTab('auth')} />)}
+        {activeTab === 'cotizar' && (latestQuote ? <QuoteResultCard quote={latestQuote} token={token} user={user} onUserUpdate={setUser} onAuthSuccess={handleAuthSuccess} onNewQuote={handleNewQuoteClick} /> : <QuotationWizard token={token} onQuoteCreated={handleQuoteCreated} onNeedAuth={() => setActiveTab('auth')} />)}
 
         {activeTab === 'historial' && (token ? (<QuoteHistory token={token} />) : (<div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '540px', margin: '32px auto', background: '#ffffff' }}>
           <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px', fontWeight: 700 }}>Autenticación Reequerida</h3>
