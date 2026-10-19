@@ -25,6 +25,12 @@ const STATUS_LABELS: Record<string, string> = {
   CANCELLED: 'Pedido cancelado',
 };
 
+const DISPOSITION_LABELS: Record<string, string> = {
+  RESALE: 'reventa',
+  RECYCLE: 'reciclaje',
+  RETURN: 'devolución',
+};
+
 function formatDate(value: string): string {
   return new Date(value).toLocaleString();
 }
@@ -229,6 +235,12 @@ export const GuestOrderTracking: React.FC<GuestOrderTrackingProps> = ({ token })
             {order.adjustment_resolution && (
               <p className={styles.message}>
                 Destino registrado: {order.adjustment_resolution === 'RETURN' ? 'devolución a cargo del cliente' : 'reciclaje sin pago'}.
+              </p>
+            )}
+            {order.disposition_status === 'COMPLETED' && order.disposition_type && (
+              <p className={styles.message} role="status">
+                Destino final del equipo: {DISPOSITION_LABELS[order.disposition_type] ?? order.disposition_type}
+                {order.disposition_reference ? ` (ref.: ${order.disposition_reference})` : ''}.
               </p>
             )}
             {quote?.adjustment_audit?.outcome === 'UNCHANGED' && (
