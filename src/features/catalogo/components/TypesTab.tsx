@@ -13,6 +13,7 @@ interface TypesTabProps {
   handleCreateType: (e: React.FormEvent) => void;
   deviceTypes: DeviceType[];
   handleInactivateType: (id: string, name: string) => void;
+  onOpenInactivityModal: () => void;
 }
 
 export const TypesTab: React.FC<TypesTabProps> = ({
@@ -26,6 +27,7 @@ export const TypesTab: React.FC<TypesTabProps> = ({
   handleCreateType,
   deviceTypes,
   handleInactivateType,
+  onOpenInactivityModal,
 }) => {
   return (
     <div className={styles.panelStack}>
@@ -79,13 +81,40 @@ export const TypesTab: React.FC<TypesTabProps> = ({
 
       {/* List Types */}
       <div className={styles.panel}>
-        <h3 className={styles.sectionTitle}>Tipos de Equipo Registrados</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h3 className={styles.sectionTitle} style={{ margin: 0 }}>Tipos de Equipo Registrados</h3>
+            <p className={styles.headerSubtitle} style={{ margin: '4px 0 0 0' }}>
+              Gestión y estado operativo del catálogo de tipos de equipo.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenInactivityModal}
+            className={styles.btnSecondary}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 14px',
+              fontWeight: 600,
+              fontSize: '13px',
+              borderColor: '#cbd5e1',
+              backgroundColor: '#f8fafc',
+            }}
+          >
+            <span>⏱️</span>
+            <span>Mantenimiento de Inactividad (HU-023)</span>
+          </button>
+        </div>
+
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead className={styles.thead}>
               <tr>
                 <th>Código</th>
                 <th>Nombre</th>
+                <th>Última Recepción</th>
                 <th>Estado</th>
                 <th className={styles.thRight}>Acción</th>
               </tr>
@@ -94,7 +123,25 @@ export const TypesTab: React.FC<TypesTabProps> = ({
               {deviceTypes.map(t => (
                 <tr key={t.id}>
                   <td className={styles.codeText}>{t.code}</td>
-                  <td>{t.name}</td>
+                  <td>
+                    <strong>{t.name}</strong>
+                    {t.description && (
+                      <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                        {t.description}
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {t.last_received_at ? (
+                      <span style={{ fontSize: '13px', color: '#334155' }}>
+                        {new Date(t.last_received_at).toLocaleDateString()}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>
+                        Sin recepciones
+                      </span>
+                    )}
+                  </td>
                   <td>
                     <span className={t.status === 'ACTIVE' ? styles.badgeActive : styles.badgeInactive}>
                       {t.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
@@ -119,3 +166,4 @@ export const TypesTab: React.FC<TypesTabProps> = ({
     </div>
   );
 };
+

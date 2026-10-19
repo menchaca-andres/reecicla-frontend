@@ -1,4 +1,4 @@
-import type { AuthResponse, PlatformAuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, OrderInspectionResponse, DetermineDestinationPayload, Disposition } from '../types';
+import type { AuthResponse, PlatformAuthResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, OrderInspectionResponse, DetermineDestinationPayload, Disposition, InactivityEvaluationSummary, InactivityMaintenanceResult, CatalogAuditLog } from '../types';
 import type { GuestOrderTracking } from '../types';
 
 const GATEWAY_ORIGIN = 'http://localhost:3000';
@@ -587,4 +587,49 @@ export class ApiService {
     if (!res.ok) throw new Error(json.error || 'Error al consultar solicitudes de caja');
     return json;
   }
+
+  // --- HU-023: Inactivity Maintenance & Audit ---
+  static async evaluateDeviceTypesInactivity(
+    token: string,
+    cutoffMonths = 12
+  ): Promise<{ summary: InactivityEvaluationSummary }> {
+    const res = await fetch(
+      this.scoped('catalog', `/device-types/inactivity/evaluation?cutoff_months=${encodeURIComponent(cutoffMonths)}`),
+      {
+        method: 'GET',
+        headers: this.getHeaders(token),
+      }
+    );
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al evaluar inactividad de tipos');
+    return { summary: json.summary || json };
+  }
+
+  static async executeDeviceTypesInactivityMaintenance(
+    token: string,
+    cutoffMonths = 12
+  ): Promise<InactivityMaintenanceResult> {
+    const res = await fetch(this.scoped('catalog', '/device-types/inactivity/maintenance'), {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify({ cutoff_months: cutoffMonths }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al ejecutar mantenimiento de inactividad');
+    return json;
+  }
+
+  static async getCatalogAuditLogs(
+    token: string,
+    limit = 50
+  ): Promise<{ audit_logs: CatalogAuditLog[] }> {
+    const res = await fetch(this.scoped('catalog', `/audit-logs?limit=${encodeURIComponent(limit)}`), {
+      method: 'GET',
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar logs de auditoría');
+    return json;
+  }
 }
+

@@ -7,6 +7,7 @@ import { DevicesTab } from './DevicesTab';
 import { BrandsTab } from './BrandsTab';
 import { TypesTab } from './TypesTab';
 import { RulesTab } from './RulesTab';
+import { DeviceTypeInactivityModal } from './DeviceTypeInactivityModal';
 
 interface CatalogManagerProps {
   token: string | null;
@@ -23,6 +24,9 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // ── Inactivity Maintenance Modal (HU-023) ──
+  const [showInactivityModal, setShowInactivityModal] = useState(false);
 
   // ── Types form state ──
   const [typeCode, setTypeCode] = useState('');
@@ -389,6 +393,7 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
           handleCreateType={handleCreateType}
           deviceTypes={deviceTypes}
           handleInactivateType={handleInactivateType}
+          onOpenInactivityModal={() => setShowInactivityModal(true)}
         />
       )}
 
@@ -417,6 +422,14 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
           rulesLoading={rulesLoading}
         />
       )}
+
+      {/* HU-023: Device Type Inactivity Maintenance Modal */}
+      <DeviceTypeInactivityModal
+        isOpen={showInactivityModal}
+        onClose={() => setShowInactivityModal(false)}
+        token={token}
+        onMaintenanceComplete={loadTypes}
+      />
     </div>
   );
 };
