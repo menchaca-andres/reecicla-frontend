@@ -1,4 +1,4 @@
-import type { AuthResponse, PlatformAuthResponse, RegistrationStartResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PaymentRecord, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection, CompleteInspectionInput } from '../types';
+import type { DispositionType, AuthResponse, PlatformAuthResponse, RegistrationStartResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PaymentRecord, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection, CompleteInspectionInput } from '../types';
 import type { GuestOrderTracking } from '../types';
 
 const GATEWAY_ORIGIN = 'http://localhost:3000';
@@ -366,6 +366,21 @@ export class ApiService {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al registrar la recepción del equipo');
+    return json;
+  }
+
+  static async registerDisposition(
+    orderId: string,
+    data: { type: DispositionType; reference: string },
+    token: string
+  ): Promise<{ message: string; already_registered: boolean; order_status: string }> {
+    const res = await fetch(this.scoped('orders', `/${encodeURIComponent(orderId)}/disposition`), {
+      method: 'POST',
+      headers: this.getHeaders(token),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al registrar el destino final del equipo');
     return json;
   }
 

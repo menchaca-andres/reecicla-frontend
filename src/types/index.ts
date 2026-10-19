@@ -168,6 +168,8 @@ export interface BoxRequest {
   requested_at: string;
   updated_at: string;
 }
+export type DispositionType = 'RESALE' | 'RECYCLE' | 'RETURN';
+
 export interface Order {
   id: string;
   tenant_id: string;
@@ -193,6 +195,10 @@ export interface Order {
   adjustment_rejected_at?: string | null;
   adjustment_resolution?: 'RETURN' | 'RECYCLE' | null;
   adjustment_resolution_at?: string | null;
+  disposition_type?: DispositionType | null;
+  disposition_status?: 'PENDING' | 'COMPLETED' | null;
+  disposition_reference?: string | null;
+  disposition_completed_at?: string | null;
   status_history?: Array<{
     previous_status: string | null;
     new_status: string;
@@ -320,6 +326,10 @@ export interface GuestOrderTracking {
   adjustment_rejected_at: string | null;
   adjustment_resolution: 'RETURN' | 'RECYCLE' | null;
   adjustment_resolution_at: string | null;
+  disposition_type?: DispositionType | null;
+  disposition_status?: 'PENDING' | 'COMPLETED' | null;
+  disposition_reference?: string | null;
+  disposition_completed_at?: string | null;
   accepted_at: string;
   tracking_code: string | null;
   box_status: string | null;

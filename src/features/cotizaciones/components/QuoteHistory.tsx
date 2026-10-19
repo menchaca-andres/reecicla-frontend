@@ -338,6 +338,12 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
                             </button>
                           </div>
                         )}
+                        {order.disposition_status === 'COMPLETED' && order.disposition_type && (
+                          <p className={styles.rowMeta}>
+                            Destino final: {order.disposition_type === 'RESALE' ? 'reventa' : order.disposition_type === 'RECYCLE' ? 'reciclaje' : 'devolución'}
+                            {order.disposition_reference ? ` (ref.: ${order.disposition_reference})` : ''}.
+                          </p>
+                        )}
                         {order.adjustment_resolution && (
                           <p className={styles.rowMeta}>
                             Destino elegido: {order.adjustment_resolution === 'RETURN' ? 'devolución a cargo del cliente' : 'reciclaje sin pago'}.
