@@ -91,6 +91,39 @@
   color: #334155;
 }
 
+.notifications {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.notifications li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #374151;
+  font-size: 13px;
+}
+
+.notifications time {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+@media (max-width: 520px) {
+  .notifications li {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
 .timelineItem:not(:last-child)::before {
   position: absolute;
   top: 12px;

@@ -313,6 +313,84 @@
   justify-content: flex-end;
 }
 
+.historySection {
+  border-top: 1px solid #f3f4f6;
+  padding-top: 16px;
+}
+
+.historyTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111111;
+  margin: 0 0 12px;
+}
+
+.timeline {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0 0 0 6px;
+}
+
+.timelineItem {
+  display: flex;
+  gap: 10px;
+  padding-bottom: 14px;
+  border-left: 1px solid #d1d5db;
+  padding-left: 14px;
+  position: relative;
+}
+
+.timelineItem:last-child {
+  border-left-color: transparent;
+  padding-bottom: 0;
+}
+
+.timelineDot {
+  position: absolute;
+  left: -5px;
+  top: 3px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #111111;
+}
+
+.timelineItem div {
+  display: grid;
+  gap: 3px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.timelineItem time,
+.timelineItem p,
+.historyEmpty {
+  color: #6b7280;
+  font-size: 12px;
+  margin: 0;
+}
+
+.notificationList {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+}
+
+.notificationList li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: #374151;
+}
+
+.notificationList span {
+  color: #6b7280;
+  text-align: right;
+}
+
 /* ── Modal ── */
 .modalOverlay {
   position: fixed;
@@ -423,4 +501,15 @@
 
 .cancelBtn:hover {
   background: #f3f4f6;
+}
+
+@media (max-width: 640px) {
+  .notificationList li {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .notificationList span {
+    text-align: left;
+  }
 }

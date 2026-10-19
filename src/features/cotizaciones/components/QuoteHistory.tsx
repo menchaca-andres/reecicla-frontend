@@ -196,6 +196,8 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
     DISPOSED: { label: 'Equipo procesado', cls: styles.statusGray },
     PAID: { label: 'Pagado', cls: styles.statusGreen },
     CLOSED: { label: 'Completado', cls: styles.statusGray },
+    CANCELLED: { label: 'Cancelado', cls: styles.statusGray },
+    RETURN_REQUESTED: { label: 'Devolución solicitada', cls: styles.statusOrange },
   };
 
   return (
@@ -408,6 +410,44 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
                           )}
                         </div>
                       </div>
+
+                      <section className={styles.historySection} aria-label={`Seguimiento de ${order.order_number}`}>
+                        <h3 className={styles.historyTitle}>Estado del proceso</h3>
+                        {order.status_history?.length ? (
+                          <ol className={styles.timeline}>
+                            {order.status_history.map((entry, index) => (
+                              <li key={`${entry.new_status}-${entry.created_at}-${index}`} className={styles.timelineItem}>
+                                <span className={styles.timelineDot} />
+                                <div>
+                                  <strong>{statusMap[entry.new_status]?.label ?? entry.new_status}</strong>
+                                  <time>{new Date(entry.created_at).toLocaleString()}</time>
+                                  {entry.reason && <p>{entry.reason}</p>}
+                                </div>
+                              </li>
+                            ))}
+                          </ol>
+                        ) : (
+                          <p className={styles.historyEmpty}>Aún no hay actualizaciones del pedido.</p>
+                        )}
+
+                        <h3 className={styles.historyTitle}>Avisos enviados</h3>
+                        {order.notifications?.length ? (
+                          <ul className={styles.notificationList}>
+                            {order.notifications.map((notification, index) => (
+                              <li key={`${notification.notification_type}-${notification.sent_at}-${index}`}>
+                                <strong>
+                                  {notification.notification_type === 'ORDER_TRACKING_LINK'
+                                    ? 'Enlace de seguimiento enviado'
+                                    : notification.notification_type}
+                                </strong>
+                                <span>{notification.channel} · {new Date(notification.sent_at).toLocaleString()}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className={styles.historyEmpty}>Todavía no se han enviado avisos.</p>
+                        )}
+                      </section>
                     </div>
                   );
                 })}

@@ -205,6 +205,7 @@ export interface Order {
     reason: string | null;
     created_at: string;
   }>;
+  notifications?: OrderNotification[];
   pickup_address?: {
     street?: string;
     city?: string;
@@ -214,6 +215,12 @@ export interface Order {
     address?: string;
   } | null;
   created_at: string;
+}
+
+export interface OrderNotification {
+  notification_type: string;
+  channel: 'EMAIL';
+  sent_at: string;
 }
 
 export interface PaymentRecord {
@@ -340,4 +347,5 @@ export interface GuestOrderTracking {
     reason: string | null;
     created_at: string;
   }>;
+  notifications: OrderNotification[];
 }
