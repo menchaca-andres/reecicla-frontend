@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ApiService } from '../../../services/api';
-import type { Order, PaymentRecord } from '../../../types';
+import type { DispositionType, Order, PaymentRecord } from '../../../types';
 import styles from '../LogisticsManager.module.css';
 
 interface LogisticsManagerProps {
@@ -26,6 +26,10 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
   const [paymentIdempotencyKey, setPaymentIdempotencyKey] = useState('');
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentLoadError, setPaymentLoadError] = useState<string | null>(null);
+  const [selectedDispositionOrder, setSelectedDispositionOrder] = useState<Order | null>(null);
+  const [dispositionType, setDispositionType] = useState<DispositionType>('RECYCLE');
+  const [dispositionReference, setDispositionReference] = useState('');
+  const [submittingDisposition, setSubmittingDisposition] = useState(false);
 
   const fetchOrders = useCallback(async () => {
     if (!token) return;
@@ -152,6 +156,52 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     }
   };
 
+  const canRegisterDisposition = (order: Order) =>
+    order.status === 'PAID' ||
+    (order.status === 'ADJUSTMENT_REJECTED' && order.disposition_status === 'PENDING');
+
+  const handleOpenDispositionModal = (order: Order) => {
+    setSelectedDispositionOrder(order);
+    setDispositionType(order.disposition_type ?? 'RECYCLE');
+    setDispositionReference('');
+    setError(null);
+  };
+
+  const handleDispositionSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selectedDispositionOrder || !token) return;
+    setSubmittingDisposition(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      const result = await ApiService.registerDisposition(
+        selectedDispositionOrder.id,
+        { type: dispositionType, reference: dispositionReference.trim() },
+        token
+      );
+      setSuccessMsg(`${result.message} (Orden ${selectedDispositionOrder.order_number})`);
+      setSelectedDispositionOrder(null);
+      setDispositionReference('');
+      await fetchOrders();
+    } catch (err: any) {
+      setError(err.message || 'Error al registrar el destino final.');
+    } finally {
+      setSubmittingDisposition(false);
+    }
+  };
+
+  const dispositionLabels: Record<DispositionType, string> = {
+    RESALE: 'Reventa',
+    RECYCLE: 'Reciclaje',
+    RETURN: 'Devolución',
+  };
+
+  const dispositionReferenceLabel: Record<DispositionType, string> = {
+    RESALE: 'Referencia de publicación de venta *',
+    RECYCLE: 'Certificado de destrucción *',
+    RETURN: 'Guía o comprobante de devolución *',
+  };
+
   const filteredOrders = orders.filter((o) => {
     if (statusFilter === 'ALL') return true;
     return o.status === statusFilter;
@@ -166,7 +216,10 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     INSPECTING: 'En evaluación',
     INSPECTED: 'Inspeccionado',
     PAYMENT_PENDING: 'Pago pendiente',
+    ADJUSTMENT_PENDING: 'Ajuste pendiente de respuesta',
+    ADJUSTMENT_REJECTED: 'Ajuste rechazado',
     PAID: 'Pagado',
+    DISPOSED: 'Destino registrado',
     CLOSED: 'Completado',
   };
 
@@ -209,6 +262,9 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
           { code: 'IN_TRANSIT', label: 'En Tránsito' },
           { code: 'RECEIVED', label: 'Recibidos' },
           { code: 'PAYMENT_PENDING', label: 'Pagos pendientes' },
+          { code: 'PAID', label: 'Pagados (pendiente destino)' },
+          { code: 'ADJUSTMENT_REJECTED', label: 'Ajuste rechazado' },
+          { code: 'CLOSED', label: 'Cerradas' },
         ].map((f) => (
           <button key={f.code} onClick={() => setStatusFilter(f.code)} className={statusFilter === f.code ? styles.filterChipActive : styles.filterChip}>
             {f.label}
@@ -291,6 +347,27 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                           ? 'Reintentar pago'
                           : 'Registrar pago'}
                       </button>
+                    )}
+                    {canRegisterDisposition(order) && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenDispositionModal(order)}
+                        disabled={submittingDisposition}
+                        className={`btn-primary ${styles.dispatchBtn}`}
+                      >
+                        Registrar destino
+                      </button>
+                    )}
+                    {order.status === 'ADJUSTMENT_REJECTED' && order.disposition_status !== 'PENDING' && (
+                      <span className={styles.statusBadge}>Esperando destino elegido por el cliente</span>
+                    )}
+                    {order.disposition_type && order.disposition_status === 'COMPLETED' && (
+                      <div>
+                        <span className={styles.statusBadge}>Destino: {dispositionLabels[order.disposition_type]}</span>
+                        {order.disposition_reference && (
+                          <p className={styles.addressNotes}>Ref.: {order.disposition_reference}</p>
+                        )}
+                      </div>
                     )}
                     {(paymentsByOrder[order.id] ?? []).map((payment, index) => (
                       <div key={payment.id}>
@@ -435,6 +512,79 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                 </button>
                 <button type="submit" disabled={submittingPayment} className="btn-primary">
                   {submittingPayment ? 'Registrando…' : 'Confirmar pago'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {selectedDispositionOrder && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Registrar destino final</h3>
+              <button
+                type="button"
+                onClick={() => setSelectedDispositionOrder(null)}
+                className={styles.modalCloseBtn}
+                aria-label="Cerrar"
+              >
+                Cerrar
+              </button>
+            </div>
+            <p className={styles.modalSubText}>
+              Orden: <strong>{selectedDispositionOrder.order_number}</strong> ({selectedDispositionOrder.device_type_name}).
+              Al confirmar, la orden se cierra.
+            </p>
+            <form onSubmit={handleDispositionSubmit} className={styles.modalForm}>
+              <div>
+                <label className={styles.label} htmlFor="disposition-type">Destino *</label>
+                <select
+                  id="disposition-type"
+                  className="input-field"
+                  value={dispositionType}
+                  disabled={Boolean(selectedDispositionOrder.disposition_type)}
+                  onChange={(event) => setDispositionType(event.target.value as DispositionType)}
+                >
+                  {selectedDispositionOrder.disposition_type ? (
+                    <option value={selectedDispositionOrder.disposition_type}>
+                      {dispositionLabels[selectedDispositionOrder.disposition_type]} (elegido por el cliente)
+                    </option>
+                  ) : (
+                    <>
+                      <option value="RESALE">Reventa</option>
+                      <option value="RECYCLE">Reciclaje</option>
+                    </>
+                  )}
+                </select>
+              </div>
+              <div>
+                <label className={styles.label} htmlFor="disposition-reference">
+                  {dispositionReferenceLabel[dispositionType]}
+                </label>
+                <input
+                  id="disposition-reference"
+                  type="text"
+                  required
+                  maxLength={255}
+                  value={dispositionReference}
+                  onChange={(event) => setDispositionReference(event.target.value)}
+                  placeholder={dispositionType === 'RESALE' ? 'Ej: PUB-2026-001' : dispositionType === 'RECYCLE' ? 'Ej: CERT-DEST-0042' : 'Ej: DEV-00123'}
+                  className={styles.inputMonospace}
+                />
+              </div>
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedDispositionOrder(null)}
+                  className="btn-secondary"
+                  disabled={submittingDisposition}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" disabled={submittingDisposition || !dispositionReference.trim()} className="btn-primary">
+                  {submittingDisposition ? 'Registrando…' : 'Confirmar y cerrar orden'}
                 </button>
               </div>
             </form>
