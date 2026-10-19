@@ -219,6 +219,7 @@ export interface PaymentRecord {
   method: 'BANK_TRANSFER' | 'CHECK';
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   reference: string | null;
+  failure_reason?: string | null;
   paid_at: string | null;
   created_at: string;
   receipt_available: boolean;

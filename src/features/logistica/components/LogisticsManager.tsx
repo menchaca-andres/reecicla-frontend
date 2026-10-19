@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ApiService } from '../../../services/api';
-import type { Order } from '../../../types';
+import type { Order, PaymentRecord } from '../../../types';
 import styles from '../LogisticsManager.module.css';
 
 interface LogisticsManagerProps {
@@ -9,6 +9,7 @@ interface LogisticsManagerProps {
 
 export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [paymentsByOrder, setPaymentsByOrder] = useState<Record<string, PaymentRecord[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -24,6 +25,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
   const [paymentReceipt, setPaymentReceipt] = useState<File | null>(null);
   const [paymentIdempotencyKey, setPaymentIdempotencyKey] = useState('');
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [paymentLoadError, setPaymentLoadError] = useState<string | null>(null);
 
   const fetchOrders = useCallback(async () => {
     if (!token) return;
@@ -32,6 +34,19 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     try {
       const res = await ApiService.getAllOrders(token);
       setOrders(res.orders);
+      try {
+        const paymentRes = await ApiService.getTenantPayments(token);
+        setPaymentsByOrder(paymentRes.payments.reduce((result, payment) => {
+          result[payment.order_id] = [...(result[payment.order_id] ?? []), payment];
+          return result;
+        }, {} as Record<string, PaymentRecord[]>));
+        setPaymentLoadError(null);
+      } catch (paymentError) {
+        setPaymentsByOrder({});
+        setPaymentLoadError(paymentError instanceof Error
+          ? paymentError.message
+          : 'No se pudo consultar el historial de pagos.');
+      }
     } catch (err: any) {
       setError(err.message || 'Error al cargar las órdenes para logística');
     } finally {
@@ -106,7 +121,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     setError(null);
     setSuccessMsg(null);
     try {
-      await ApiService.registerPayment(
+      const result = await ApiService.registerPayment(
         selectedPaymentOrder.id,
         {
           method: paymentMethod,
@@ -116,6 +131,14 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
         paymentIdempotencyKey,
         token
       );
+      if (result.payment.status === 'FAILED') {
+        setError(
+          `El intento de pago quedó registrado como fallido: ${result.payment.failure_reason || 'el proveedor rechazó la operación'}. Puedes iniciar un nuevo intento.`
+        );
+        setSelectedPaymentOrder(null);
+        await fetchOrders();
+        return;
+      }
       setSuccessMsg(
         `Pago registrado para la orden ${selectedPaymentOrder.order_number}. El comprobante Reecicla estará disponible en el historial del cliente.`
       );
@@ -172,6 +195,9 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
         <div className={styles.alertError}>
           {error}
         </div>
+      )}
+      {paymentLoadError && (
+        <div className={styles.alertError}>{paymentLoadError}</div>
       )}
 
       <div className={styles.filterRow}>
@@ -261,9 +287,27 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                         disabled={submittingPayment}
                         className={`btn-primary ${styles.dispatchBtn}`}
                       >
-                        Registrar pago
+                        {paymentsByOrder[order.id]?.some((payment) => payment.status === 'FAILED')
+                          ? 'Reintentar pago'
+                          : 'Registrar pago'}
                       </button>
                     )}
+                    {(paymentsByOrder[order.id] ?? []).map((payment, index) => (
+                      <div key={payment.id}>
+                        <span className={styles.statusBadge}>
+                          Intento {(paymentsByOrder[order.id]?.length ?? 0) - index}: {payment.status === 'FAILED'
+                            ? 'Fallido'
+                            : payment.status === 'COMPLETED'
+                              ? 'Completado'
+                              : payment.status === 'PENDING'
+                                ? 'En proceso'
+                                : payment.status}
+                        </span>
+                        {payment.failure_reason && (
+                          <p className={styles.addressNotes}>{payment.failure_reason}</p>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
 

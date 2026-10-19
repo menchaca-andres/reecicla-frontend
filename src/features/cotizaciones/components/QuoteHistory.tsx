@@ -346,13 +346,19 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
 
                         {(paymentsByOrder[order.id] ?? []).map((payment) => (
                           <div key={payment.id}>
-                            <p className={styles.fieldLabel}>Desembolso registrado</p>
+                            <p className={styles.fieldLabel}>
+                              {payment.status === 'FAILED' ? 'Intento de pago fallido' : 'Desembolso registrado'}
+                            </p>
                             <p className={styles.fieldMeta}>
+                              {payment.status} ·{' '}
                               {payment.method === 'CHECK' ? 'Cheque' : 'Transferencia'} ·{' '}
                               {payment.currency} {payment.amount.toFixed(2)}
                               {payment.reference ? ` · Ref. ${payment.reference}` : ''}
                               {payment.paid_at ? ` · ${new Date(payment.paid_at).toLocaleDateString()}` : ''}
                             </p>
+                            {payment.failure_reason && (
+                              <p className={styles.fieldMeta}>Motivo: {payment.failure_reason}</p>
+                            )}
                             {payment.receipt_available && (
                               <button
                                 type="button"

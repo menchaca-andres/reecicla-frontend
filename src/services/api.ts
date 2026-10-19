@@ -401,6 +401,15 @@ export class ApiService {
     return json;
   }
 
+  static async getTenantPayments(token: string): Promise<{ payments: PaymentRecord[] }> {
+    const res = await fetch(this.scoped('payments', '/admin'), {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar los intentos de pago');
+    return json;
+  }
+
   static async downloadPaymentReceipt(orderId: string, paymentId: string, token: string): Promise<Blob> {
     return this.downloadPaymentFile(orderId, paymentId, token, 'receipt');
   }
