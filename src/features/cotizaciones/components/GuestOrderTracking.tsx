@@ -260,6 +260,24 @@ export const GuestOrderTracking: React.FC<GuestOrderTrackingProps> = ({ token })
               <p className={styles.message}>Aún no hay actualizaciones del pedido.</p>
             )}
 
+            <h2 className={styles.historyTitle}>Avisos enviados</h2>
+            {order.notifications.length ? (
+              <ul className={styles.notifications}>
+                {order.notifications.map((notification, index) => (
+                  <li key={`${notification.notification_type}-${notification.sent_at}-${index}`}>
+                    <strong>
+                      {notification.notification_type === 'ORDER_TRACKING_LINK'
+                        ? 'Enlace de seguimiento enviado'
+                        : notification.notification_type}
+                    </strong>
+                    <time>{notification.channel} · {formatDate(notification.sent_at)}</time>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.message}>Todavía no se han enviado avisos.</p>
+            )}
+
             <button type="button" className={styles.secondaryButton} onClick={() => void refresh()} disabled={loading}>
               Actualizar estado
             </button>
