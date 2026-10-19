@@ -1,4 +1,4 @@
-import type { AuthResponse, PlatformAuthResponse, RegistrationStartResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection, CompleteInspectionInput } from '../types';
+import type { AuthResponse, PlatformAuthResponse, RegistrationStartResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PaymentRecord, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection, CompleteInspectionInput } from '../types';
 import type { GuestOrderTracking } from '../types';
 
 const GATEWAY_ORIGIN = 'http://localhost:3000';
@@ -10,7 +10,7 @@ export class ApiService {
     this.slug = slug;
   }
 
-  private static scoped(service: 'quotation' | 'catalog' | 'auth' | 'orders' | 'inspections', path: string): string {
+  private static scoped(service: 'quotation' | 'catalog' | 'auth' | 'orders' | 'inspections' | 'payments', path: string): string {
     return `${GATEWAY_ORIGIN}/recicla/${encodeURIComponent(this.slug)}/api/${service}${path}`;
   }
 
@@ -367,6 +367,74 @@ export class ApiService {
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al registrar la recepción del equipo');
     return json;
+  }
+
+  static async registerPayment(
+    orderId: string,
+    data: { method: PaymentRecord['method']; reference: string; receipt?: File },
+    idempotencyKey: string,
+    token: string
+  ): Promise<{ message: string; payment: PaymentRecord }> {
+    const body = new FormData();
+    body.append('method', data.method);
+    body.append('reference', data.reference);
+    if (data.receipt) body.append('receipt', data.receipt);
+    const res = await fetch(this.scoped('payments', `/orders/${encodeURIComponent(orderId)}`), {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Idempotency-Key': idempotencyKey,
+      },
+      body,
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al registrar el pago');
+    return json;
+  }
+
+  static async getOrderPayments(orderId: string, token: string): Promise<{ payments: PaymentRecord[] }> {
+    const res = await fetch(this.scoped('payments', `/orders/${encodeURIComponent(orderId)}`), {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar los pagos de la orden');
+    return json;
+  }
+
+  static async getTenantPayments(token: string): Promise<{ payments: PaymentRecord[] }> {
+    const res = await fetch(this.scoped('payments', '/admin'), {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar los intentos de pago');
+    return json;
+  }
+
+  static async downloadPaymentReceipt(orderId: string, paymentId: string, token: string): Promise<Blob> {
+    return this.downloadPaymentFile(orderId, paymentId, token, 'receipt');
+  }
+
+  static async downloadExternalPaymentReceipt(orderId: string, paymentId: string, token: string): Promise<Blob> {
+    return this.downloadPaymentFile(orderId, paymentId, token, 'external-receipt');
+  }
+
+  private static async downloadPaymentFile(
+    orderId: string,
+    paymentId: string,
+    token: string,
+    receiptType: 'receipt' | 'external-receipt'
+  ): Promise<Blob> {
+    const res = await fetch(this.scoped(
+      'payments',
+      `/orders/${encodeURIComponent(orderId)}/${encodeURIComponent(paymentId)}/${receiptType}`
+    ), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.error || 'Error al descargar el comprobante');
+    }
+    return res.blob();
   }
 
   static async getRules(token: string): Promise<{ rules: PricingRule[] }> {

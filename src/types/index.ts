@@ -210,6 +210,22 @@ export interface Order {
   created_at: string;
 }
 
+export interface PaymentRecord {
+  id: string;
+  tenant_id: string;
+  order_id: string;
+  amount: number;
+  currency: string;
+  method: 'BANK_TRANSFER' | 'CHECK';
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  reference: string | null;
+  failure_reason?: string | null;
+  paid_at: string | null;
+  created_at: string;
+  receipt_available: boolean;
+  external_receipt_available: boolean;
+}
+
 export type InspectionItemValue = boolean | number | string;
 
 export interface PendingInspection {

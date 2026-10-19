@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ApiService } from '../../../services/api';
-import type { Order } from '../../../types';
+import type { Order, PaymentRecord } from '../../../types';
 import styles from '../LogisticsManager.module.css';
 
 interface LogisticsManagerProps {
@@ -9,15 +9,23 @@ interface LogisticsManagerProps {
 
 export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [paymentsByOrder, setPaymentsByOrder] = useState<Record<string, PaymentRecord[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedPaymentOrder, setSelectedPaymentOrder] = useState<Order | null>(null);
   const [trackingCodeInput, setTrackingCodeInput] = useState<string>('');
   const [shipmentStatus, setShipmentStatus] = useState<'BOX_SHIPPED' | 'IN_TRANSIT'>('BOX_SHIPPED');
   const [submitting, setSubmitting] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'BANK_TRANSFER' | 'CHECK'>('BANK_TRANSFER');
+  const [paymentReference, setPaymentReference] = useState('');
+  const [paymentReceipt, setPaymentReceipt] = useState<File | null>(null);
+  const [paymentIdempotencyKey, setPaymentIdempotencyKey] = useState('');
+  const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [paymentLoadError, setPaymentLoadError] = useState<string | null>(null);
 
   const fetchOrders = useCallback(async () => {
     if (!token) return;
@@ -26,6 +34,19 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     try {
       const res = await ApiService.getAllOrders(token);
       setOrders(res.orders);
+      try {
+        const paymentRes = await ApiService.getTenantPayments(token);
+        setPaymentsByOrder(paymentRes.payments.reduce((result, payment) => {
+          result[payment.order_id] = [...(result[payment.order_id] ?? []), payment];
+          return result;
+        }, {} as Record<string, PaymentRecord[]>));
+        setPaymentLoadError(null);
+      } catch (paymentError) {
+        setPaymentsByOrder({});
+        setPaymentLoadError(paymentError instanceof Error
+          ? paymentError.message
+          : 'No se pudo consultar el historial de pagos.');
+      }
     } catch (err: any) {
       setError(err.message || 'Error al cargar las órdenes para logística');
     } finally {
@@ -84,6 +105,53 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     }
   };
 
+  const handleOpenPaymentModal = (order: Order) => {
+    setSelectedPaymentOrder(order);
+    setPaymentMethod('BANK_TRANSFER');
+    setPaymentReference('');
+    setPaymentReceipt(null);
+    setPaymentIdempotencyKey(crypto.randomUUID());
+    setError(null);
+  };
+
+  const handlePaymentSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selectedPaymentOrder || !token || !paymentIdempotencyKey) return;
+    setSubmittingPayment(true);
+    setError(null);
+    setSuccessMsg(null);
+    try {
+      const result = await ApiService.registerPayment(
+        selectedPaymentOrder.id,
+        {
+          method: paymentMethod,
+          reference: paymentReference.trim(),
+          receipt: paymentReceipt ?? undefined,
+        },
+        paymentIdempotencyKey,
+        token
+      );
+      if (result.payment.status === 'FAILED') {
+        setError(
+          `El intento de pago quedó registrado como fallido: ${result.payment.failure_reason || 'el proveedor rechazó la operación'}. Puedes iniciar un nuevo intento.`
+        );
+        setSelectedPaymentOrder(null);
+        await fetchOrders();
+        return;
+      }
+      setSuccessMsg(
+        `Pago registrado para la orden ${selectedPaymentOrder.order_number}. El comprobante Reecicla estará disponible en el historial del cliente.`
+      );
+      setSelectedPaymentOrder(null);
+      setPaymentReceipt(null);
+      await fetchOrders();
+    } catch (err: any) {
+      setError(err.message || 'Error al registrar el pago.');
+    } finally {
+      setSubmittingPayment(false);
+    }
+  };
+
   const filteredOrders = orders.filter((o) => {
     if (statusFilter === 'ALL') return true;
     return o.status === statusFilter;
@@ -97,6 +165,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     RECEIVED: 'Recibido en almacén',
     INSPECTING: 'En evaluación',
     INSPECTED: 'Inspeccionado',
+    PAYMENT_PENDING: 'Pago pendiente',
     PAID: 'Pagado',
     CLOSED: 'Completado',
   };
@@ -127,6 +196,9 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
           {error}
         </div>
       )}
+      {paymentLoadError && (
+        <div className={styles.alertError}>{paymentLoadError}</div>
+      )}
 
       <div className={styles.filterRow}>
         <span className={styles.filterLabel}>Filtrar por estado</span>
@@ -136,6 +208,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
           { code: 'BOX_SHIPPED', label: 'Cajas Enviadas' },
           { code: 'IN_TRANSIT', label: 'En Tránsito' },
           { code: 'RECEIVED', label: 'Recibidos' },
+          { code: 'PAYMENT_PENDING', label: 'Pagos pendientes' },
         ].map((f) => (
           <button key={f.code} onClick={() => setStatusFilter(f.code)} className={statusFilter === f.code ? styles.filterChipActive : styles.filterChip}>
             {f.label}
@@ -173,7 +246,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                     <p className={styles.deviceTitle}>
                       {order.device_type_name} {order.brand ? `· ${order.brand}` : ''} {order.model ? `(${order.model})` : ''}
                     </p>
-                    <p className={styles.priceText}>Monto: <strong>{order.currency === 'BOB' || order.currency === 'Bs' ? 'Bs.' : order.currency} {Number(order.quoted_price).toFixed(2)}</strong></p>
+                    <p className={styles.priceText}>Monto: <strong>{order.currency === 'BOB' || order.currency === 'Bs' ? 'Bs.' : order.currency} {Number(order.final_price ?? order.quoted_price).toFixed(2)}</strong></p>
                   </div>
 
                   <div>
@@ -207,6 +280,34 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                         Registrar recepción
                       </button>
                     )}
+                    {order.status === 'PAYMENT_PENDING' && (
+                      <button
+                        type="button"
+                        onClick={() => handleOpenPaymentModal(order)}
+                        disabled={submittingPayment}
+                        className={`btn-primary ${styles.dispatchBtn}`}
+                      >
+                        {paymentsByOrder[order.id]?.some((payment) => payment.status === 'FAILED')
+                          ? 'Reintentar pago'
+                          : 'Registrar pago'}
+                      </button>
+                    )}
+                    {(paymentsByOrder[order.id] ?? []).map((payment, index) => (
+                      <div key={payment.id}>
+                        <span className={styles.statusBadge}>
+                          Intento {(paymentsByOrder[order.id]?.length ?? 0) - index}: {payment.status === 'FAILED'
+                            ? 'Fallido'
+                            : payment.status === 'COMPLETED'
+                              ? 'Completado'
+                              : payment.status === 'PENDING'
+                                ? 'En proceso'
+                                : payment.status}
+                        </span>
+                        {payment.failure_reason && (
+                          <p className={styles.addressNotes}>{payment.failure_reason}</p>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -251,6 +352,89 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                 </button>
                 <button type="submit" disabled={submitting} className="btn-primary" style={{ padding: '8px 16px', fontSize: '13px' }}>
                   {submitting ? 'Guardando...' : 'Confirmar Envío y Guía'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {selectedPaymentOrder && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Registrar desembolso</h3>
+              <button
+                type="button"
+                onClick={() => setSelectedPaymentOrder(null)}
+                className={styles.modalCloseBtn}
+                aria-label="Cerrar"
+              >
+                Cerrar
+              </button>
+            </div>
+            <p className={styles.modalSubText}>
+              Orden: <strong>{selectedPaymentOrder.order_number}</strong>. Monto aceptado:{' '}
+              <strong>
+                {selectedPaymentOrder.currency === 'BOB' || selectedPaymentOrder.currency === 'Bs.'
+                  ? 'Bs.'
+                  : selectedPaymentOrder.currency}{' '}
+                {Number(selectedPaymentOrder.final_price ?? selectedPaymentOrder.quoted_price).toFixed(2)}
+              </strong>
+            </p>
+            <form onSubmit={handlePaymentSubmit} className={styles.modalForm}>
+              <div>
+                <label className={styles.label} htmlFor="payment-method">Método de pago *</label>
+                <select
+                  id="payment-method"
+                  className="input-field"
+                  value={paymentMethod}
+                  onChange={(event) => setPaymentMethod(event.target.value as 'BANK_TRANSFER' | 'CHECK')}
+                >
+                  <option value="BANK_TRANSFER">Transferencia bancaria</option>
+                  <option value="CHECK">Cheque</option>
+                </select>
+              </div>
+              <div>
+                <label className={styles.label} htmlFor="payment-reference">
+                  {paymentMethod === 'CHECK' ? 'Número de cheque *' : 'Referencia de transferencia (opcional)'}
+                </label>
+                <input
+                  id="payment-reference"
+                  type="text"
+                  required={paymentMethod === 'CHECK'}
+                  maxLength={150}
+                  value={paymentReference}
+                  onChange={(event) => setPaymentReference(event.target.value)}
+                  className={styles.inputMonospace}
+                />
+              </div>
+              <div>
+                <label className={styles.label} htmlFor="payment-receipt">
+                  Evidencia bancaria adicional (opcional, PDF/JPG/PNG, máx. 5 MB)
+                </label>
+                <input
+                  id="payment-receipt"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                  onChange={(event) => setPaymentReceipt(event.target.files?.[0] ?? null)}
+                  className={styles.inputMonospace}
+                />
+                <p className={styles.modalSubText}>
+                  Reecicla generará automáticamente el comprobante oficial de registro del pago.
+                </p>
+              </div>
+              <div className={styles.modalActions}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPaymentOrder(null)}
+                  className="btn-secondary"
+                  disabled={submittingPayment}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" disabled={submittingPayment} className="btn-primary">
+                  {submittingPayment ? 'Registrando…' : 'Confirmar pago'}
                 </button>
               </div>
             </form>

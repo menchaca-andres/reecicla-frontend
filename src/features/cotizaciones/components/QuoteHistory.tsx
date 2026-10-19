@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { Quote, Order, CreateBoxRequestInput } from '../../../types';
+import type { Quote, Order, CreateBoxRequestInput, PaymentRecord } from '../../../types';
 import { ApiService } from '../../../services/api';
 import styles from '../QuoteHistory.module.css';
 
@@ -10,11 +10,14 @@ interface QuoteHistoryProps {
 export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [paymentsByOrder, setPaymentsByOrder] = useState<Record<string, PaymentRecord[]>>({});
   const [loading, setLoading] = useState(true);
   const [acceptingQuoteId, setAcceptingQuoteId] = useState<string | null>(null);
   const [resolvingOrderId, setResolvingOrderId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [downloadingPaymentId, setDownloadingPaymentId] = useState<string | null>(null);
 
   const [selectedOrderIdForBox, setSelectedOrderIdForBox] = useState<string | null>(null);
   const [boxAddress, setBoxAddress] = useState<CreateBoxRequestInput>({
@@ -46,6 +49,25 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
       setQuotes(res.quotes);
       const orderRes = await ApiService.getUserOrders(token);
       setOrders(orderRes.orders);
+      setPaymentError(null);
+      const payableOrders = orderRes.orders.filter(
+        (order) => order.status === 'PAYMENT_PENDING' || order.status === 'PAID'
+      );
+      try {
+        const paymentResponses = await Promise.all(
+          payableOrders.map((order) => ApiService.getOrderPayments(order.id, token))
+        );
+        setPaymentsByOrder(Object.fromEntries(
+          payableOrders.map((order, index) => [order.id, paymentResponses[index].payments])
+        ));
+      } catch (paymentFetchError) {
+        setPaymentsByOrder({});
+        setPaymentError(
+          paymentFetchError instanceof Error
+            ? paymentFetchError.message
+            : 'No se pudieron consultar los comprobantes de pago.'
+        );
+      }
     } catch (err: any) {
       setError(err.message || 'Error al obtener el historial');
     } finally {
@@ -131,6 +153,31 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
     }
   };
 
+  const handleDownloadReceipt = async (
+    orderId: string,
+    payment: PaymentRecord,
+    external = false
+  ) => {
+    setDownloadingPaymentId(payment.id);
+    setError(null);
+    try {
+      const blob = external
+        ? await ApiService.downloadExternalPaymentReceipt(orderId, payment.id, token)
+        : await ApiService.downloadPaymentReceipt(orderId, payment.id, token);
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const extension = blob.type === 'application/pdf' ? 'pdf' : blob.type === 'image/png' ? 'png' : 'jpg';
+      link.href = downloadUrl;
+      link.download = `${external ? 'evidencia-bancaria' : 'comprobante-reecicla'}-${payment.id}.${extension}`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+    } catch (downloadError) {
+      setError(downloadError instanceof Error ? downloadError.message : 'No se pudo descargar el comprobante.');
+    } finally {
+      setDownloadingPaymentId(null);
+    }
+  };
+
   useEffect(() => {
     fetchHistory();
   }, [token]);
@@ -167,6 +214,7 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
       ) : (
         <>
           {notice && <p role="status" className={styles.noticeText}>{notice}</p>}
+          {paymentError && <p role="alert" className={styles.alertError}>{paymentError}</p>}
 
           {/* ── Cotizaciones ── */}
           <h2 className={styles.sectionHeading}>Cotizaciones</h2>
@@ -295,6 +343,44 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
                             Destino elegido: {order.adjustment_resolution === 'RETURN' ? 'devolución a cargo del cliente' : 'reciclaje sin pago'}.
                           </p>
                         )}
+
+                        {(paymentsByOrder[order.id] ?? []).map((payment) => (
+                          <div key={payment.id}>
+                            <p className={styles.fieldLabel}>
+                              {payment.status === 'FAILED' ? 'Intento de pago fallido' : 'Desembolso registrado'}
+                            </p>
+                            <p className={styles.fieldMeta}>
+                              {payment.status} ·{' '}
+                              {payment.method === 'CHECK' ? 'Cheque' : 'Transferencia'} ·{' '}
+                              {payment.currency} {payment.amount.toFixed(2)}
+                              {payment.reference ? ` · Ref. ${payment.reference}` : ''}
+                              {payment.paid_at ? ` · ${new Date(payment.paid_at).toLocaleDateString()}` : ''}
+                            </p>
+                            {payment.failure_reason && (
+                              <p className={styles.fieldMeta}>Motivo: {payment.failure_reason}</p>
+                            )}
+                            {payment.receipt_available && (
+                              <button
+                                type="button"
+                                onClick={() => void handleDownloadReceipt(order.id, payment)}
+                                disabled={downloadingPaymentId !== null}
+                                className={styles.secondaryActionBtn}
+                              >
+                                {downloadingPaymentId === payment.id ? 'Descargando…' : 'Descargar comprobante Reecicla'}
+                              </button>
+                            )}
+                            {payment.external_receipt_available && (
+                              <button
+                                type="button"
+                                onClick={() => void handleDownloadReceipt(order.id, payment, true)}
+                                disabled={downloadingPaymentId !== null}
+                                className={styles.secondaryActionBtn}
+                              >
+                                {downloadingPaymentId === payment.id ? 'Descargando…' : 'Descargar evidencia bancaria'}
+                              </button>
+                            )}
+                          </div>
+                        ))}
 
                         <div>
                           <p className={styles.fieldLabel}>Monto Aceptado</p>
