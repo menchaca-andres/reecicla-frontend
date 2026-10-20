@@ -349,3 +349,37 @@ export interface GuestOrderTracking {
   }>;
   notifications: OrderNotification[];
 }
+
+// HU-022: reportes del negocio (read model de reporting-service).
+export type AmountsByCurrency = Record<string, number>;
+
+export interface ReportSummary {
+  tenant_id: string;
+  period: { from: string; to: string };
+  generated_at: string;
+  last_event_at: string | null;
+  quotes: {
+    total: number;
+    by_status: Record<'ANONYMOUS' | 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED', number>;
+    by_type: Record<'INITIAL' | 'ADJUSTED', number>;
+    acceptance_rate: number;
+    quoted_amount: AmountsByCurrency;
+    accepted_amount: AmountsByCurrency;
+    by_device_type: Array<{ device_type_name: string; total: number; accepted: number }>;
+  };
+  orders: {
+    created_in_period: number;
+    by_status_in_period: Record<string, number>;
+    current_by_status: Record<string, number>;
+  };
+  payments: {
+    completed: number;
+    failed: number;
+    completed_amount: AmountsByCurrency;
+    by_method: Record<string, { completed: number; failed: number; amount: AmountsByCurrency }>;
+  };
+  dispositions: {
+    total: number;
+    by_type: Record<'RESALE' | 'RECYCLE' | 'RETURN', number>;
+  };
+}

@@ -1,4 +1,4 @@
-import type { DispositionType, AuthResponse, PlatformAuthResponse, RegistrationStartResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PaymentRecord, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection, CompleteInspectionInput } from '../types';
+import type { DispositionType, AuthResponse, PlatformAuthResponse, RegistrationStartResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PaymentRecord, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection, CompleteInspectionInput, ReportSummary } from '../types';
 import type { GuestOrderTracking } from '../types';
 
 const GATEWAY_ORIGIN = 'http://localhost:3000';
@@ -10,7 +10,7 @@ export class ApiService {
     this.slug = slug;
   }
 
-  private static scoped(service: 'quotation' | 'catalog' | 'auth' | 'orders' | 'inspections' | 'payments', path: string): string {
+  private static scoped(service: 'quotation' | 'catalog' | 'auth' | 'orders' | 'inspections' | 'payments' | 'reports', path: string): string {
     return `${GATEWAY_ORIGIN}/recicla/${encodeURIComponent(this.slug)}/api/${service}${path}`;
   }
 
@@ -448,6 +448,35 @@ export class ApiService {
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
       throw new Error(json.error || 'Error al descargar el comprobante');
+    }
+    return res.blob();
+  }
+
+  // HU-022: reportes del negocio. from/to son AAAA-MM-DD (inclusivos).
+  private static reportQuery(from?: string, to?: string): string {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const query = params.toString();
+    return query ? `?${query}` : '';
+  }
+
+  static async getReportSummary(token: string, from?: string, to?: string): Promise<ReportSummary> {
+    const res = await fetch(this.scoped('reports', `/summary${this.reportQuery(from, to)}`), {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al cargar los reportes');
+    return json as ReportSummary;
+  }
+
+  static async downloadReportCsv(token: string, from?: string, to?: string): Promise<Blob> {
+    const res = await fetch(this.scoped('reports', `/summary.csv${this.reportQuery(from, to)}`), {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.error || 'Error al exportar el reporte');
     }
     return res.blob();
   }

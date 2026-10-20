@@ -11,8 +11,8 @@ interface TenantNavbarProps {
   slug?: string;
   onOpenAuth: () => void;
   onLogout: () => void;
-  activeTab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'inspeccion' | 'auth';
-  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'inspeccion' | 'auth') => void;
+  activeTab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'inspeccion' | 'reportes' | 'auth';
+  setActiveTab: (tab: 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'inspeccion' | 'reportes' | 'auth') => void;
 }
 
 interface PlatformNavbarProps {
@@ -71,6 +71,10 @@ export const Navbar: React.FC<NavbarProps> = (props) => {
 
           {user && (user.role === 'TENANT_ADMIN' || user.role === 'INSPECTOR') && (
             <button onClick={() => setActiveTab('inspeccion')} className={`apple-global-nav-link ${activeTab === 'inspeccion' ? 'active' : ''}`}>Inspección</button>
+          )}
+
+          {user?.role === 'TENANT_ADMIN' && (
+            <button onClick={() => setActiveTab('reportes')} className={`apple-global-nav-link ${activeTab === 'reportes' ? 'active' : ''}`}>Reportes</button>
           )}
 
           {user?.role === 'SUPER_ADMIN' && (
