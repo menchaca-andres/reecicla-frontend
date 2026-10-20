@@ -41,6 +41,10 @@ export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({
 
   const activeToken = sessionToken ?? token;
   const activeUser = sessionUser ?? user;
+  const openAcceptance = () => {
+    setError(null);
+    setAcceptanceStep(activeToken && activeUser ? 'authenticated' : 'choice');
+  };
 
   const basePrice = Number(quote.base_price);
   const adjustment = Number(quote.adjustment);
@@ -212,7 +216,7 @@ export const QuoteResultCard: React.FC<QuoteResultCardProps> = ({
       {!isAccepted && acceptanceStep === 'closed' && (
         <div style={{ marginBottom: '16px' }}>
           <button
-            onClick={() => setAcceptanceStep('choice')}
+            onClick={openAcceptance}
             disabled={Boolean(token && !user)}
             className="btn-primary"
             style={{ width: '100%', padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 600, fontSize: '15px' }}

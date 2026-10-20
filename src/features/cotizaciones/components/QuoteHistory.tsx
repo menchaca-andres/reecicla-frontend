@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import type { Quote, Order, CreateBoxRequestInput, PaymentRecord } from '../../../types';
+import type { Quote, Order, CreateBoxRequestInput, PaymentRecord, PaginationMeta } from '../../../types';
 import { ApiService } from '../../../services/api';
+import { PaginationControls } from '../../../components/PaginationControls';
 import styles from '../QuoteHistory.module.css';
 
 interface QuoteHistoryProps {
@@ -10,7 +11,10 @@ interface QuoteHistoryProps {
 export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [quotesPagination, setQuotesPagination] = useState<PaginationMeta>({ page: 1, page_size: 10, total_items: 0, total_pages: 0 });
+  const [ordersPagination, setOrdersPagination] = useState<PaginationMeta>({ page: 1, page_size: 10, total_items: 0, total_pages: 0 });
   const [paymentsByOrder, setPaymentsByOrder] = useState<Record<string, PaymentRecord[]>>({});
+  const [paymentPaginationByOrder, setPaymentPaginationByOrder] = useState<Record<string, PaginationMeta>>({});
   const [loading, setLoading] = useState(true);
   const [acceptingQuoteId, setAcceptingQuoteId] = useState<string | null>(null);
   const [resolvingOrderId, setResolvingOrderId] = useState<string | null>(null);
@@ -45,23 +49,33 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await ApiService.getUserQuotes(token);
+      const res = await ApiService.getUserQuotes(token, { page: quotesPagination.page, page_size: 10 });
       setQuotes(res.quotes);
-      const orderRes = await ApiService.getUserOrders(token);
+      if (res.pagination) setQuotesPagination(res.pagination);
+      const orderRes = await ApiService.getUserOrders(token, { page: ordersPagination.page, page_size: 10 });
       setOrders(orderRes.orders);
+      if (orderRes.pagination) setOrdersPagination(orderRes.pagination);
       setPaymentError(null);
       const payableOrders = orderRes.orders.filter(
         (order) => order.status === 'PAYMENT_PENDING' || order.status === 'PAID'
       );
       try {
         const paymentResponses = await Promise.all(
-          payableOrders.map((order) => ApiService.getOrderPayments(order.id, token))
+          payableOrders.map((order) => ApiService.getOrderPayments(order.id, token, { page: 1, page_size: 10 }))
         );
         setPaymentsByOrder(Object.fromEntries(
           payableOrders.map((order, index) => [order.id, paymentResponses[index].payments])
         ));
+        setPaymentPaginationByOrder(Object.fromEntries(
+          payableOrders.reduce<Array<[string, PaginationMeta]>>((entries, order, index) => {
+            const pagination = paymentResponses[index].pagination;
+            if (pagination) entries.push([order.id, pagination]);
+            return entries;
+          }, [])
+        ));
       } catch (paymentFetchError) {
         setPaymentsByOrder({});
+        setPaymentPaginationByOrder({});
         setPaymentError(
           paymentFetchError instanceof Error
             ? paymentFetchError.message
@@ -72,6 +86,18 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
       setError(err.message || 'Error al obtener el historial');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const changePaymentPage = async (orderId: string, page: number) => {
+    try {
+      const response = await ApiService.getOrderPayments(orderId, token, { page, page_size: 10 });
+      setPaymentsByOrder((current) => ({ ...current, [orderId]: response.payments }));
+      const pagination = response.pagination;
+      if (pagination) setPaymentPaginationByOrder((current) => ({ ...current, [orderId]: pagination }));
+    } catch (err) {
+      setPaymentPaginationByOrder({});
+      setPaymentError(err instanceof Error ? err.message : 'No se pudieron consultar los pagos.');
     }
   };
 
@@ -180,7 +206,7 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
 
   useEffect(() => {
     fetchHistory();
-  }, [token]);
+  }, [token, quotesPagination.page, ordersPagination.page]);
 
   const statusMap: Record<string, { label: string; cls: string }> = {
     ACCEPTED: { label: 'Cotización Aceptada', cls: styles.statusGreen },
@@ -283,12 +309,18 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
               ))}
             </div>
           )}
+          {quotes.length > 0 && (
+            <PaginationControls
+              pagination={quotesPagination}
+              onPageChange={(page) => setQuotesPagination((current) => ({ ...current, page }))}
+            />
+          )}
 
           {/* ── Órdenes ── */}
           {orders.length > 0 && (
             <section className={styles.ordersSection}>
               <h2 className={styles.sectionHeading}>
-                Órdenes ({orders.length})
+                Órdenes ({ordersPagination.total_items})
               </h2>
               <div className={styles.list}>
                 {orders.map((order) => {
@@ -389,6 +421,12 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
                             )}
                           </div>
                         ))}
+                        {paymentPaginationByOrder[order.id] && (
+                          <PaginationControls
+                            pagination={paymentPaginationByOrder[order.id]}
+                            onPageChange={(page) => void changePaymentPage(order.id, page)}
+                          />
+                        )}
 
                         <div>
                           <p className={styles.fieldLabel}>Monto Aceptado</p>
@@ -414,7 +452,7 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
                       <section className={styles.historySection} aria-label={`Seguimiento de ${order.order_number}`}>
                         <h3 className={styles.historyTitle}>Estado del proceso</h3>
                         {order.status_history?.length ? (
-                          <ol className={styles.timeline}>
+                          <ol className={styles.timeline} aria-label="Historial cronológico del estado">
                             {order.status_history.map((entry, index) => (
                               <li key={`${entry.new_status}-${entry.created_at}-${index}`} className={styles.timelineItem}>
                                 <span className={styles.timelineDot} />
@@ -452,6 +490,10 @@ export const QuoteHistory: React.FC<QuoteHistoryProps> = ({ token }) => {
                   );
                 })}
               </div>
+              <PaginationControls
+                pagination={ordersPagination}
+                onPageChange={(page) => setOrdersPagination((current) => ({ ...current, page }))}
+              />
             </section>
           )}
         </>

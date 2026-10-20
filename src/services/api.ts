@@ -1,4 +1,4 @@
-import type { DispositionType, AuthResponse, PlatformAuthResponse, RegistrationStartResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PaymentRecord, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection, CompleteInspectionInput } from '../types';
+import type { DispositionType, AuthResponse, PlatformAuthResponse, RegistrationStartResponse, User, Quote, QuoteRequest, PricingRule, DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, BoxRequest, CreateBoxRequestInput, Order, PaymentRecord, PendingInspection, InspectionChecklist, RegisterInspectionInput, Inspection, CompleteInspectionInput, PaginationMeta, PaginationParams, CatalogAuditLog } from '../types';
 import type { GuestOrderTracking } from '../types';
 
 const GATEWAY_ORIGIN = 'http://localhost:3000';
@@ -21,7 +21,17 @@ export class ApiService {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
+
     return headers;
+  }
+
+  private static paginationQuery(pagination?: PaginationParams): string {
+    if (!pagination) return '';
+    const params = new URLSearchParams({
+      page: String(pagination.page),
+      page_size: String(pagination.page_size),
+    });
+    return `?${params}`;
   }
 
   static async platformLogin(data: { email: string; password: string }): Promise<PlatformAuthResponse> {
@@ -53,10 +63,15 @@ export class ApiService {
 
   static async getDeviceTypes(
     token?: string | null,
-    includeInactive = false
-  ): Promise<{ device_types: DeviceType[]; deviceTypes: DeviceType[] }> {
+    includeInactive = false,
+    pagination?: PaginationParams
+  ): Promise<{ device_types: DeviceType[]; deviceTypes: DeviceType[]; pagination?: PaginationMeta }> {
     const params = new URLSearchParams();
     if (includeInactive) params.set('include_inactive', 'true');
+    if (pagination) {
+      params.set('page', String(pagination.page));
+      params.set('page_size', String(pagination.page_size));
+    }
     const query = params.toString();
     const res = await fetch(`${this.scoped('catalog', `/device-types${query ? `?${query}` : ''}`)}`, {
       headers: this.getHeaders(token),
@@ -64,7 +79,7 @@ export class ApiService {
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al consultar el catálogo');
     const list = json.device_types || json.deviceTypes || [];
-    return { device_types: list, deviceTypes: list };
+    return { device_types: list, deviceTypes: list, ...(json.pagination ? { pagination: json.pagination } : {}) };
   }
 
   static async createDeviceType(
@@ -237,8 +252,8 @@ export class ApiService {
     return json;
   }
 
-  static async getUserQuotes(token: string): Promise<{ quotes: Quote[] }> {
-    const res = await fetch(this.scoped('quotation', '/quotes/user'), {
+  static async getUserQuotes(token: string, pagination?: PaginationParams): Promise<{ quotes: Quote[]; pagination?: PaginationMeta }> {
+    const res = await fetch(this.scoped('quotation', `/quotes/user${this.paginationQuery(pagination)}`), {
       method: 'GET',
       headers: this.getHeaders(token),
     });
@@ -323,8 +338,8 @@ export class ApiService {
     return json;
   }
 
-  static async getUserOrders(token: string): Promise<{ orders: Order[] }> {
-    const res = await fetch(this.scoped('orders', '/'), {
+  static async getUserOrders(token: string, pagination?: PaginationParams): Promise<{ orders: Order[]; pagination?: PaginationMeta }> {
+    const res = await fetch(this.scoped('orders', `/${this.paginationQuery(pagination)}`), {
       method: 'GET',
       headers: this.getHeaders(token),
     });
@@ -333,8 +348,21 @@ export class ApiService {
     return json;
   }
 
-  static async getAllOrders(token: string): Promise<{ orders: Order[] }> {
-    const res = await fetch(this.scoped('orders', '/admin/all'), {
+  static async getAllOrders(
+    token: string,
+    pagination?: PaginationParams,
+    status?: string,
+    orderIds?: string[]
+  ): Promise<{ orders: Order[]; pagination?: PaginationMeta }> {
+    const params = new URLSearchParams();
+    if (pagination) {
+      params.set('page', String(pagination.page));
+      params.set('page_size', String(pagination.page_size));
+    }
+    if (status && status !== 'ALL') params.set('status', status);
+    if (orderIds?.length) params.set('order_ids', orderIds.join(','));
+    const query = params.toString();
+    const res = await fetch(this.scoped('orders', `/admin/all${query ? `?${query}` : ''}`), {
       method: 'GET',
       headers: this.getHeaders(token),
     });
@@ -407,8 +435,8 @@ export class ApiService {
     return json;
   }
 
-  static async getOrderPayments(orderId: string, token: string): Promise<{ payments: PaymentRecord[] }> {
-    const res = await fetch(this.scoped('payments', `/orders/${encodeURIComponent(orderId)}`), {
+  static async getOrderPayments(orderId: string, token: string, pagination?: PaginationParams): Promise<{ payments: PaymentRecord[]; pagination?: PaginationMeta }> {
+    const res = await fetch(this.scoped('payments', `/orders/${encodeURIComponent(orderId)}${this.paginationQuery(pagination)}`), {
       headers: this.getHeaders(token),
     });
     const json = await res.json();
@@ -416,8 +444,8 @@ export class ApiService {
     return json;
   }
 
-  static async getTenantPayments(token: string): Promise<{ payments: PaymentRecord[] }> {
-    const res = await fetch(this.scoped('payments', '/admin'), {
+  static async getTenantPayments(token: string, pagination?: PaginationParams): Promise<{ payments: PaymentRecord[]; pagination?: PaginationMeta }> {
+    const res = await fetch(this.scoped('payments', `/admin${this.paginationQuery(pagination)}`), {
       headers: this.getHeaders(token),
     });
     const json = await res.json();
@@ -535,11 +563,16 @@ export class ApiService {
   static async getBrands(
     deviceTypeId?: string,
     token?: string | null,
-    includeInactive = false
-  ): Promise<{ brands: DeviceBrand[] }> {
+    includeInactive = false,
+    pagination?: PaginationParams
+  ): Promise<{ brands: DeviceBrand[]; pagination?: PaginationMeta }> {
     const params = new URLSearchParams();
     if (deviceTypeId) params.set('device_type_id', deviceTypeId);
     if (includeInactive) params.set('include_inactive', 'true');
+    if (pagination) {
+      params.set('page', String(pagination.page));
+      params.set('page_size', String(pagination.page_size));
+    }
     const query = params.toString();
 
     const res = await fetch(this.scoped('catalog', `/brands${query ? `?${query}` : ''}`), {
@@ -547,7 +580,7 @@ export class ApiService {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al consultar las marcas');
-    return { brands: json.brands || [] };
+    return { brands: json.brands || [], ...(json.pagination ? { pagination: json.pagination } : {}) };
   }
 
   static async createBrand(
@@ -597,11 +630,16 @@ export class ApiService {
   static async getDevices(
     deviceTypeId?: string,
     token?: string | null,
-    includeInactive = false
-  ): Promise<{ devices: Device[] }> {
+    includeInactive = false,
+    pagination?: PaginationParams
+  ): Promise<{ devices: Device[]; pagination?: PaginationMeta }> {
     const params = new URLSearchParams();
     if (deviceTypeId) params.set('device_type_id', deviceTypeId);
     if (includeInactive) params.set('include_inactive', 'true');
+    if (pagination) {
+      params.set('page', String(pagination.page));
+      params.set('page_size', String(pagination.page_size));
+    }
     const query = params.toString();
 
     const res = await fetch(this.scoped('catalog', `/devices${query ? `?${query}` : ''}`), {
@@ -609,7 +647,7 @@ export class ApiService {
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al consultar dispositivos');
-    return { devices: json.devices || [] };
+    return { devices: json.devices || [], ...(json.pagination ? { pagination: json.pagination } : {}) };
   }
 
   static async createDevice(
@@ -670,14 +708,20 @@ export class ApiService {
 
   static async getEvaluationRuleHistory(
     deviceTypeId: string,
-    token?: string | null
-  ): Promise<{ rules: EvaluationRule[] }> {
-    const res = await fetch(this.scoped('catalog', `/evaluation-rules/history?device_type_id=${deviceTypeId}`), {
+    token?: string | null,
+    pagination?: PaginationParams
+  ): Promise<{ rules: EvaluationRule[]; pagination?: PaginationMeta }> {
+    const params = new URLSearchParams({ device_type_id: deviceTypeId });
+    if (pagination) {
+      params.set('page', String(pagination.page));
+      params.set('page_size', String(pagination.page_size));
+    }
+    const res = await fetch(this.scoped('catalog', `/evaluation-rules/history?${params}`), {
       headers: this.getHeaders(token),
     });
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || 'Error al obtener historial de reglas de evaluación');
-    return { rules: json.rules || [] };
+    return { rules: json.rules || [], ...(json.pagination ? { pagination: json.pagination } : {}) };
   }
 
   static async createEvaluationRuleVersion(
@@ -729,8 +773,8 @@ export class ApiService {
     return error;
   }
 
-  static async getPendingInspections(token: string): Promise<{ pending: PendingInspection[] }> {
-    const res = await fetch(this.scoped('inspections', `/pending`), {
+  static async getPendingInspections(token: string, pagination?: PaginationParams): Promise<{ pending: PendingInspection[]; pagination?: PaginationMeta }> {
+    const res = await fetch(this.scoped('inspections', `/pending${this.paginationQuery(pagination)}`), {
       method: 'GET',
       headers: this.getHeaders(token),
     });
@@ -763,13 +807,22 @@ export class ApiService {
     return json;
   }
 
-  static async getInspections(token: string): Promise<{ inspections: Inspection[] }> {
-    const res = await fetch(this.scoped('inspections', ''), {
+  static async getInspections(token: string, pagination?: PaginationParams): Promise<{ inspections: Inspection[]; pagination?: PaginationMeta }> {
+    const res = await fetch(this.scoped('inspections', this.paginationQuery(pagination)), {
       method: 'GET',
       headers: this.getHeaders(token),
     });
     const json = await res.json();
     if (!res.ok) throw this.inspectionError(res, json, 'Error al consultar inspecciones');
+    return json;
+  }
+
+  static async getCatalogAuditLogs(token: string, pagination: PaginationParams): Promise<{ audit_logs: CatalogAuditLog[]; pagination: PaginationMeta }> {
+    const res = await fetch(this.scoped('catalog', `/audit-logs${this.paginationQuery(pagination)}`), {
+      headers: this.getHeaders(token),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.error || 'Error al consultar auditoría');
     return json;
   }
 

@@ -25,7 +25,7 @@ Aplicación web desarrollada con **React 18**, **TypeScript** y **Vite**, con un
 - **[HU-005] Cotización en Vivo**: Selector visual para línea blanca (refrigeradores, lavadoras) y dispositivos (laptops, celulares, TVs).
 - **Condición Declarada**: Evaluación según estado (*Excelente*, *Con Detalles*, *Averiado*).
 - **Cálculo Automático**: Desglose transparente de Precio Base + Ajuste por Condición = **Precio Final en Bs.**
-- **Historial de Cotizaciones**: Listado de solicitudes previas en estado `PENDING`.
+- **Historiales y registros**: Cotizaciones, órdenes, pagos, inspecciones y catálogo se muestran en páginas de 10 elementos; los registros cronológicos aparecen primero los más recientes. El catálogo también incluye paginación de versiones de reglas y auditoría.
 
 ### 3. Administración de Reglas de Valoración
 - **[HU-004] Reglas de Precios**: Panel de configuración para administradores (`ADMIN`) para definir el precio base y ajustes por tipo de equipo en la base de datos `pricing_rules`.

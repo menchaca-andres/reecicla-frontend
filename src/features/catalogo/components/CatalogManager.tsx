@@ -1,24 +1,33 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ApiService } from '../../../services/api';
-import type { DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem } from '../../../types';
+import type { DeviceType, DeviceBrand, Device, EvaluationRule, ChecklistItem, PaginationMeta, CatalogAuditLog } from '../../../types';
 import styles from '../catalog.module.css';
 
 import { DevicesTab } from './DevicesTab';
 import { BrandsTab } from './BrandsTab';
 import { TypesTab } from './TypesTab';
 import { RulesTab } from './RulesTab';
+import { AuditTab } from './AuditTab';
 
 interface CatalogManagerProps {
   token: string | null;
 }
 
-type Tab = 'devices' | 'brands' | 'types' | 'rules';
+type Tab = 'devices' | 'brands' | 'types' | 'rules' | 'audit';
 
 export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
   const [activeTab, setActiveTab] = useState<Tab>('devices');
 
   const [deviceTypes, setDeviceTypes] = useState<DeviceType[]>([]);
+  const [deviceTypesPage, setDeviceTypesPage] = useState<DeviceType[]>([]);
   const [devices, setDevices] = useState<Device[]>([]);
+  const [devicesPagination, setDevicesPagination] = useState<PaginationMeta>({ page: 1, page_size: 10, total_items: 0, total_pages: 0 });
+  const [typesPagination, setTypesPagination] = useState<PaginationMeta>({ page: 1, page_size: 10, total_items: 0, total_pages: 0 });
+  const [brandsPagination, setBrandsPagination] = useState<PaginationMeta>({ page: 1, page_size: 10, total_items: 0, total_pages: 0 });
+  const [ruleHistoryPagination, setRuleHistoryPagination] = useState<PaginationMeta>({ page: 1, page_size: 10, total_items: 0, total_pages: 0 });
+  const [auditLogs, setAuditLogs] = useState<CatalogAuditLog[]>([]);
+  const [auditPagination, setAuditPagination] = useState<PaginationMeta>({ page: 1, page_size: 10, total_items: 0, total_pages: 0 });
+  const [auditLoading, setAuditLoading] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,9 +76,14 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
   const loadTypes = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await ApiService.getDeviceTypes(token, true);
-      const list = res.device_types || (res as any).deviceTypes || [];
+      const [res, pageRes] = await Promise.all([
+        ApiService.getDeviceTypes(token, true),
+        ApiService.getDeviceTypes(token, true, { page: typesPagination.page, page_size: 10 }),
+      ]);
+      const list = res.device_types || res.deviceTypes || [];
       setDeviceTypes(list);
+      setDeviceTypesPage(pageRes.device_types);
+      if (pageRes.pagination) setTypesPagination(pageRes.pagination);
       if (list.length > 0) {
         if (!selectedTypeForBrand) setSelectedTypeForBrand(list[0].id);
         if (!devTypeId) setDevTypeId(list[0].id);
@@ -80,17 +94,21 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
     } finally {
       setLoading(false);
     }
-  }, [token, selectedTypeForBrand, devTypeId, selectedTypeForRule]);
+  }, [token, selectedTypeForBrand, devTypeId, selectedTypeForRule, typesPagination.page]);
 
   const loadBrandsForType = useCallback(async (typeId: string) => {
     if (!typeId) return;
     setBrandsLoading(true);
     try {
-      const res = await ApiService.getBrands(typeId, token, true);
+      const res = await ApiService.getBrands(typeId, token, true, { page: brandsPagination.page, page_size: 10 });
       setBrandsForType(res.brands || []);
-    } catch { setBrandsForType([]); }
+      if (res.pagination) setBrandsPagination(res.pagination);
+    } catch (err) {
+      setBrandsForType([]);
+      setError(err instanceof Error ? err.message : 'Error al cargar las marcas.');
+    }
     finally { setBrandsLoading(false); }
-  }, [token]);
+  }, [token, brandsPagination.page]);
 
   const loadDevBrandsForType = useCallback(async (typeId: string) => {
     if (!typeId) return;
@@ -105,12 +123,13 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
   const loadDevices = useCallback(async () => {
     try {
       const typeId = devicesFilterType || undefined;
-      const res = await ApiService.getDevices(typeId, token, true);
+      const res = await ApiService.getDevices(typeId, token, true, { page: devicesPagination.page, page_size: 10 });
       setDevices(res.devices || []);
+      if (res.pagination) setDevicesPagination(res.pagination);
     } catch (err: any) {
       setError(err.message || 'Error al cargar dispositivos.');
     }
-  }, [token, devicesFilterType]);
+  }, [token, devicesFilterType, devicesPagination.page]);
 
   const loadRulesForType = useCallback(async (typeId: string) => {
     if (!typeId) return;
@@ -118,10 +137,11 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
     try {
       const [activeRes, historyRes] = await Promise.all([
         ApiService.getActiveEvaluationRule(typeId, token),
-        ApiService.getEvaluationRuleHistory(typeId, token)
+        ApiService.getEvaluationRuleHistory(typeId, token, { page: ruleHistoryPagination.page, page_size: 10 })
       ]);
       setActiveRule(activeRes.rule);
       setRuleHistory(historyRes.rules || []);
+      if (historyRes.pagination) setRuleHistoryPagination(historyRes.pagination);
 
       if (activeRes.rule) {
         setNewChecklist(activeRes.rule.checklist || []);
@@ -134,13 +154,28 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
     } finally {
       setRulesLoading(false);
     }
-  }, [token]);
+  }, [token, ruleHistoryPagination.page]);
+
+  const loadAuditLogs = useCallback(async () => {
+    if (!token) return;
+    setAuditLoading(true);
+    try {
+      const result = await ApiService.getCatalogAuditLogs(token, { page: auditPagination.page, page_size: 10 });
+      setAuditLogs(result.audit_logs);
+      setAuditPagination(result.pagination);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al consultar la auditoría.');
+    } finally {
+      setAuditLoading(false);
+    }
+  }, [token, auditPagination.page]);
 
   useEffect(() => { loadTypes(); }, [loadTypes]);
   useEffect(() => { if (selectedTypeForBrand) loadBrandsForType(selectedTypeForBrand); }, [selectedTypeForBrand, loadBrandsForType]);
   useEffect(() => { if (devTypeId) loadDevBrandsForType(devTypeId); }, [devTypeId, loadDevBrandsForType]);
   useEffect(() => { if (activeTab === 'devices') loadDevices(); }, [activeTab, loadDevices]);
   useEffect(() => { if (selectedTypeForRule) loadRulesForType(selectedTypeForRule); }, [selectedTypeForRule, loadRulesForType]);
+  useEffect(() => { if (activeTab === 'audit') loadAuditLogs(); }, [activeTab, loadAuditLogs]);
 
   const notify = (msg: string, isError = false) => {
     if (isError) setError(msg); else setSuccess(msg);
@@ -156,6 +191,7 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
       const res = await ApiService.createDeviceType({ code: typeCode.trim().toUpperCase(), name: typeName.trim(), description: typeDesc.trim() || undefined }, token);
       notify(`Tipo "${res.device_type.name}" creado.`);
       setTypeCode(''); setTypeName(''); setTypeDesc('');
+      setTypesPagination((current) => ({ ...current, page: 1 }));
       loadTypes();
     } catch (err: any) { notify(err.message || 'Error al crear tipo.', true); }
     finally { setSubmittingType(false); }
@@ -166,6 +202,7 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
     try {
       await ApiService.inactivateDeviceType(id, token);
       notify(`Tipo "${name}" inactivado.`);
+      setTypesPagination((current) => ({ ...current, page: 1 }));
       loadTypes();
     } catch (err: any) { notify(err.message, true); }
   };
@@ -179,6 +216,7 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
       await ApiService.createBrand({ device_type_id: selectedTypeForBrand, name: newBrandName.trim() }, token);
       notify(`Marca "${newBrandName.trim()}" agregada.`);
       setNewBrandName('');
+      setBrandsPagination((current) => ({ ...current, page: 1 }));
       loadBrandsForType(selectedTypeForBrand);
     } catch (err: any) { notify(err.message || 'Error al crear marca.', true); }
     finally { setSubmittingBrand(false); }
@@ -216,6 +254,7 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
       );
       notify(`Dispositivo "${res.device.brand_name} ${res.device.model}" registrado.`);
       setDevModel(''); setDevYear(''); setDevDesc('');
+      setDevicesPagination((current) => ({ ...current, page: 1 }));
       loadDevices();
     } catch (err: any) { notify(err.message || 'Error al registrar dispositivo.', true); }
     finally { setSubmittingDevice(false); }
@@ -285,6 +324,7 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
             if (activeTab === 'brands' && selectedTypeForBrand) loadBrandsForType(selectedTypeForBrand);
             if (activeTab === 'devices') loadDevices();
             if (activeTab === 'rules' && selectedTypeForRule) loadRulesForType(selectedTypeForRule);
+            if (activeTab === 'audit') loadAuditLogs();
           }}
           disabled={loading}
           className={styles.refreshButton}
@@ -331,6 +371,12 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
         >
           Reglas de evaluación
         </button>
+        <button
+          className={`${styles.tabButton} ${activeTab === 'audit' ? styles.active : ''}`}
+          onClick={() => setActiveTab('audit')}
+        >
+          Auditoría
+        </button>
       </div>
 
       {/* Tab Contents */}
@@ -351,8 +397,13 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
           submittingDevice={submittingDevice}
           handleCreateDevice={handleCreateDevice}
           devicesFilterType={devicesFilterType}
-          setDevicesFilterType={setDevicesFilterType}
+          setDevicesFilterType={(id) => {
+            setDevicesFilterType(id);
+            setDevicesPagination((current) => ({ ...current, page: 1 }));
+          }}
           devices={devices}
+          pagination={devicesPagination}
+          onPageChange={(page) => setDevicesPagination((current) => ({ ...current, page }))}
           handleToggleDevice={handleToggleDevice}
         />
       )}
@@ -361,13 +412,18 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
         <BrandsTab
           deviceTypes={deviceTypes}
           selectedTypeForBrand={selectedTypeForBrand}
-          setSelectedTypeForBrand={setSelectedTypeForBrand}
+          setSelectedTypeForBrand={(id) => {
+            setSelectedTypeForBrand(id);
+            setBrandsPagination((current) => ({ ...current, page: 1 }));
+          }}
           newBrandName={newBrandName}
           setNewBrandName={setNewBrandName}
           submittingBrand={submittingBrand}
           handleCreateBrand={handleCreateBrand}
           brandsLoading={brandsLoading}
           brandsForType={brandsForType}
+          pagination={brandsPagination}
+          onPageChange={(page) => setBrandsPagination((current) => ({ ...current, page }))}
           editingBrandId={editingBrandId}
           setEditingBrandId={setEditingBrandId}
           editBrandName={editBrandName}
@@ -387,7 +443,9 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
           setTypeDesc={setTypeDesc}
           submittingType={submittingType}
           handleCreateType={handleCreateType}
-          deviceTypes={deviceTypes}
+          deviceTypes={deviceTypesPage}
+          pagination={typesPagination}
+          onPageChange={(page) => setTypesPagination((current) => ({ ...current, page }))}
           handleInactivateType={handleInactivateType}
         />
       )}
@@ -396,10 +454,15 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
         <RulesTab
           deviceTypes={deviceTypes}
           selectedTypeForRule={selectedTypeForRule}
-          setSelectedTypeForRule={setSelectedTypeForRule}
+          setSelectedTypeForRule={(id) => {
+            setSelectedTypeForRule(id);
+            setRuleHistoryPagination((current) => ({ ...current, page: 1 }));
+          }}
           showHistoryModal={showHistoryModal}
           setShowHistoryModal={setShowHistoryModal}
           ruleHistory={ruleHistory}
+          ruleHistoryPagination={ruleHistoryPagination}
+          onRuleHistoryPageChange={(page) => setRuleHistoryPagination((current) => ({ ...current, page }))}
           showNewRuleForm={showNewRuleForm}
           setShowNewRuleForm={setShowNewRuleForm}
           activeRule={activeRule}
@@ -415,6 +478,14 @@ export const CatalogManager: React.FC<CatalogManagerProps> = ({ token }) => {
           submittingRule={submittingRule}
           handleCreateRuleVersion={handleCreateRuleVersion}
           rulesLoading={rulesLoading}
+        />
+      )}
+      {activeTab === 'audit' && (
+        <AuditTab
+          auditLogs={auditLogs}
+          loading={auditLoading}
+          pagination={auditPagination}
+          onPageChange={(page) => setAuditPagination((current) => ({ ...current, page }))}
         />
       )}
     </div>

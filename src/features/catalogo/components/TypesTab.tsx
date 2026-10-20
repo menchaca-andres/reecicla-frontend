@@ -1,5 +1,7 @@
 import React from 'react';
 import type { DeviceType } from '../../../types';
+import type { PaginationMeta } from '../../../types';
+import { PaginationControls } from '../../../components/PaginationControls';
 import styles from '../catalog.module.css';
 
 interface TypesTabProps {
@@ -12,6 +14,8 @@ interface TypesTabProps {
   submittingType: boolean;
   handleCreateType: (e: React.FormEvent) => void;
   deviceTypes: DeviceType[];
+  pagination: PaginationMeta;
+  onPageChange: (page: number) => void;
   handleInactivateType: (id: string, name: string) => void;
 }
 
@@ -25,6 +29,8 @@ export const TypesTab: React.FC<TypesTabProps> = ({
   submittingType,
   handleCreateType,
   deviceTypes,
+  pagination,
+  onPageChange,
   handleInactivateType,
 }) => {
   return (
@@ -115,6 +121,7 @@ export const TypesTab: React.FC<TypesTabProps> = ({
             </tbody>
           </table>
         </div>
+        <PaginationControls pagination={pagination} onPageChange={onPageChange} />
       </div>
     </div>
   );

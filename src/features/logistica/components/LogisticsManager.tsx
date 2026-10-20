@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ApiService } from '../../../services/api';
-import type { DispositionType, Order, PaymentRecord } from '../../../types';
+import type { DispositionType, Order, PaymentRecord, PaginationMeta } from '../../../types';
 import styles from '../LogisticsManager.module.css';
+import { PaginationControls } from '../../../components/PaginationControls';
 
 interface LogisticsManagerProps {
   token: string | null;
@@ -10,6 +11,8 @@ interface LogisticsManagerProps {
 export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [paymentsByOrder, setPaymentsByOrder] = useState<Record<string, PaymentRecord[]>>({});
+  const [ordersPagination, setOrdersPagination] = useState<PaginationMeta>({ page: 1, page_size: 10, total_items: 0, total_pages: 0 });
+  const [paymentPaginationByOrder, setPaymentPaginationByOrder] = useState<Record<string, PaginationMeta>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -36,17 +39,27 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     setLoading(true);
     setError(null);
     try {
-      const res = await ApiService.getAllOrders(token);
+      const res = await ApiService.getAllOrders(token, { page: ordersPagination.page, page_size: 10 }, statusFilter);
       setOrders(res.orders);
+      if (res.pagination) setOrdersPagination(res.pagination);
       try {
-        const paymentRes = await ApiService.getTenantPayments(token);
-        setPaymentsByOrder(paymentRes.payments.reduce((result, payment) => {
-          result[payment.order_id] = [...(result[payment.order_id] ?? []), payment];
-          return result;
-        }, {} as Record<string, PaymentRecord[]>));
+        const paymentResponses = await Promise.all(
+          res.orders.map((order) => ApiService.getOrderPayments(order.id, token, { page: 1, page_size: 10 }))
+        );
+        setPaymentsByOrder(Object.fromEntries(
+          res.orders.map((order, index) => [order.id, paymentResponses[index].payments])
+        ));
+        setPaymentPaginationByOrder(Object.fromEntries(
+          res.orders.reduce<Array<[string, PaginationMeta]>>((entries, order, index) => {
+            const pagination = paymentResponses[index].pagination;
+            if (pagination) entries.push([order.id, pagination]);
+            return entries;
+          }, [])
+        ));
         setPaymentLoadError(null);
       } catch (paymentError) {
         setPaymentsByOrder({});
+        setPaymentPaginationByOrder({});
         setPaymentLoadError(paymentError instanceof Error
           ? paymentError.message
           : 'No se pudo consultar el historial de pagos.');
@@ -56,7 +69,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, ordersPagination.page, statusFilter]);
 
   useEffect(() => {
     fetchOrders();
@@ -67,6 +80,18 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     setTrackingCodeInput(order.tracking_code || `TRACK-${Math.floor(100000 + Math.random() * 900000)}`);
     setShipmentStatus('BOX_SHIPPED');
     setError(null);
+  };
+
+  const changePaymentPage = async (orderId: string, page: number) => {
+    if (!token) return;
+    try {
+      const response = await ApiService.getOrderPayments(orderId, token, { page, page_size: 10 });
+      setPaymentsByOrder((current) => ({ ...current, [orderId]: response.payments }));
+      const pagination = response.pagination;
+      if (pagination) setPaymentPaginationByOrder((current) => ({ ...current, [orderId]: pagination }));
+    } catch (err) {
+      setPaymentLoadError(err instanceof Error ? err.message : 'No se pudo consultar el historial de pagos.');
+    }
   };
 
   const handleDispatchSubmit = async (e: React.FormEvent) => {
@@ -202,10 +227,7 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
     RETURN: 'Guía o comprobante de devolución *',
   };
 
-  const filteredOrders = orders.filter((o) => {
-    if (statusFilter === 'ALL') return true;
-    return o.status === statusFilter;
-  });
+  const filteredOrders = orders;
 
   const statusMap: Record<string, string> = {
     ACCEPTED: 'Cotización aceptada',
@@ -266,7 +288,10 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
           { code: 'ADJUSTMENT_REJECTED', label: 'Ajuste rechazado' },
           { code: 'CLOSED', label: 'Cerradas' },
         ].map((f) => (
-          <button key={f.code} onClick={() => setStatusFilter(f.code)} className={statusFilter === f.code ? styles.filterChipActive : styles.filterChip}>
+          <button key={f.code} onClick={() => {
+            setStatusFilter(f.code);
+            setOrdersPagination((current) => ({ ...current, page: 1 }));
+          }} className={statusFilter === f.code ? styles.filterChipActive : styles.filterChip}>
             {f.label}
           </button>
         ))}
@@ -385,6 +410,12 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
                         )}
                       </div>
                     ))}
+                    {paymentPaginationByOrder[order.id] && (
+                      <PaginationControls
+                        pagination={paymentPaginationByOrder[order.id]}
+                        onPageChange={(page) => void changePaymentPage(order.id, page)}
+                      />
+                    )}
                   </div>
                 </div>
 
@@ -393,6 +424,10 @@ export const LogisticsManager: React.FC<LogisticsManagerProps> = ({ token }) => 
           })}
         </div>
       )}
+      <PaginationControls
+        pagination={ordersPagination}
+        onPageChange={(page) => setOrdersPagination((current) => ({ ...current, page }))}
+      />
 
       {selectedOrder && (
         <div className={styles.modalOverlay}>

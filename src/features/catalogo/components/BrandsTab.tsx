@@ -1,5 +1,7 @@
 import React from 'react';
 import type { DeviceType, DeviceBrand } from '../../../types';
+import type { PaginationMeta } from '../../../types';
+import { PaginationControls } from '../../../components/PaginationControls';
 import styles from '../catalog.module.css';
 
 interface BrandsTabProps {
@@ -12,6 +14,8 @@ interface BrandsTabProps {
   handleCreateBrand: (e: React.FormEvent) => void;
   brandsLoading: boolean;
   brandsForType: DeviceBrand[];
+  pagination: PaginationMeta;
+  onPageChange: (page: number) => void;
   editingBrandId: string | null;
   setEditingBrandId: (id: string | null) => void;
   editBrandName: string;
@@ -30,6 +34,8 @@ export const BrandsTab: React.FC<BrandsTabProps> = ({
   handleCreateBrand,
   brandsLoading,
   brandsForType,
+  pagination,
+  onPageChange,
   editingBrandId,
   setEditingBrandId,
   editBrandName,
@@ -93,6 +99,9 @@ export const BrandsTab: React.FC<BrandsTabProps> = ({
             </tbody>
           </table>
         </div>
+      )}
+      {!brandsLoading && brandsForType.length > 0 && (
+        <PaginationControls pagination={pagination} onPageChange={onPageChange} />
       )}
     </div>
   );

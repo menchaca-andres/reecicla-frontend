@@ -5,7 +5,7 @@
    ───────────────────────────────────────────── */
 
 .page {
-  max-width: 860px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 48px 24px 80px;
   background: #ffffff;
@@ -327,39 +327,64 @@
 
 .timeline {
   list-style: none;
-  margin: 0 0 20px;
-  padding: 0 0 0 6px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(220px, 1fr);
+  gap: 0;
+  margin: 0 0 24px;
+  padding: 8px 8px 16px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f8fafc;
 }
 
 .timelineItem {
-  display: flex;
-  gap: 10px;
-  padding-bottom: 14px;
-  border-left: 1px solid #d1d5db;
-  padding-left: 14px;
   position: relative;
+  display: grid;
+  grid-template-rows: 1fr 16px;
+  align-content: stretch;
+  gap: 14px;
+  min-height: 100px;
+  min-width: 0;
+  padding: 0 24px 0 0;
 }
 
-.timelineItem:last-child {
-  border-left-color: transparent;
-  padding-bottom: 0;
+.timelineItem:not(:last-child)::after {
+  position: absolute;
+  bottom: 7px;
+  left: 8px;
+  right: -8px;
+  height: 2px;
+  background: #d1d5db;
+  content: '';
 }
 
 .timelineDot {
-  position: absolute;
-  left: -5px;
-  top: 3px;
-  width: 9px;
-  height: 9px;
+  z-index: 1;
+  grid-row: 2;
+  align-self: start;
+  width: 16px;
+  height: 16px;
+  border: 3px solid #111111;
   border-radius: 50%;
-  background: #111111;
+  background: #ffffff;
+  box-sizing: border-box;
+  margin-left: 0;
 }
 
 .timelineItem div {
+  grid-row: 1;
   display: grid;
+  align-content: start;
   gap: 3px;
   font-size: 13px;
   color: #374151;
+}
+
+.timelineItem strong {
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .timelineItem time,
@@ -368,6 +393,12 @@
   color: #6b7280;
   font-size: 12px;
   margin: 0;
+}
+
+.timelineItem p {
+  margin-top: 5px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .notificationList {

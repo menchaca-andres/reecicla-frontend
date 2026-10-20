@@ -1,5 +1,17 @@
 export type UserRole = 'SUPER_ADMIN' | 'TENANT_ADMIN' | 'CATALOG_ADMIN' | 'INSPECTOR' | 'CLIENT';
 
+export interface PaginationMeta {
+  page: number;
+  page_size: number;
+  total_items: number;
+  total_pages: number;
+}
+
+export interface PaginationParams {
+  page: number;
+  page_size: number;
+}
+
 export interface User {
   id: string;
   tenant_id: string;
@@ -149,6 +161,16 @@ export interface EvaluationRule {
   updated_at: string;
   device_type_name?: string;
   device_type_code?: string;
+}
+
+export interface CatalogAuditLog {
+  id: string;
+  entity_type: string;
+  entity_name: string;
+  action: string;
+  reason: string;
+  executed_by: string;
+  created_at: string;
 }
 
 export interface CreateBoxRequestInput {

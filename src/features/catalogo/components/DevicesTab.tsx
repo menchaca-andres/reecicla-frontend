@@ -1,5 +1,7 @@
 import React from 'react';
 import type { DeviceType, DeviceBrand, Device } from '../../../types';
+import type { PaginationMeta } from '../../../types';
+import { PaginationControls } from '../../../components/PaginationControls';
 import styles from '../catalog.module.css';
 
 interface DevicesTabProps {
@@ -20,6 +22,8 @@ interface DevicesTabProps {
   devicesFilterType: string;
   setDevicesFilterType: (id: string) => void;
   devices: Device[];
+  pagination: PaginationMeta;
+  onPageChange: (page: number) => void;
   handleToggleDevice: (dev: Device) => void;
 }
 
@@ -41,6 +45,8 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({
   devicesFilterType,
   setDevicesFilterType,
   devices,
+  pagination,
+  onPageChange,
   handleToggleDevice,
 }) => {
   return (
@@ -155,6 +161,7 @@ export const DevicesTab: React.FC<DevicesTabProps> = ({
             </table>
           </div>
         )}
+        {devices.length > 0 && <PaginationControls pagination={pagination} onPageChange={onPageChange} />}
       </div>
     </div>
   );

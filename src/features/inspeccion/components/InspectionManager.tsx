@@ -8,7 +8,9 @@ import type {
   InspectionItemValue,
   Order,
   PendingInspection,
+  PaginationMeta,
 } from '../../../types';
+import { PaginationControls } from '../../../components/PaginationControls';
 import styles from '../InspectionManager.module.css';
 
 interface InspectionManagerProps {
@@ -44,6 +46,8 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
   const [view, setView] = useState<'pending' | 'done'>('pending');
   const [pending, setPending] = useState<PendingInspection[]>([]);
   const [inspections, setInspections] = useState<Inspection[]>([]);
+  const [pendingPagination, setPendingPagination] = useState<PaginationMeta>({ page: 1, page_size: 10, total_items: 0, total_pages: 0 });
+  const [inspectionsPagination, setInspectionsPagination] = useState<PaginationMeta>({ page: 1, page_size: 10, total_items: 0, total_pages: 0 });
   const [orders, setOrders] = useState<Record<string, Order>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,26 +68,38 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
     if (!token) return;
     setLoading(true);
     setError(null);
+    let visibleOrderIds: string[] = [];
     try {
       const [pendingRes, inspectionsRes] = await Promise.all([
-        ApiService.getPendingInspections(token),
-        ApiService.getInspections(token),
+        ApiService.getPendingInspections(token, { page: pendingPagination.page, page_size: 10 }),
+        ApiService.getInspections(token, { page: inspectionsPagination.page, page_size: 10 }),
       ]);
       setPending(pendingRes.pending);
       setInspections(inspectionsRes.inspections);
+      if (pendingRes.pagination) setPendingPagination(pendingRes.pagination);
+      if (inspectionsRes.pagination) setInspectionsPagination(inspectionsRes.pagination);
+      visibleOrderIds = [...new Set([
+        ...pendingRes.pending.map((device) => device.order_id),
+        ...inspectionsRes.inspections.map((inspection) => inspection.order_id),
+      ])];
     } catch (err: any) {
       setError(err.message || 'Error al cargar las inspecciones.');
+      return;
     } finally {
       setLoading(false);
     }
-    // Los datos de la orden (número, marca, condición declarada) son complementarios.
+    // Solo se consultan los datos de las órdenes visibles en ambas páginas.
     try {
-      const res = await ApiService.getAllOrders(token);
-      setOrders(Object.fromEntries(res.orders.map((order) => [order.id, order])));
+      if (visibleOrderIds.length === 0) {
+        setOrders({});
+      } else {
+        const res = await ApiService.getAllOrders(token, undefined, undefined, visibleOrderIds);
+        setOrders(Object.fromEntries(res.orders.map((order) => [order.id, order])));
+      }
     } catch {
       setOrders({});
     }
-  }, [token]);
+  }, [token, pendingPagination.page, inspectionsPagination.page]);
 
   useEffect(() => {
     fetchData();
@@ -572,10 +588,10 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
 
       <div className={styles.tabRow}>
         <button onClick={() => setView('pending')} className={view === 'pending' ? styles.tabChipActive : styles.tabChip}>
-          Pendientes ({pending.length})
+          Pendientes ({pendingPagination.total_items})
         </button>
         <button onClick={() => setView('done')} className={view === 'done' ? styles.tabChipActive : styles.tabChip}>
-          Registradas ({inspections.length})
+          Registradas ({inspectionsPagination.total_items})
         </button>
       </div>
 
@@ -585,30 +601,36 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
         pending.length === 0 ? (
           <div className={styles.emptyBox}>No hay equipos pendientes de inspección.</div>
         ) : (
-          <div className={styles.list}>
-            {pending.map((device) => (
-              <div key={device.order_id} className={`glass-card ${styles.card}`}>
-                <div>
-                  <p className={styles.cardTitle}>
-                    {orderNumber(device.order_id)}
-                    <span className={styles.badge}>Pendiente</span>
-                  </p>
-                  <p className={styles.cardMeta}>
-                    {orderTitle(device.order_id, device.device_type_name)} · Recibido {formatDate(device.received_at)}
-                  </p>
+          <>
+            <div className={styles.list}>
+              {pending.map((device) => (
+                <div key={device.order_id} className={`glass-card ${styles.card}`}>
+                  <div>
+                    <p className={styles.cardTitle}>
+                      {orderNumber(device.order_id)}
+                      <span className={styles.badge}>Pendiente</span>
+                    </p>
+                    <p className={styles.cardMeta}>
+                      {orderTitle(device.order_id, device.device_type_name)} · Recibido {formatDate(device.received_at)}
+                    </p>
+                  </div>
+                  {canRegister && (
+                    <button
+                      onClick={() => void openForm(device.order_id)}
+                      disabled={submitting}
+                      className={`btn-primary ${styles.smallBtn}`}
+                    >
+                      Inspeccionar
+                    </button>
+                  )}
                 </div>
-                {canRegister && (
-                  <button
-                    onClick={() => void openForm(device.order_id)}
-                    disabled={submitting}
-                    className={`btn-primary ${styles.smallBtn}`}
-                  >
-                    Inspeccionar
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+            <PaginationControls
+              pagination={pendingPagination}
+              onPageChange={(page) => setPendingPagination((current) => ({ ...current, page }))}
+            />
+          </>
         )
       ) : inspections.length === 0 ? (
         <div className={styles.emptyBox}>Todavía no hay inspecciones registradas.</div>
@@ -635,6 +657,12 @@ export const InspectionManager: React.FC<InspectionManagerProps> = ({ token, can
             </div>
           ))}
         </div>
+      )}
+      {!loading && view === 'done' && inspections.length > 0 && (
+        <PaginationControls
+          pagination={inspectionsPagination}
+          onPageChange={(page) => setInspectionsPagination((current) => ({ ...current, page }))}
+        />
       )}
     </div>
   );

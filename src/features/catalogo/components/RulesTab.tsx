@@ -1,5 +1,7 @@
 import React from 'react';
 import type { DeviceType, EvaluationRule, ChecklistItem } from '../../../types';
+import type { PaginationMeta } from '../../../types';
+import { PaginationControls } from '../../../components/PaginationControls';
 import styles from '../catalog.module.css';
 
 interface RulesTabProps {
@@ -9,6 +11,8 @@ interface RulesTabProps {
   showHistoryModal: boolean;
   setShowHistoryModal: (val: boolean) => void;
   ruleHistory: EvaluationRule[];
+  ruleHistoryPagination: PaginationMeta;
+  onRuleHistoryPageChange: (page: number) => void;
   showNewRuleForm: boolean;
   setShowNewRuleForm: (val: boolean) => void;
   activeRule: EvaluationRule | null;
@@ -33,6 +37,8 @@ export const RulesTab: React.FC<RulesTabProps> = ({
   showHistoryModal,
   setShowHistoryModal,
   ruleHistory,
+  ruleHistoryPagination,
+  onRuleHistoryPageChange,
   showNewRuleForm,
   setShowNewRuleForm,
   activeRule,
@@ -74,7 +80,7 @@ export const RulesTab: React.FC<RulesTabProps> = ({
             onClick={() => setShowHistoryModal(!showHistoryModal)}
             className={styles.btnSecondary}
           >
-            Historial de versiones ({ruleHistory.length})
+            Historial de versiones ({ruleHistoryPagination.total_items})
           </button>
           <button
             onClick={() => setShowNewRuleForm(!showNewRuleForm)}
@@ -119,6 +125,10 @@ export const RulesTab: React.FC<RulesTabProps> = ({
               </tbody>
             </table>
           </div>
+          <PaginationControls
+            pagination={ruleHistoryPagination}
+            onPageChange={onRuleHistoryPageChange}
+          />
         </div>
       )}
 
