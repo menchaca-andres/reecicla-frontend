@@ -7,11 +7,12 @@ import { CatalogManager } from './features/catalogo';
 import { AdminManager } from './features/admins';
 import { LogisticsManager } from './features/logistica';
 import { InspectionManager } from './features/inspeccion';
+import { ReportsDashboard } from './features/reportes';
 import type { User, Quote, AuthResponse } from './types';
 import { ApiService } from './services/api';
 import { PlatformAdminPage } from './features/admins/components/PlatformAdminPage';
 
-type Tab = 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'inspeccion' | 'auth';
+type Tab = 'cotizar' | 'historial' | 'reglas' | 'admins' | 'catalogo' | 'logistica' | 'inspeccion' | 'reportes' | 'auth';
 
 function getInitialSlug(): string {
   const pathSegments = window.location.pathname.split('/').filter(Boolean);
@@ -24,7 +25,7 @@ function getInitialSlug(): string {
 
   if (pathSegments[0] === 'seguimiento') return 'demo';
   if (pathSegments.length > 0) {
-    const knownTabs = ['cotizar', 'historial', 'reglas', 'admins', 'catalogo', 'logistica', 'inspeccion', 'auth'];
+    const knownTabs = ['cotizar', 'historial', 'reglas', 'admins', 'catalogo', 'logistica', 'inspeccion', 'reportes', 'auth'];
     if (!knownTabs.includes(pathSegments[0])) {
       return pathSegments[0];
     }
@@ -219,6 +220,14 @@ function TenantApp() {
           <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px', fontWeight: 700 }}>Acceso Restringido</h3>
           <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>
             La inspección de equipos está reservada para inspectores (<strong>INSPECTOR</strong>) y administradores.
+          </p>
+          {!user && (<button onClick={() => setActiveTab('auth')} className="btn-primary">Iniciar Sesión</button>)}
+        </div>))}
+
+        {activeTab === 'reportes' && (user?.role === 'TENANT_ADMIN' ? (<ReportsDashboard token={token} />) : (<div className="glass-panel" style={{ padding: '40px', textAlign: 'center', maxWidth: '540px', margin: '32px auto', background: '#ffffff' }}>
+          <h3 style={{ fontSize: '20px', color: '#0f172a', marginBottom: '8px', fontWeight: 700 }}>Acceso Restringido</h3>
+          <p style={{ fontSize: '14px', color: '#64748b', marginBottom: '20px' }}>
+            Los reportes del negocio están reservados para el administrador del negocio (<strong>TENANT_ADMIN</strong>).
           </p>
           {!user && (<button onClick={() => setActiveTab('auth')} className="btn-primary">Iniciar Sesión</button>)}
         </div>))}
